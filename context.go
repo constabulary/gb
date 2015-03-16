@@ -13,3 +13,8 @@ type Context struct {
 func (c *Context) Srcdir() string {
 	return filepath.Join(c.Project.rootdir, "src")
 }
+
+// ResolvePackage resolves the package at path using the current context.
+func (c *Context) ResolvePackage(path string) *Package {
+	return resolvePackage(c, path)
+}

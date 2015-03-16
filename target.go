@@ -15,14 +15,18 @@ type target struct {
 	c chan error
 }
 
-func newTarget(f func() error) target {
-	t := target{
-		c: make(chan error, 1),
-	}
+func newTarget(f func() error, deps ...Target) target {
+	c := make(chan error, 1)
 	go func() {
-		t.c <- f()
+		for _, dep := range deps {
+			if err := dep.Result(); err != nil {
+				c <- err
+				return
+			}
+		}
+		c <- f()
 	}()
-	return t
+	return target{c: c}
 }
 
 func (t *target) Result() error {

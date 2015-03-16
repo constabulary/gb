@@ -5,19 +5,24 @@ import "go/build"
 // Package represents a resolved package from the Project with respect to the Context.
 type Package struct {
 	target
-	p *build.Package
+	ctx *Context
+	p   *build.Package
 }
 
-// ResolvePackage resolves the package at path using the current context.
-func ResolvePackage(ctx *Context, path string) *Package {
-	var p Package
-	p.target = newTarget(p.findPackage(ctx, path))
-	return &p
+// resolvePackage resolves the package at path using the current context.
+func resolvePackage(ctx *Context, path string) *Package {
+	pkg := Package{
+		ctx: ctx,
+	}
+	pkg.target = newTarget(pkg.findPackage(path))
+	return &pkg
 }
 
-func (p *Package) findPackage(ctx *Context, path string) func() error {
+func (p *Package) findPackage(path string) func() error {
+	ctx := p.ctx
 	return func() error {
 		var err error
+		Debugf("Package::findPackage %v", path)
 		p.p, err = ctx.Context.Import(path, ctx.Srcdir(), 0)
 		return err
 	}

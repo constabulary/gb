@@ -1,5 +1,7 @@
 package gb
 
+import "go/build"
+
 // Project represents a gb project. A gb project has a simlar layout to
 // a $GOPATH workspace. Each gb project has a standard directory layout
 // starting at the project root, which we'll refer too as $PROJECT.
@@ -17,5 +19,12 @@ type Project struct {
 func (p *Project) NewContext() *Context {
 	return &Context{
 		Project: p,
+		Context: &build.Default,
+	}
+}
+
+func NewProject(root string) *Project {
+	return &Project{
+		rootdir: root,
 	}
 }

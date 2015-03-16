@@ -42,7 +42,7 @@ func TestResolvePackage(t *testing.T) {
 	}
 }
 
-func TestPackageNmae(t *testing.T) {
+func TestPackageName(t *testing.T) {
 	ctx := testContext(t)
 	pkg := ResolvePackage(ctx, "aprime")
 	if err := pkg.Result(); err != nil {
