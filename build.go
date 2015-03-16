@@ -2,49 +2,44 @@ package gb
 
 import "fmt"
 
-/**
 // Build returns a Target representing the result of compiling the Package pkg
 // and its dependencies. If pkg is a command, then the results of build include
 // linking the final binary into pkg.Context.Bindir().
-func Build(ctx *Context, pkg *Package) Target {
-        if pkg.Name() == "main" {
-                return buildCommand(ctx, pkg)
-        }
-        return buildPackage(ctx, pkg)
+func Build(pkg *Package) Target {
+	if err := pkg.Result(); err != nil {
+		// TODO(dfc)
+		panic(err)
+	}
+	if pkg.Name() == "main" {
+		return buildCommand(pkg)
+	}
+	return buildPackage(pkg)
 }
 
 // buildPackage returns a Target repesenting the results of compiling
 // pkg and its dependencies.
-func buildPackage(ctx *Context, pkg *Package) Target {
-        var deps []Future
-        for _, dep := range pkg.Imports {
-                // TODO(dfc) use project.Spec
-                pkg, err := ctx.ResolvePackage(runtime.GOOS, runtime.GOARCH, dep).Result()
-                if err != nil {
-                        return &errFuture{err}
-                }
-                deps = append(deps, buildPackage(ctx, pkg))
-        }
-        return ctx.addTargetIfMissing(pkg, func() Future { return Compile(ctx, pkg, deps) })
+func buildPackage(pkg *Package) Target {
+	var deps []Target
+	for _, dep := range pkg.p.Imports {
+		// TODO(dfc) use project.Spec
+		pkg := resolvePackage(pkg.ctx, dep)
+		deps = append(deps, buildPackage(pkg))
+	}
+	return pkg.ctx.addTargetIfMissing(pkg, func() Target { return Compile(pkg.ctx, pkg, deps...) })
 }
 
 // buildCommand returns a Target repesenting the results of compiling
 // pkg as a command and linking the result into pkg.Context.Bindir().
-func buildCommand(ctx *Context, pkg *Package) Target {
-        var deps []Future
-        for _, dep := range pkg.Imports {
-                // TODO(dfc) use project.Spec
-                pkg, err := ctx.ResolvePackage(runtime.GOOS, runtime.GOARCH, dep).Result()
-                if err != nil {
-                        return errFuture{err}
-                }
-                deps = append(deps, buildPackage(ctx, pkg))
-        }
-        compile := Compile(ctx, pkg, deps)
-        ld := Ld(ctx, pkg, compile)
-        return ld
+func buildCommand(pkg *Package) Target {
+	var deps []Target
+	for _, dep := range pkg.p.Imports {
+		pkg := resolvePackage(pkg.ctx, dep)
+		deps = append(deps, buildPackage(pkg))
+	}
+	compile := Compile(pkg.ctx, pkg, deps...)
+	ld := Ld(pkg.ctx, pkg, compile.(PkgTarget))
+	return ld
 }
-**/
 
 type errTarget struct {
 	error
@@ -169,4 +164,25 @@ func Asm(ctx *Context, pkg *Package, sfile string) ObjTarget {
 	}
 	asm.target = newTarget(asm.asm)
 	return &asm
+}
+
+type ld struct {
+	target
+	ctx   *Context
+	afile PkgTarget
+}
+
+func (l *ld) link() error {
+	return nil
+}
+
+// Ld returns a Target representing the result of linking a
+// Package into a command with the Context provided linker.
+func Ld(ctx *Context, pkg *Package, afile PkgTarget) Target {
+	ld := ld{
+		ctx:   ctx,
+		afile: afile,
+	}
+	ld.target = newTarget(ld.link, afile)
+	return &ld
 }
