@@ -16,17 +16,22 @@ type target struct {
 }
 
 func newTarget(f func() error, deps ...Target) target {
-	c := make(chan error, 1)
-	go func() {
-		for _, dep := range deps {
-			if err := dep.Result(); err != nil {
-				c <- err
-				return
-			}
+	if f == nil {
+		panic("nil func")
+	}
+	t := target{c: make(chan error, 1)}
+	go t.run(f, deps...)
+	return t
+}
+
+func (t *target) run(f func() error, deps ...Target) {
+	for _, dep := range deps {
+		if err := dep.Result(); err != nil {
+			t.c <- err
+			return
 		}
-		c <- f()
-	}()
-	return target{c: c}
+	}
+	t.c <- f()
 }
 
 func (t *target) Result() error {

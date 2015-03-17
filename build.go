@@ -19,25 +19,40 @@ func Build(pkg *Package) Target {
 // buildPackage returns a Target repesenting the results of compiling
 // pkg and its dependencies.
 func buildPackage(pkg *Package) Target {
-	var deps []Target
-	for _, dep := range pkg.p.Imports {
-		// TODO(dfc) use project.Spec
-		pkg := resolvePackage(pkg.ctx, dep)
-		deps = append(deps, buildPackage(pkg))
+	if err := pkg.Result(); err != nil {
+		// TODO(dfc)
+		panic(err)
 	}
-	return pkg.ctx.addTargetIfMissing(pkg, func() Target { return Compile(pkg.ctx, pkg, deps...) })
+	return pkg.ctx.targetOrMissing("compile:"+pkg.ImportPath, func() Target {
+		var deps []Target
+		for _, dep := range pkg.p.Imports {
+			if _, ok := stdlib[dep]; ok {
+				continue
+			}
+			pkg := resolvePackage(pkg.ctx, dep)
+			deps = append(deps, buildPackage(pkg))
+		}
+		return Compile(pkg, deps...)
+	})
 }
 
 // buildCommand returns a Target repesenting the results of compiling
 // pkg as a command and linking the result into pkg.Context.Bindir().
 func buildCommand(pkg *Package) Target {
+	if err := pkg.Result(); err != nil {
+		// TODO(dfc)
+		panic(err)
+	}
 	var deps []Target
 	for _, dep := range pkg.p.Imports {
+		if _, ok := stdlib[dep]; ok {
+			continue
+		}
 		pkg := resolvePackage(pkg.ctx, dep)
 		deps = append(deps, buildPackage(pkg))
 	}
-	compile := Compile(pkg.ctx, pkg, deps...)
-	ld := Ld(pkg.ctx, pkg, compile.(PkgTarget))
+	compile := Compile(pkg, deps...)
+	ld := Ld(pkg, compile.(PkgTarget))
 	return ld
 }
 
@@ -50,24 +65,26 @@ func (e errTarget) Result() error {
 }
 
 // Compile returns a Target representing all the steps required to build a go package.
-func Compile(ctx *Context, pkg *Package, deps ...Target) Target {
+func Compile(pkg *Package, deps ...Target) Target {
 	if err := pkg.Result(); err != nil {
 		return errTarget{err}
 	}
-	var gofiles []string
-	gofiles = append(gofiles, pkg.p.GoFiles...)
-	var objs []Target
-	if len(pkg.p.CgoFiles) > 0 {
-		/**cgo, cgofiles := cgo(ctx, pkg, deps)
-		  deps = append(deps, cgo[0])
-		  objs = append(objs, cgo...)
-		  gofiles = append(gofiles, cgofiles...) */
-	}
-	objs = append(objs, Gc(ctx, pkg, gofiles, deps...))
-	for _, sfile := range pkg.p.SFiles {
-		objs = append(objs, Asm(ctx, pkg, sfile))
-	}
-	return Pack(ctx, pkg, objs...)
+	return pkg.ctx.addTargetIfMissing("compile:"+pkg.ImportPath, func() Target {
+		var gofiles []string
+		gofiles = append(gofiles, pkg.p.GoFiles...)
+		var objs []Target
+		if len(pkg.p.CgoFiles) > 0 {
+			/**cgo, cgofiles := cgo(ctx, pkg, deps)
+			  deps = append(deps, cgo[0])
+			  objs = append(objs, cgo...)
+			  gofiles = append(gofiles, cgofiles...) */
+		}
+		objs = append(objs, Gc(pkg, gofiles, deps...))
+		for _, sfile := range pkg.p.SFiles {
+			objs = append(objs, Asm(pkg, sfile))
+		}
+		return Pack(pkg, objs...)
+	})
 }
 
 // ObjTarget represents a compiled Go object (.5, .6, etc)
@@ -80,23 +97,22 @@ type ObjTarget interface {
 
 type gc struct {
 	target
-	ctx     *Context
 	pkg     *Package
 	gofiles []string
 	objfile string
 }
 
 func (g *gc) compile() error {
-	Debugf("gc::compile %v (%v)", g.pkg.Name(), g.gofiles)
+	Debugf("gc::compile %v %v", g.pkg.ImportPath, g.gofiles)
 	return nil
 }
 
 func (g *gc) Objfile() string { return g.objfile }
 
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
-func Gc(ctx *Context, pkg *Package, gofiles []string, deps ...Target) ObjTarget {
+func Gc(pkg *Package, gofiles []string, deps ...Target) ObjTarget {
 	gc := gc{
-		ctx:     ctx,
+		pkg:     pkg,
 		gofiles: gofiles,
 	}
 	gc.target = newTarget(gc.compile, deps...)
@@ -135,9 +151,9 @@ func (p *pack) Pkgfile() string { return p.afile }
 
 // Pack returns a Target representing the result of packing a
 // set of Context specific object files into an archive.
-func Pack(ctx *Context, pkg *Package, deps ...Target) PkgTarget {
+func Pack(pkg *Package, deps ...Target) PkgTarget {
 	pack := pack{
-		ctx:  ctx,
+		ctx:  pkg.ctx,
 		deps: deps,
 	}
 	pack.target = newTarget(pack.pack, deps...)
@@ -158,9 +174,9 @@ func (a *asm) asm() error {
 
 // Asm returns a Target representing the result of assembling
 // sfile with the Context specified asssembler.
-func Asm(ctx *Context, pkg *Package, sfile string) ObjTarget {
+func Asm(pkg *Package, sfile string) ObjTarget {
 	asm := asm{
-		ctx: ctx,
+		ctx: pkg.ctx,
 	}
 	asm.target = newTarget(asm.asm)
 	return &asm
@@ -178,9 +194,9 @@ func (l *ld) link() error {
 
 // Ld returns a Target representing the result of linking a
 // Package into a command with the Context provided linker.
-func Ld(ctx *Context, pkg *Package, afile PkgTarget) Target {
+func Ld(pkg *Package, afile PkgTarget) Target {
 	ld := ld{
-		ctx:   ctx,
+		ctx:   pkg.ctx,
 		afile: afile,
 	}
 	ld.target = newTarget(ld.link, afile)
