@@ -14,11 +14,9 @@ type Toolchain interface {
 	Ld(string, string) error
 	Cc(srcdir, objdir, ofile, cfile string) error
 
-	Cgo(string, []string) error
-	Gcc(string, []string) error
-	Libgcc() (string, error)
-
-	name() string
+	//	Cgo(string, []string) error
+	//	Gcc(string, []string) error
+	//	Libgcc() (string, error)
 }
 
 func run(dir, command string, args ...string) error {
@@ -35,4 +33,28 @@ func runOut(dir, command string, args ...string) ([]byte, error) {
 		Errorf("%s", output)
 	}
 	return output, err
+}
+
+type NullToolchain struct{}
+
+func (NullToolchain) Gc(importpath, srcdir, outfile string, files []string) error {
+	Debugf("null:gc %v %v %v %v", importpath, srcdir, outfile, files)
+	return nil
+}
+
+func (NullToolchain) Asm(srcdir, ofile, sfile string) error {
+	Debugf("null:asm %v %v %v", srcdir, ofile, sfile)
+	return nil
+}
+func (NullToolchain) Pack(afile string, ofiles ...string) error {
+	Debugf("null:pack %v %v", afile, ofiles)
+	return nil
+}
+func (NullToolchain) Ld(aout string, afile string) error {
+	Debugf("null:ld %v %v", aout, afile)
+	return nil
+}
+func (NullToolchain) Cc(srcdir, objdir, ofile, cfile string) error {
+	Debugf("null:cc %v %v %v %v", srcdir, objdir, ofile, cfile)
+	return nil
 }

@@ -16,10 +16,11 @@ type Project struct {
 }
 
 // NewContext returns a new build context from this project.
-func (p *Project) NewContext() *Context {
+func (p *Project) NewContext(tc Toolchain) *Context {
 	return &Context{
 		Project: p,
 		Context: &build.Default,
+		tc:      tc,
 	}
 }
 

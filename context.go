@@ -11,6 +11,8 @@ type Context struct {
 	*Project
 	*build.Context
 
+	tc Toolchain
+
 	Statistics
 
 	targetCache

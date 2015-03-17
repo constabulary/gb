@@ -1,7 +1,5 @@
 package gb
 
-import "fmt"
-
 // Build returns a Target representing the result of compiling the Package pkg
 // and its dependencies. If pkg is a command, then the results of build include
 // linking the final binary into pkg.Context.Bindir().
@@ -72,7 +70,7 @@ func Compile(pkg *Package, deps ...Target) Target {
 	return pkg.ctx.addTargetIfMissing("compile:"+pkg.ImportPath, func() Target {
 		var gofiles []string
 		gofiles = append(gofiles, pkg.p.GoFiles...)
-		var objs []Target
+		var objs []ObjTarget
 		if len(pkg.p.CgoFiles) > 0 {
 			/**cgo, cgofiles := cgo(ctx, pkg, deps)
 			  deps = append(deps, cgo[0])
@@ -103,8 +101,8 @@ type gc struct {
 }
 
 func (g *gc) compile() error {
-	Debugf("gc::compile %v %v", g.pkg.ImportPath, g.gofiles)
-	return nil
+	Debugf("compile %v %v", g.pkg.ImportPath, g.gofiles)
+	return g.pkg.ctx.tc.Gc(g.pkg.ImportPath, "", "", g.gofiles)
 }
 
 func (g *gc) Objfile() string { return g.objfile }
@@ -128,35 +126,37 @@ type PkgTarget interface {
 }
 
 type pack struct {
-	target
-	ctx   *Context
-	deps  []Target
+	c     chan error
+	pkg   *Package
 	afile string
 }
 
-func (p *pack) pack() error {
-	var ofiles []string
-	for _, dep := range p.deps {
-		switch dep := dep.(type) {
-		case ObjTarget:
-			ofiles = append(ofiles, dep.Objfile())
-		default:
-			return fmt.Errorf("unexpected Target %T", dep)
-		}
+func (p *pack) Result() error {
+	err := <-p.c
+	p.c <- err
+	return err
+}
+
+func (p *pack) pack(objs ...ObjTarget) {
+	Debugf("pack %v", p.pkg.ImportPath)
+	ofiles := make([]string, 0, len(objs))
+	for _, obj := range objs {
+		ofiles = append(ofiles, obj.Objfile())
 	}
-	return nil
+	p.c <- p.pkg.ctx.tc.Pack(p.afile, ofiles...)
 }
 
 func (p *pack) Pkgfile() string { return p.afile }
 
 // Pack returns a Target representing the result of packing a
 // set of Context specific object files into an archive.
-func Pack(pkg *Package, deps ...Target) PkgTarget {
+func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
 	pack := pack{
-		ctx:  pkg.ctx,
-		deps: deps,
+		c:     make(chan error, 1),
+		pkg:   pkg,
+		afile: pkg.Name() + ".a",
 	}
-	pack.target = newTarget(pack.pack, deps...)
+	go pack.pack(deps...)
 	return &pack
 }
 
