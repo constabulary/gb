@@ -10,6 +10,7 @@ import (
 type Context struct {
 	*Project
 	*build.Context
+	workdir string
 
 	tc Toolchain
 

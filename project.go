@@ -21,6 +21,7 @@ func (p *Project) NewContext(tc Toolchain) *Context {
 		Project: p,
 		Context: &build.Default,
 		tc:      tc,
+		workdir: mktmpdir(),
 	}
 }
 

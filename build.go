@@ -1,5 +1,7 @@
 package gb
 
+import "path/filepath"
+
 // Build returns a Target representing the result of compiling the Package pkg
 // and its dependencies. If pkg is a command, then the results of build include
 // linking the final binary into pkg.Context.Bindir().
@@ -97,15 +99,16 @@ type gc struct {
 	target
 	pkg     *Package
 	gofiles []string
-	objfile string
 }
 
 func (g *gc) compile() error {
-	Debugf("compile %v %v", g.pkg.ImportPath, g.gofiles)
-	return g.pkg.ctx.tc.Gc(g.pkg.ImportPath, "", "", g.gofiles)
+	Infof("compile %v %v", g.pkg.ImportPath, g.gofiles)
+	return g.pkg.ctx.tc.Gc([]string{g.pkg.ctx.workdir}, g.pkg.ImportPath, g.pkg.p.Dir, g.Objfile(), g.gofiles)
 }
 
-func (g *gc) Objfile() string { return g.objfile }
+func (g *gc) Objfile() string {
+	return filepath.Join(g.pkg.ctx.workdir, g.pkg.ImportPath+".6")
+}
 
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
 func Gc(pkg *Package, gofiles []string, deps ...Target) ObjTarget {
@@ -126,9 +129,8 @@ type PkgTarget interface {
 }
 
 type pack struct {
-	c     chan error
-	pkg   *Package
-	afile string
+	c   chan error
+	pkg *Package
 }
 
 func (p *pack) Result() error {
@@ -141,20 +143,26 @@ func (p *pack) pack(objs ...ObjTarget) {
 	Debugf("pack %v", p.pkg.ImportPath)
 	ofiles := make([]string, 0, len(objs))
 	for _, obj := range objs {
+		err := obj.Result()
+		if err != nil {
+			p.c <- err
+			return
+		}
 		ofiles = append(ofiles, obj.Objfile())
 	}
-	p.c <- p.pkg.ctx.tc.Pack(p.afile, ofiles...)
+	p.c <- p.pkg.ctx.tc.Pack(p.Pkgfile(), ofiles...)
 }
 
-func (p *pack) Pkgfile() string { return p.afile }
+func (p *pack) Pkgfile() string {
+	return filepath.Join(p.pkg.ctx.workdir, p.pkg.ImportPath+".a")
+}
 
 // Pack returns a Target representing the result of packing a
 // set of Context specific object files into an archive.
 func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
 	pack := pack{
-		c:     make(chan error, 1),
-		pkg:   pkg,
-		afile: pkg.Name() + ".a",
+		c:   make(chan error, 1),
+		pkg: pkg,
 	}
 	go pack.pack(deps...)
 	return &pack
@@ -184,19 +192,20 @@ func Asm(pkg *Package, sfile string) ObjTarget {
 
 type ld struct {
 	target
-	ctx   *Context
+	pkg   *Package
 	afile PkgTarget
 }
 
 func (l *ld) link() error {
-	return nil
+	Infof("link %v", l.afile.Pkgfile())
+	return l.pkg.ctx.tc.Ld([]string{l.pkg.ctx.workdir}, filepath.Join(l.pkg.ctx.workdir, l.pkg.p.Name), l.afile.Pkgfile())
 }
 
 // Ld returns a Target representing the result of linking a
 // Package into a command with the Context provided linker.
 func Ld(pkg *Package, afile PkgTarget) Target {
 	ld := ld{
-		ctx:   pkg.ctx,
+		pkg:   pkg,
 		afile: afile,
 	}
 	ld.target = newTarget(ld.link, afile)

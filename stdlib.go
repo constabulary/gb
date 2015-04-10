@@ -42,6 +42,7 @@ var stdlib = map[string]bool{
 	"debug/gosym":         true,
 	"debug/macho":         true,
 	"debug/pe":            true,
+	"encoding":            true,
 	"encoding/ascii85":    true,
 	"encoding/asn1":       true,
 	"encoding/base32":     true,
