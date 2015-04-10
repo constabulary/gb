@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -30,7 +31,8 @@ func runOut(dir, command string, args ...string) ([]byte, error) {
 	output, err := cmd.CombinedOutput()
 	Debugf("cd %s; %s %s", dir, command, strings.Join(args, " "))
 	if err != nil {
-		Errorf("%s", output)
+		Errorf("%v: %s", cmd.Args, output)
+		err = fmt.Errorf("%v: %s", cmd.Args, err)
 	}
 	return output, err
 }

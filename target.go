@@ -39,3 +39,14 @@ func (t *target) Result() error {
 	t.c <- err
 	return err
 }
+
+type errTarget struct {
+	error
+}
+
+func (e errTarget) Result() error { return e.error }
+
+// nilTarget always returns nil immediately.
+type nilTarget struct{}
+
+func (*nilTarget) Result() error { return nil }

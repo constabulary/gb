@@ -24,6 +24,13 @@ func (c *Context) Srcdir() string {
 	return filepath.Join(c.Project.rootdir, "src")
 }
 
+// IncludePaths returns the include paths visible in this context.
+func (c *Context) IncludePaths() []string {
+	return []string{
+		c.workdir,
+	}
+}
+
 // ResolvePackage resolves the package at path using the current context.
 func (c *Context) ResolvePackage(path string) *Package {
 	return resolvePackage(c, path)

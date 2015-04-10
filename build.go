@@ -56,14 +56,6 @@ func buildCommand(pkg *Package) Target {
 	return ld
 }
 
-type errTarget struct {
-	error
-}
-
-func (e errTarget) Result() error {
-	return e.error
-}
-
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) Target {
 	if err := pkg.Result(); err != nil {
@@ -74,10 +66,10 @@ func Compile(pkg *Package, deps ...Target) Target {
 		gofiles = append(gofiles, pkg.p.GoFiles...)
 		var objs []ObjTarget
 		if len(pkg.p.CgoFiles) > 0 {
-			/**cgo, cgofiles := cgo(ctx, pkg, deps)
-			  deps = append(deps, cgo[0])
-			  objs = append(objs, cgo...)
-			  gofiles = append(gofiles, cgofiles...) */
+			// cgo, cgofiles := cgo(pkg, deps...)
+			// deps = append(deps, cgo[0])
+			// objs = append(objs, cgo...)
+			// gofiles = append(gofiles, cgofiles...)
 		}
 		objs = append(objs, Gc(pkg, gofiles, deps...))
 		for _, sfile := range pkg.p.SFiles {
@@ -103,11 +95,11 @@ type gc struct {
 
 func (g *gc) compile() error {
 	Infof("compile %v %v", g.pkg.ImportPath, g.gofiles)
-	return g.pkg.ctx.tc.Gc([]string{g.pkg.ctx.workdir}, g.pkg.ImportPath, g.pkg.p.Dir, g.Objfile(), g.gofiles)
+	return g.pkg.ctx.tc.Gc(g.pkg.ctx.IncludePaths(), g.pkg.ImportPath, g.pkg.p.Dir, g.Objfile(), g.gofiles)
 }
 
 func (g *gc) Objfile() string {
-	return filepath.Join(g.pkg.ctx.workdir, g.pkg.ImportPath+".6")
+	return filepath.Join(objdir(g.pkg), g.pkg.p.Name+".6")
 }
 
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
@@ -170,21 +162,25 @@ func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
 
 type asm struct {
 	target
-	ctx   *Context
-	ofile string
+	pkg   *Package
+	sfile string
 }
 
-func (a *asm) Objfile() string { return a.ofile }
+func (a *asm) Objfile() string {
+	return filepath.Join(a.pkg.ctx.workdir, a.pkg.ImportPath, stripext(a.sfile)+".6")
+}
 
 func (a *asm) asm() error {
-	return nil
+	Infof("asm %v", a.sfile)
+	return a.pkg.ctx.tc.Asm(a.pkg.p.Dir, a.Objfile(), filepath.Join(a.pkg.p.Dir, a.sfile))
 }
 
 // Asm returns a Target representing the result of assembling
 // sfile with the Context specified asssembler.
 func Asm(pkg *Package, sfile string) ObjTarget {
 	asm := asm{
-		ctx: pkg.ctx,
+		pkg:   pkg,
+		sfile: sfile,
 	}
 	asm.target = newTarget(asm.asm)
 	return &asm
@@ -197,8 +193,9 @@ type ld struct {
 }
 
 func (l *ld) link() error {
-	Infof("link %v", l.afile.Pkgfile())
-	return l.pkg.ctx.tc.Ld([]string{l.pkg.ctx.workdir}, filepath.Join(l.pkg.ctx.workdir, l.pkg.p.Name), l.afile.Pkgfile())
+	target := filepath.Join(l.pkg.ctx.workdir, l.pkg.p.Name)
+	Infof("link %v (%v)", target, l.afile.Pkgfile())
+	return l.pkg.ctx.tc.Ld(l.pkg.ctx.IncludePaths(), target, l.afile.Pkgfile())
 }
 
 // Ld returns a Target representing the result of linking a
@@ -210,4 +207,14 @@ func Ld(pkg *Package, afile PkgTarget) Target {
 	}
 	ld.target = newTarget(ld.link, afile)
 	return &ld
+}
+
+func stripext(path string) string {
+	ext := filepath.Ext(path)
+	return path[:len(ext)]
+}
+
+// objdir returns the destination for object files compiled for this Package.
+func objdir(pkg *Package) string {
+	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_obj")
 }
