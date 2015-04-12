@@ -1,6 +1,9 @@
 package gb
 
-import "go/build"
+import (
+	"go/build"
+	"path/filepath"
+)
 
 // Project represents a gb project. A gb project has a simlar layout to
 // a $GOPATH workspace. Each gb project has a standard directory layout
@@ -29,4 +32,14 @@ func NewProject(root string) *Project {
 	return &Project{
 		rootdir: root,
 	}
+}
+
+// Builddir returns the path to built packages and commands
+func (p *Project) Builddir() string {
+	return filepath.Join(p.rootdir, "build")
+}
+
+// Projectdir returns the path root of this project.
+func (p *Project) Projectdir() string {
+	return p.rootdir
 }

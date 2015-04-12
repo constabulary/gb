@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+const debugTargetCache = false
+
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
@@ -28,6 +30,7 @@ func (c *Context) Srcdir() string {
 func (c *Context) IncludePaths() []string {
 	return []string{
 		c.workdir,
+		c.Project.Builddir(),
 	}
 }
 
@@ -52,10 +55,14 @@ func (c *targetCache) addTargetIfMissing(name string, f func() Target) Target {
 	}
 	target, ok := c.m[name]
 	if ok {
-		Debugf("targetCache:addTargetIdMissing HIT %v", name)
+		if debugTargetCache {
+			Debugf("targetCache:addTargetIdMissing HIT %v", name)
+		}
 		return target
 	}
-	Debugf("targetCache:addTargetIfMissing MISS %v", name)
+	if debugTargetCache {
+		Debugf("targetCache:addTargetIfMissing MISS %v", name)
+	}
 	target = f()
 	c.m[name] = target
 	return target
@@ -66,9 +73,13 @@ func (c *targetCache) targetOrMissing(name string, f func() Target) Target {
 	target, ok := c.m[name]
 	c.Unlock()
 	if ok {
-		Debugf("targetCache:targetOrMissing HIT %v", name)
+		if debugTargetCache {
+			Debugf("targetCache:targetOrMissing HIT %v", name)
+		}
 		return target
 	}
-	Debugf("targetCache:targetOrMissing MISS %v", name)
+	if debugTargetCache {
+		Debugf("targetCache:targetOrMissing MISS %v", name)
+	}
 	return f()
 }
