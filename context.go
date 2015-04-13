@@ -2,7 +2,6 @@ package gb
 
 import (
 	"go/build"
-	"path/filepath"
 	"sync"
 )
 
@@ -19,11 +18,6 @@ type Context struct {
 	Statistics
 
 	targetCache
-}
-
-// Srcdir returns the source directory of this context's project.
-func (c *Context) Srcdir() string {
-	return filepath.Join(c.Project.rootdir, "src")
 }
 
 // IncludePaths returns the include paths visible in this context.

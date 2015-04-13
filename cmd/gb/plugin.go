@@ -6,6 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/constabulary/gb"
+	"github.com/constabulary/gb/cmd"
 )
 
 func init() {
@@ -19,21 +20,21 @@ var PluginCmd = &Command{
 		}
 
 		plugin := "gb-" + args[0]
-		args = args[1:]
+		args[0] = plugin
 
 		path, err := exec.LookPath(plugin)
 		if err != nil {
 			return fmt.Errorf("plugin: unable to locate %q: %v", plugin, err)
 		}
 
-		env := mergeEnv(os.Environ(), map[string]string{
+		env := cmd.MergeEnv(os.Environ(), map[string]string{
 			"GB_PROJECT_DIR": proj.Projectdir(),
 		})
 
 		cmd := exec.Cmd{
 			Path: path,
 			Args: args,
-			Env: env,
+			Env:  env,
 
 			Stdin:  os.Stdin,
 			Stdout: os.Stdout,
@@ -42,11 +43,4 @@ var PluginCmd = &Command{
 
 		return cmd.Run()
 	},
-}
-
-func mergeEnv(env []string, args map[string]string) []string {
-	for k, v := range args {
-		env = append(env, fmt.Sprintf("%s=%q", k, v))
-	}
-	return env
 }

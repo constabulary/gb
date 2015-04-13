@@ -36,7 +36,7 @@ func (p *Package) Result() error {
 
 func (p *Package) resolvePackage(path string) {
 	Debugf("Package::findPackage %v", path)
-	pkg, err := p.ctx.Context.Import(path, p.ctx.Srcdir(), 0)
+	pkg, err := p.ctx.Context.Import(path, p.ctx.Projectdir(), 0)
 	p.p = pkg
 	p.c <- err
 }

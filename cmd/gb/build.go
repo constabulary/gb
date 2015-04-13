@@ -60,7 +60,7 @@ var BuildCmd = &Command{
 		for _, arg := range args {
 			if arg == "." {
 				var err error
-				arg, err = filepath.Rel(ctx.Srcdir(), mustGetwd())
+				arg, err = filepath.Rel(ctx.Srcdirs()[0], mustGetwd())
 				if err != nil {
 					return err
 				}

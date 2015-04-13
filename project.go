@@ -3,6 +3,7 @@ package gb
 import (
 	"go/build"
 	"path/filepath"
+	"strings"
 )
 
 // Project represents a gb project. A gb project has a simlar layout to
@@ -20,12 +21,22 @@ type Project struct {
 
 // NewContext returns a new build context from this project.
 func (p *Project) NewContext(tc Toolchain) *Context {
+	context := build.Default
+	context.GOPATH = togopath(p.Srcdirs())
 	return &Context{
 		Project: p,
-		Context: &build.Default,
+		Context: &context,
 		tc:      tc,
 		workdir: mktmpdir(),
 	}
+}
+
+func togopath(srcdirs []string) string {
+	var s []string
+	for _, srcdir := range srcdirs {
+		s = append(s, filepath.Dir(srcdir))
+	}
+	return strings.Join(s, ":")
 }
 
 func NewProject(root string) *Project {
@@ -42,4 +53,14 @@ func (p *Project) Builddir() string {
 // Projectdir returns the path root of this project.
 func (p *Project) Projectdir() string {
 	return p.rootdir
+}
+
+// Srcdirs returns the path to the source directories.
+// The first source directory will always be
+// filepath.Join(Projectdir(), "src)
+// but there may be additional directories.
+func (p *Project) Srcdirs() []string {
+	srcdirs := []string{filepath.Join(p.Projectdir(), "src")}
+	srcdirs = append(srcdirs, filepath.Join(p.Projectdir(), "vendor", "src"))
+	return srcdirs
 }

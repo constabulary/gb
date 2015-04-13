@@ -7,8 +7,7 @@ import "path/filepath"
 // linking the final binary into pkg.Context.Bindir().
 func Build(pkg *Package) Target {
 	if err := pkg.Result(); err != nil {
-		// TODO(dfc)
-		panic(err)
+		return errTarget{err}
 	}
 	if pkg.Name() == "main" {
 		return buildCommand(pkg)
@@ -20,8 +19,7 @@ func Build(pkg *Package) Target {
 // pkg and its dependencies.
 func buildPackage(pkg *Package) Target {
 	if err := pkg.Result(); err != nil {
-		// TODO(dfc)
-		panic(err)
+		return errTarget{err}
 	}
 	return pkg.ctx.targetOrMissing("compile:"+pkg.ImportPath, func() Target {
 		var deps []Target
