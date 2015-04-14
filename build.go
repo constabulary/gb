@@ -18,18 +18,11 @@ func Build(pkg *Package) Target {
 // buildPackage returns a Target repesenting the results of compiling
 // pkg and its dependencies.
 func buildPackage(pkg *Package) Target {
-	if err := pkg.Result(); err != nil {
-		return errTarget{err}
-	}
 	return pkg.ctx.targetOrMissing("compile:"+pkg.ImportPath, func() Target {
-		var deps []Target
-		for _, dep := range pkg.p.Imports {
-			if _, ok := stdlib[dep]; ok {
-				continue
-			}
-			pkg := resolvePackage(pkg.ctx, dep)
-			deps = append(deps, buildPackage(pkg))
+		if err := pkg.Result(); err != nil {
+			return errTarget{err}
 		}
+		deps := buildDependencies(pkg.ctx, pkg.p.Imports...)
 		return Compile(pkg, deps...)
 	})
 }
@@ -37,10 +30,6 @@ func buildPackage(pkg *Package) Target {
 // buildCommand returns a Target repesenting the results of compiling
 // pkg as a command and linking the result into pkg.Context.Bindir().
 func buildCommand(pkg *Package) Target {
-	if err := pkg.Result(); err != nil {
-		// TODO(dfc)
-		panic(err)
-	}
 	var deps []Target
 	for _, dep := range pkg.p.Imports {
 		if _, ok := stdlib[dep]; ok {
@@ -215,4 +204,17 @@ func stripext(path string) string {
 // objdir returns the destination for object files compiled for this Package.
 func objdir(pkg *Package) string {
 	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_obj")
+}
+
+// buildDependencies resolves the dependencies the package paths.
+func buildDependencies(ctx *Context, imports ...string) []Target {
+	var deps []Target
+	for _, dep := range imports {
+		if _, ok := stdlib[dep]; ok {
+			continue
+		}
+		pkg := resolvePackage(ctx, dep)
+		deps = append(deps, buildPackage(pkg))
+	}
+	return deps
 }

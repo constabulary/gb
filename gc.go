@@ -20,10 +20,13 @@ func NewGcToolchain(goroot, goos, goarch string) (Toolchain, error) {
 		return nil, err
 	}
 	return &gcToolchain{
-		gc:   filepath.Join(tooldir, archchar+"g"),
-		ld:   filepath.Join(tooldir, archchar+"l"),
-		as:   filepath.Join(tooldir, archchar+"a"),
-		pack: filepath.Join(tooldir, "pack"),
+		goroot: goroot,
+		goos:   goos,
+		goarch: goarch,
+		gc:     filepath.Join(tooldir, archchar+"g"),
+		ld:     filepath.Join(tooldir, archchar+"l"),
+		as:     filepath.Join(tooldir, archchar+"a"),
+		pack:   filepath.Join(tooldir, "pack"),
 	}, nil
 }
 

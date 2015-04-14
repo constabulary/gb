@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const debugTargetCache = false
+const debugTargetCache = true
 
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {

@@ -12,6 +12,9 @@ import (
 // package pkg, and its dependencies, and linking it with the
 // test runner.
 func Test(pkg *Package) Target {
+	if err := pkg.Result(); err != nil {
+		return errTarget{err}
+	}
 	// commands are built as packages for testing.
 	return testPackage(pkg)
 }
@@ -29,11 +32,7 @@ func testPackage(pkg *Package) Target {
 	imports = append(imports, pkg.p.TestImports...)
 
 	// build dependencies
-	var deps []Target
-	for _, dep := range imports {
-		pkg := pkg.ctx.ResolvePackage(dep)
-		deps = append(deps, Build(pkg))
-	}
+	deps := buildDependencies(pkg.ctx, imports...)
 
 	testpkg := &build.Package{
 		Name:       pkg.Name(),
@@ -50,8 +49,7 @@ func testPackage(pkg *Package) Target {
 	test := newPackage(pkg.ctx, testpkg)
 	compile := Compile(test, deps...)
 	buildtest := buildTest(test, compile)
-	runtest := runTest(test, buildtest)
-	return runtest
+	return runTest(test, buildtest)
 }
 
 type buildTestTarget struct {
@@ -60,6 +58,7 @@ type buildTestTarget struct {
 }
 
 func (t *buildTestTarget) build() error {
+	Infof("buildTestMain: %v", t.pkg.Name())
 	if err := buildTestMain(t.pkg); err != nil {
 		return err
 	}
