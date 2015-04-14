@@ -97,7 +97,7 @@ func (g *gc) compile() error {
 }
 
 func (g *gc) Objfile() string {
-	return filepath.Join(objdir(g.pkg), g.pkg.p.Name+".6")
+	return filepath.Join(objdir(g.pkg), g.pkg.p.Name+".7")
 }
 
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.

@@ -2,6 +2,7 @@ package gb
 
 import (
 	"go/build"
+	"path/filepath"
 	"sync"
 )
 
@@ -24,8 +25,13 @@ type Context struct {
 func (c *Context) IncludePaths() []string {
 	return []string{
 		c.workdir,
-		c.Project.Builddir(),
+		c.Pkgdir(),
 	}
+}
+
+// Pkgdir returns the path to precompiled packages.
+func (c *Context) Pkgdir() string {
+	return filepath.Join(c.Project.Pkgdir(), c.Context.GOOS, c.Context.GOARCH)
 }
 
 // ResolvePackage resolves the package at path using the current context.

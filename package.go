@@ -23,6 +23,17 @@ func resolvePackage(ctx *Context, path string) *Package {
 	}).(*Package)
 }
 
+// newPackage creates a resolved Package.
+func newPackage(ctx *Context, p *build.Package) *Package {
+	pkg := Package{
+		c:          make(chan error, 1),
+		ctx:        ctx,
+		ImportPath: p.ImportPath,
+		p:          p,
+	}
+	return &pkg
+}
+
 // Name returns this package's name.
 func (p *Package) Name() string {
 	return p.p.Name

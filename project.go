@@ -45,9 +45,9 @@ func NewProject(root string) *Project {
 	}
 }
 
-// Builddir returns the path to built packages and commands
-func (p *Project) Builddir() string {
-	return filepath.Join(p.rootdir, "build")
+// Pkgdir returns the path to precompiled packages.
+func (p *Project) Pkgdir() string {
+	return filepath.Join(p.rootdir, "pkg")
 }
 
 // Projectdir returns the path root of this project.
