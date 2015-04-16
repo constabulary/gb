@@ -76,13 +76,14 @@ type ObjTarget interface {
 
 type gc struct {
 	target
-	pkg     *Package
-	gofiles []string
+	pkg      *Package
+	gofiles  []string
+	complete bool // are there other compilation units in this package ?
 }
 
 func (g *gc) compile() error {
 	Infof("compile %v %v", g.pkg.ImportPath, g.gofiles)
-	return g.pkg.ctx.tc.Gc(g.pkg.ctx.IncludePaths(), g.pkg.ImportPath, g.pkg.p.Dir, g.Objfile(), g.gofiles)
+	return g.pkg.ctx.tc.Gc(g.pkg.ctx.IncludePaths(), g.pkg.ImportPath, g.pkg.p.Dir, g.Objfile(), g.gofiles, g.complete)
 }
 
 func (g *gc) Objfile() string {

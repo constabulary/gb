@@ -30,7 +30,7 @@ func NewGcToolchain(goroot, goos, goarch string) (Toolchain, error) {
 	}, nil
 }
 
-func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile string, files []string) error {
+func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
 	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
 
 	args := []string{"-p", importpath}
@@ -39,6 +39,9 @@ func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile strin
 	}
 	args = append(args, "-o", outfile)
 	args = append(args, files...)
+	if complete {
+		args = append(args, "-pack", "-complete")
+	}
 	err := os.MkdirAll(filepath.Dir(outfile), 0755)
 	if err != nil {
 		return err

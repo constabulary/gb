@@ -36,7 +36,7 @@ func testContext(t *testing.T) *Context {
 
 func TestResolvePackage(t *testing.T) {
 	ctx := testContext(t)
-	pkg := ResolvePackage(ctx, "a")
+	pkg := ctx.ResolvePackage("a")
 	if err := pkg.Result(); err != nil {
 		t.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func TestResolvePackage(t *testing.T) {
 
 func TestPackageName(t *testing.T) {
 	ctx := testContext(t)
-	pkg := ResolvePackage(ctx, "aprime")
+	pkg := ctx.ResolvePackage("aprime")
 	if err := pkg.Result(); err != nil {
 		t.Fatal(err)
 	}

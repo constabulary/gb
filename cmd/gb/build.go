@@ -47,33 +47,9 @@ var BuildCmd = &Command{
 		defer func() {
 			gb.Debugf("build statistics: %v", ctx.Statistics.String())
 		}()
-		var pkgs []*gb.Package
-		/**
-		if A {
-			var err error
-			args, err = proj.SrcDirs[0].FindAll()
-			if err != nil {
-				return fmt.Errorf("could not fetch packages in srcpath %v: %v", proj.SrcDirs[0], err)
-			}
-		}
-		*/
-		for _, arg := range args {
-			if arg == "." {
-				var err error
-				arg, err = filepath.Rel(ctx.Srcdirs()[0], mustGetwd())
-				if err != nil {
-					return err
-				}
-			}
-			pkg := ctx.ResolvePackage(arg)
-			if err := pkg.Result(); err != nil {
-				if _, ok := err.(*build.NoGoError); ok {
-					gb.Debugf("skipping %q", arg)
-					continue
-				}
-				return fmt.Errorf("failed to resolve package %q: %v", arg, err)
-			}
-			pkgs = append(pkgs, pkg)
+		pkgs, err := resolvePackages(ctx, args...)
+		if err != nil {
+			return err
 		}
 		results := make(chan gb.Target, len(pkgs))
 		go func() {
@@ -90,4 +66,27 @@ var BuildCmd = &Command{
 		return ctx.Destroy()
 	},
 	AddFlags: addBuildFlags,
+}
+
+func resolvePackages(ctx *gb.Context, args ...string) ([]*gb.Package, error) {
+	var pkgs []*gb.Package
+	for _, arg := range args {
+		if arg == "." {
+			var err error
+			arg, err = filepath.Rel(ctx.Srcdirs()[0], mustGetwd())
+			if err != nil {
+				return pkgs, err
+			}
+		}
+		pkg := ctx.ResolvePackage(arg)
+		if err := pkg.Result(); err != nil {
+			if _, ok := err.(*build.NoGoError); ok {
+				gb.Debugf("skipping %q", arg)
+				continue
+			}
+			return pkgs, fmt.Errorf("failed to resolve package %q: %v", arg, err)
+		}
+		pkgs = append(pkgs, pkg)
+	}
+	return pkgs, nil
 }

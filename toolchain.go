@@ -9,7 +9,7 @@ import (
 // Toolchain represents a standardised set of command line tools
 // used to build and test Go programs.
 type Toolchain interface {
-	Gc(searchpaths []string, importpath, srcdir, outfile string, files []string) error
+	Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error
 	Asm(srcdir, ofile, sfile string) error
 	Pack(string, ...string) error
 	Ld([]string, string, string) error
