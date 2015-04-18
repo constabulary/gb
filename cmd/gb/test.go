@@ -23,6 +23,8 @@ var TestCmd = &Command{
 		}
 		//ctx := proj.NewContext(new(gb.NullToolchain))
 		ctx := proj.NewContext(tc)
+		ctx.Force = F
+		ctx.SkipCache = FF
 		defer func() {
 			gb.Debugf("build statistics: %v", ctx.Statistics.String())
 		}()

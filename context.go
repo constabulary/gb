@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const debugTargetCache = true
+const debugTargetCache = false
 
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
@@ -19,6 +19,9 @@ type Context struct {
 	Statistics
 
 	targetCache
+
+	Force     bool // force rebuild of packages
+	SkipCache bool // do not cache compiled packages
 }
 
 // IncludePaths returns the include paths visible in this context.

@@ -48,7 +48,7 @@ type errTarget struct {
 
 func (e errTarget) Result() error { return e.error }
 
-func (e errTarget) PkgFile() string {
+func (e errTarget) Pkgfile() string {
 	panic(fmt.Sprintf("PkgFile called on errTarget: %v", e.error))
 }
 

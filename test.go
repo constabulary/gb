@@ -54,8 +54,7 @@ func testPackage(pkg *Package) Target {
 	if err != nil {
 		return errTarget{err}
 	}
-	pkgmain := Compile(testmain, testobj)
-	buildmain := Ld(testmain, pkgmain.(PkgTarget))
+	buildmain := Ld(testmain, Compile(testmain, testobj))
 
 	cmd := exec.Command(filepath.Join(objdir(testmain), testmain.p.Name+".test"))
 	cmd.Dir = pkg.p.Dir // tests run in the original source directory

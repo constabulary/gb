@@ -24,15 +24,25 @@ var (
 	// should we perform a release build +release tag ?
 	// defaults to false, +debug.
 	R bool
+
+	// force rebuild of packages
+	F bool
+
+	// skip caching of packages
+	FF bool
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
+	// TODO(dfc) this should accept a *gb.Context
 	fs.BoolVar(&A, "a", false, "build all packages in this project")
 	fs.BoolVar(&R, "r", false, "perform a release build")
+	fs.BoolVar(&F, "f", false, "rebuild up to date packages")
+	fs.BoolVar(&FF, "F", false, "do not cache built packages")
 }
 
 var BuildCmd = &Command{
 	Run: func(proj *gb.Project, args []string) error {
+		// TODO(dfc) run should take a *gb.Context not a *gb.Project
 		t0 := time.Now()
 		defer func() {
 			gb.Infof("build duration: %v", time.Since(t0))
@@ -42,8 +52,9 @@ var BuildCmd = &Command{
 		if err != nil {
 			gb.Fatalf("unable to construct toolchain: %v", err)
 		}
-		//ctx := proj.NewContext(new(gb.NullToolchain))
 		ctx := proj.NewContext(tc)
+		ctx.Force = F
+		ctx.SkipCache = FF
 		defer func() {
 			gb.Debugf("build statistics: %v", ctx.Statistics.String())
 		}()

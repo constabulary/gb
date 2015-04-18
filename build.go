@@ -42,12 +42,12 @@ func buildCommand(pkg *Package) Target {
 		deps = append(deps, buildPackage(pkg))
 	}
 	compile := Compile(pkg, deps...)
-	ld := Ld(pkg, compile.(PkgTarget))
+	ld := Ld(pkg, compile)
 	return ld
 }
 
 // Compile returns a Target representing all the steps required to build a go package.
-func Compile(pkg *Package, deps ...Target) Target {
+func Compile(pkg *Package, deps ...Target) PkgTarget {
 	if err := pkg.Result(); err != nil {
 		return errTarget{err}
 	}
@@ -66,10 +66,46 @@ func Compile(pkg *Package, deps ...Target) Target {
 			objs = append(objs, Asm(pkg, sfile))
 		}
 		if pkg.Complete() {
-			return objs[0]
+			return Cache(pkg, objs[0].(PkgTarget))
 		}
-		return Pack(pkg, objs...)
-	})
+		return Cache(pkg, Pack(pkg, objs...))
+	}).(PkgTarget)
+}
+
+type cache struct {
+	target
+	PkgTarget
+	dest string
+}
+
+func (c *cache) String() string {
+	return fmt.Sprintf("cache %v", c.PkgTarget)
+}
+
+func (c *cache) cache() error {
+	Infof("cache %v", c.PkgTarget)
+	return copyfile(c.dest, c.Pkgfile())
+}
+
+func (c *cache) Result() error {
+	return c.target.Result()
+}
+
+// Cache stores a copy of the compiled file in Project.Pkgdir
+func Cache(pkg *Package, t PkgTarget) PkgTarget {
+	if pkg.ctx.SkipCache {
+		return t
+	}
+	if pkg.Scope == "test" {
+		Debugf("%v is test scoped, not caching", pkg)
+		return t
+	}
+	cc := cache{
+		PkgTarget: t,
+		dest:      filepath.Join(pkgdir(pkg), pkg.Name()+".a"),
+	}
+	cc.target = newTarget(cc.cache, t)
+	return &cc
 }
 
 // ObjTarget represents a compiled Go object (.5, .6, etc)
@@ -113,7 +149,10 @@ func (g *gc) Pkgfile() string {
 }
 
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
-func Gc(pkg *Package, gofiles []string, deps ...Target) ObjTarget {
+func Gc(pkg *Package, gofiles []string, deps ...Target) interface {
+	ObjTarget
+	Pkgfile() string // implements PkgTarget
+} {
 	gc := gc{
 		pkg:     pkg,
 		gofiles: gofiles,
@@ -238,6 +277,14 @@ func objdir(pkg *Package) string {
 	default:
 		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
+}
+
+// pkgdir returns the destination for object cached for this Package.
+func pkgdir(pkg *Package) string {
+	if pkg.Scope == "test" {
+		panic("pkgdir called with test scope")
+	}
+	return filepath.Join(pkg.ctx.Pkgdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 }
 
 func testobjdir(pkg *Package) string {
