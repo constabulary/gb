@@ -1,6 +1,7 @@
 package gb
 
 import "go/build"
+import "fmt"
 
 // Package represents a resolved package from the Project with respect to the Context.
 type Package struct {
@@ -8,6 +9,7 @@ type Package struct {
 	ctx        *Context
 	p          *build.Package
 	ImportPath string
+	Scope      string // scope: build, test, etc
 }
 
 // resolvePackage resolves the package at path using the current context.
@@ -31,12 +33,22 @@ func newPackage(ctx *Context, p *build.Package) *Package {
 		ImportPath: p.ImportPath,
 		p:          p,
 	}
+	// seed pkg.c so calling result never blocks
+	pkg.c <- nil
 	return &pkg
 }
 
 // Name returns this package's name.
 func (p *Package) Name() string {
 	return p.p.Name
+}
+
+func (p *Package) String() string {
+	return fmt.Sprintf("%v", struct {
+		Name, ImportPath, Dir string
+	}{
+		p.Name(), p.ImportPath, p.p.Dir,
+	})
 }
 
 func (p *Package) Result() error {
@@ -50,4 +62,11 @@ func (p *Package) resolvePackage(path string) {
 	pkg, err := p.ctx.Context.Import(path, p.ctx.Projectdir(), 0)
 	p.p = pkg
 	p.c <- err
+}
+
+// Complete indicates if this is a pure Go package
+// TODO(dfc) this should be pure go with respect to tags and scope
+func (p *Package) Complete() bool {
+	has := func(s []string) bool { return len(s) > 0 }
+	return !(has(p.p.SFiles) || has(p.p.CgoFiles))
 }

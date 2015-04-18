@@ -1,11 +1,11 @@
 package gb
 
 import (
+	"fmt"
 	"go/build"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 // Test returns a Target representing the result of compiling the
@@ -33,76 +33,63 @@ func testPackage(pkg *Package) Target {
 
 	// build dependencies
 	deps := buildDependencies(pkg.ctx, imports...)
-
-	testpkg := &build.Package{
-		Name:       pkg.Name(),
+	Debugf("testing %q: building deps: %v", pkg.Name(), deps)
+	testpkg := newPackage(pkg.ctx, &build.Package{
+		Name:       pkg.p.Name,
 		ImportPath: pkg.ImportPath,
-		// Srcdir:     pkg.Srcdir,
+		Dir:        pkg.p.Dir,
 
 		GoFiles:     gofiles,
 		CgoFiles:    cgofiles,
 		TestGoFiles: pkg.p.TestGoFiles, // passed directly to buildTestMain
 
 		Imports: imports,
+	})
+
+	testpkg.Scope = "test"
+
+	testobj := Compile(testpkg, deps...)
+	Debugf("building testobj: %v", testobj)
+	testmain, err := buildTestMain(testpkg)
+	if err != nil {
+		return errTarget{err}
 	}
+	pkgmain := Compile(testmain, testobj)
+	buildmain := Ld(testmain, pkgmain.(PkgTarget))
 
-	test := newPackage(pkg.ctx, testpkg)
-	compile := Compile(test, deps...)
-	buildtest := buildTest(test, compile)
-	return runTest(test, buildtest)
-}
-
-type buildTestTarget struct {
-	target
-	pkg *Package
-}
-
-func (t *buildTestTarget) build() error {
-	Infof("buildTestMain: %v", t.pkg.Name())
-	if err := buildTestMain(t.pkg); err != nil {
-		return err
-	}
-	gc := Gc(t.pkg, []string{"_testmain.go"})
-	pack := Pack(t.pkg, gc)
-	return Ld(t.pkg, pack).Result()
-}
-
-func buildTestMain(pkg *Package) error {
-	return writeTestmain(filepath.Join(objdir(pkg), "_testmain.go"), pkg.p)
-}
-
-func buildTest(pkg *Package, deps ...Target) Target {
-	t := buildTestTarget{
-		pkg: pkg,
-	}
-	t.target = newTarget(t.build, deps...)
-	return &t
-}
-
-type runTestTarget struct {
-	target
-	pkg *Package
-}
-
-func (t *runTestTarget) runTest() error {
-	Infof("test %q", t.pkg.ImportPath)
-	cmd := exec.Command(filepath.Join(objdir(t.pkg), t.pkg.Name()+".test"))
-	cmd.Dir = t.pkg.p.Dir
+	cmd := exec.Command(filepath.Join(objdir(testmain), testmain.p.Name+".test"))
+	cmd.Dir = pkg.p.Dir // tests run in the original source directory
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	Debugf("cd %s; %s", cmd.Dir, strings.Join(cmd.Args, " "))
-	return cmd.Run()
+
+	Debugf("scheduling run of %v", cmd.Args)
+	return Run(cmd, buildmain)
 }
 
-func runTest(pkg *Package, deps ...Target) Target {
-	t := runTestTarget{
-		pkg: pkg,
+func buildTestMain(pkg *Package) (*Package, error) {
+	if err := pkg.Result(); err != nil {
+		return nil, err
 	}
-	t.target = newTarget(t.runTest, deps...)
-	return &t
-}
+	if pkg.Scope != "test" {
+		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name())
+	}
+	dir := objdir(pkg)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return nil, err
+	}
+	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), pkg.p); err != nil {
+		return nil, err
+	}
+	testmain := newPackage(pkg.ctx, &build.Package{
+		Name:       "main",
+		ImportPath: pkg.p.ImportPath,
+		Dir:        dir,
 
-// testobjdir returns the destination for test object files compiled for this Package.
-func testobjdir(pkg *Package) string {
-	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.p.ImportPath), "_test")
+		GoFiles: []string{"_testmain.go"},
+
+		Imports: pkg.p.Imports,
+	})
+	testmain.Scope = "test"
+	testmain.ImportPath = "testmain"
+	return testmain, nil
 }

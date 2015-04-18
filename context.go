@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-const debugTargetCache = false
+const debugTargetCache = true
 
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
@@ -56,7 +56,7 @@ func (c *targetCache) addTargetIfMissing(name string, f func() Target) Target {
 	target, ok := c.m[name]
 	if ok {
 		if debugTargetCache {
-			Debugf("targetCache:addTargetIdMissing HIT %v", name)
+			Debugf("targetCache:addTargetIfMissing HIT %v", name)
 		}
 		return target
 	}

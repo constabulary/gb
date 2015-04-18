@@ -30,17 +30,8 @@ var TestCmd = &Command{
 		if err != nil {
 			return err
 		}
-		results := make(chan gb.Target, len(pkgs))
-		go func() {
-			defer close(results)
-			for _, pkg := range pkgs {
-				results <- gb.Test(pkg)
-			}
-		}()
-		for result := range results {
-			if err := result.Result(); err != nil {
-				return err
-			}
+		if err := execute(gb.Test, pkgs...); err != nil {
+			return err
 		}
 		return ctx.Destroy()
 	},

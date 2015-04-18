@@ -37,11 +37,11 @@ func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile strin
 	for _, d := range searchpaths {
 		args = append(args, "-I", d)
 	}
-	args = append(args, "-o", outfile)
-	args = append(args, files...)
 	if complete {
 		args = append(args, "-pack", "-complete")
 	}
+	args = append(args, "-o", outfile)
+	args = append(args, files...)
 	err := os.MkdirAll(filepath.Dir(outfile), 0755)
 	if err != nil {
 		return err

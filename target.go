@@ -1,5 +1,7 @@
 package gb
 
+import "fmt"
+
 // A Target is a placeholder for work which is completed asyncronusly.
 type Target interface {
 	// Result returns the result of the work as an error, or nil if the work
@@ -45,6 +47,10 @@ type errTarget struct {
 }
 
 func (e errTarget) Result() error { return e.error }
+
+func (e errTarget) PkgFile() string {
+	panic(fmt.Sprintf("PkgFile called on errTarget: %v", e.error))
+}
 
 // nilTarget always returns nil immediately.
 type nilTarget struct{}

@@ -1,6 +1,9 @@
 package gb
 
-import "path/filepath"
+import (
+	"fmt"
+	"path/filepath"
+)
 
 // Build returns a Target representing the result of compiling the Package pkg
 // and its dependencies. If pkg is a command, then the results of build include
@@ -18,7 +21,7 @@ func Build(pkg *Package) Target {
 // buildPackage returns a Target repesenting the results of compiling
 // pkg and its dependencies.
 func buildPackage(pkg *Package) Target {
-	return pkg.ctx.targetOrMissing("compile:"+pkg.ImportPath, func() Target {
+	return pkg.ctx.targetOrMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
 		if err := pkg.Result(); err != nil {
 			return errTarget{err}
 		}
@@ -48,7 +51,7 @@ func Compile(pkg *Package, deps ...Target) Target {
 	if err := pkg.Result(); err != nil {
 		return errTarget{err}
 	}
-	return pkg.ctx.addTargetIfMissing("compile:"+pkg.ImportPath, func() Target {
+	return pkg.ctx.addTargetIfMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
 		var gofiles []string
 		gofiles = append(gofiles, pkg.p.GoFiles...)
 		var objs []ObjTarget
@@ -61,6 +64,9 @@ func Compile(pkg *Package, deps ...Target) Target {
 		objs = append(objs, Gc(pkg, gofiles, deps...))
 		for _, sfile := range pkg.p.SFiles {
 			objs = append(objs, Asm(pkg, sfile))
+		}
+		if pkg.Complete() {
+			return objs[0]
 		}
 		return Pack(pkg, objs...)
 	})
@@ -76,18 +82,34 @@ type ObjTarget interface {
 
 type gc struct {
 	target
-	pkg      *Package
-	gofiles  []string
-	complete bool // are there other compilation units in this package ?
+	pkg     *Package
+	gofiles []string
+}
+
+func (g *gc) String() string {
+	return fmt.Sprintf("compile %v", g.pkg)
 }
 
 func (g *gc) compile() error {
 	Infof("compile %v %v", g.pkg.ImportPath, g.gofiles)
-	return g.pkg.ctx.tc.Gc(g.pkg.ctx.IncludePaths(), g.pkg.ImportPath, g.pkg.p.Dir, g.Objfile(), g.gofiles, g.complete)
+	includes := g.pkg.ctx.IncludePaths()
+	importpath := g.pkg.ImportPath
+	if g.pkg.Scope == "test" {
+		// TODO(dfc) gross
+		includes = append(includes, testobjdir(g.pkg))
+		if g.pkg.Name() == "main" {
+			importpath = "testmain"
+		}
+	}
+	return g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.p.Dir, g.Objfile(), g.gofiles, g.pkg.Complete())
 }
 
 func (g *gc) Objfile() string {
-	return filepath.Join(objdir(g.pkg), g.pkg.p.Name+".7")
+	return filepath.Join(objdir(g.pkg), g.pkg.Name()+".a")
+}
+
+func (g *gc) Pkgfile() string {
+	return g.Objfile()
 }
 
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
@@ -134,7 +156,7 @@ func (p *pack) pack(objs ...ObjTarget) {
 }
 
 func (p *pack) Pkgfile() string {
-	return filepath.Join(p.pkg.ctx.workdir, p.pkg.ImportPath+".a")
+	return filepath.Join(objdir(p.pkg), p.pkg.Name()+".a")
 }
 
 // Pack returns a Target representing the result of packing a
@@ -181,9 +203,15 @@ type ld struct {
 }
 
 func (l *ld) link() error {
-	target := filepath.Join(l.pkg.ctx.workdir, l.pkg.p.Name)
+	target := filepath.Join(objdir(l.pkg), l.pkg.p.Name)
 	Infof("link %v (%v)", target, l.afile.Pkgfile())
-	return l.pkg.ctx.tc.Ld(l.pkg.ctx.IncludePaths(), target, l.afile.Pkgfile())
+	includes := l.pkg.ctx.IncludePaths()
+	if l.pkg.Scope == "test" {
+		// TODO(dfc) gross
+		includes = append(includes, testobjdir(l.pkg))
+		target += ".test"
+	}
+	return l.pkg.ctx.tc.Ld(includes, target, l.afile.Pkgfile())
 }
 
 // Ld returns a Target representing the result of linking a
@@ -204,7 +232,16 @@ func stripext(path string) string {
 
 // objdir returns the destination for object files compiled for this Package.
 func objdir(pkg *Package) string {
-	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_obj")
+	switch pkg.Scope {
+	case "test":
+		return filepath.Join(testobjdir(pkg), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	default:
+		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	}
+}
+
+func testobjdir(pkg *Package) string {
+	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.p.ImportPath), "_test")
 }
 
 // buildDependencies resolves the dependencies the package paths.

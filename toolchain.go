@@ -20,6 +20,13 @@ type Toolchain interface {
 	//	Libgcc() (string, error)
 }
 
+// Run returns a Target representing the result of executing a CmdTarget.
+func Run(cmd *exec.Cmd, dep Target) Target {
+	Debugf("run: %v, depends on  %v", cmd.Args, dep)
+	target := newTarget(cmd.Run, dep)
+	return &target // TODO
+}
+
 func run(dir, command string, args ...string) error {
 	_, err := runOut(dir, command, args...)
 	return err
