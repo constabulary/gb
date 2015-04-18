@@ -21,7 +21,7 @@ type Context struct {
 	targetCache
 
 	Force     bool // force rebuild of packages
-	SkipCache bool // do not cache compiled packages
+	SkipInstall bool // do not cache compiled packages
 }
 
 // IncludePaths returns the include paths visible in this context.

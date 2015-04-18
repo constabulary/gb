@@ -54,7 +54,7 @@ var BuildCmd = &Command{
 		}
 		ctx := proj.NewContext(tc)
 		ctx.Force = F
-		ctx.SkipCache = FF
+		ctx.SkipInstall = FF
 		defer func() {
 			gb.Debugf("build statistics: %v", ctx.Statistics.String())
 		}()
