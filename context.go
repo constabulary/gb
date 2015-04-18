@@ -20,7 +20,7 @@ type Context struct {
 
 	targetCache
 
-	Force     bool // force rebuild of packages
+	Force       bool // force rebuild of packages
 	SkipInstall bool // do not cache compiled packages
 }
 
