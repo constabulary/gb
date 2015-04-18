@@ -52,6 +52,9 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 		return errTarget{err}
 	}
 	return pkg.ctx.addTargetIfMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
+		if !isStale(pkg) {
+			return cachedPackage(pkg)
+		}
 		var gofiles []string
 		gofiles = append(gofiles, pkg.p.GoFiles...)
 		var objs []ObjTarget
@@ -70,6 +73,31 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 		}
 		return Cache(pkg, Pack(pkg, objs...))
 	}).(PkgTarget)
+}
+
+// cachePackage returns a PkgTarget representing the cached output of
+// pkg.
+func cachedPackage(pkg *Package) *cachedPkgTarget {
+	return &cachedPkgTarget{
+		pkg: pkg,
+	}
+}
+
+type cachedPkgTarget struct {
+	pkg *Package
+}
+
+func (c *cachedPkgTarget) Pkgfile() string {
+	return filepath.Join(pkgdir(c.pkg), c.pkg.Name()+".a")
+}
+
+func (c *cachedPkgTarget) String() string {
+	return fmt.Sprintf("cached %v", c.pkg)
+}
+
+func (c *cachedPkgTarget) Result() error {
+	// TODO(dfc) _, err := os.Stat(c.Pkgfile())
+	return nil
 }
 
 type cache struct {
@@ -302,4 +330,13 @@ func buildDependencies(ctx *Context, imports ...string) []Target {
 		deps = append(deps, buildPackage(pkg))
 	}
 	return deps
+}
+
+// isStale returns true if the source pkg is considered to be stale with
+// respect to its cached copy.
+func isStale(pkg *Package) bool {
+	if pkg.ctx.Force {
+		return true
+	}
+	return false
 }

@@ -82,5 +82,9 @@ func (t *gcToolchain) Ld(searchpaths []string, outfile, afile string) error {
 		args = append(args, "-L", d)
 	}
 	args = append(args, afile)
+	err := os.MkdirAll(filepath.Dir(outfile), 0755)
+	if err != nil {
+		return err
+	}
 	return run(".", t.ld, args...)
 }
