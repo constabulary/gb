@@ -43,6 +43,11 @@ func (p *Package) Name() string {
 	return p.p.Name
 }
 
+// isMain returns true if this is a command, a main package.
+func (p *Package) isMain() bool {
+	return p.p.Name == "main"
+}
+
 func (p *Package) String() string {
 	return fmt.Sprintf("%v", struct {
 		Name, ImportPath, Dir string

@@ -33,12 +33,12 @@ func NewGcToolchain(goroot, goos, goarch string) (Toolchain, error) {
 func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
 	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
 
-	args := []string{"-p", importpath}
+	args := []string{"-p", importpath, "-pack"}
 	for _, d := range searchpaths {
 		args = append(args, "-I", d)
 	}
 	if complete {
-		args = append(args, "-pack", "-complete")
+		args = append(args, "-complete")
 	}
 	args = append(args, "-o", outfile)
 	args = append(args, files...)
@@ -56,14 +56,10 @@ func (t *gcToolchain) Cc(srcdir, objdir, outfile, cfile string) error {
 	return run(srcdir, t.cc, args...)
 }
 
-func (t *gcToolchain) Pack(afile string, ofiles ...string) error {
-	args := []string{"grc", afile}
-	args = append(args, ofiles...)
-	dir := filepath.Dir(afile)
-	err := os.MkdirAll(dir, 0755)
-	if err != nil {
-		return err
-	}
+func (t *gcToolchain) Pack(afiles ...string) error {
+	args := []string{"r"}
+	args = append(args, afiles...)
+	dir := filepath.Dir(afiles[0])
 	return run(dir, t.pack, args...)
 }
 

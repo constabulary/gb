@@ -9,13 +9,13 @@ import (
 // and its dependencies. If pkg is a command, then the results of build include
 // linking the final binary into pkg.Context.Bindir().
 func Build(pkg *Package) Target {
-	if err := pkg.Result(); err != nil {
-		return errTarget{err}
+	t := buildPackage(pkg)
+	if err := t.Result(); err == nil {
+		if pkg.isMain() {
+			t = Ld(pkg, t.(PkgTarget))
+		}
 	}
-	if pkg.Name() == "main" {
-		return buildCommand(pkg)
-	}
-	return buildPackage(pkg)
+	return t
 }
 
 // buildPackage returns a Target repesenting the results of compiling
@@ -149,16 +149,17 @@ func (p *pack) Result() error {
 
 func (p *pack) pack(objs ...ObjTarget) {
 	Debugf("pack %v", p.pkg.ImportPath)
-	ofiles := make([]string, 0, len(objs))
+	afiles := make([]string, 0, len(objs))
 	for _, obj := range objs {
 		err := obj.Result()
 		if err != nil {
 			p.c <- err
 			return
 		}
-		ofiles = append(ofiles, obj.Objfile())
+		// pkg.a (compiled Go code) is always first
+		afiles = append(afiles, obj.Objfile())
 	}
-	p.c <- p.pkg.ctx.tc.Pack(p.Pkgfile(), ofiles...)
+	p.c <- p.pkg.ctx.tc.Pack(afiles...)
 }
 
 func (p *pack) Pkgfile() string {

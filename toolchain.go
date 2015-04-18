@@ -11,7 +11,7 @@ import (
 type Toolchain interface {
 	Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error
 	Asm(srcdir, ofile, sfile string) error
-	Pack(string, ...string) error
+	Pack(...string) error
 	Ld([]string, string, string) error
 	Cc(srcdir, objdir, ofile, cfile string) error
 
@@ -55,8 +55,8 @@ func (NullToolchain) Asm(srcdir, ofile, sfile string) error {
 	Debugf("null:asm %v %v %v", srcdir, ofile, sfile)
 	return nil
 }
-func (NullToolchain) Pack(afile string, ofiles ...string) error {
-	Debugf("null:pack %v %v", afile, ofiles)
+func (NullToolchain) Pack(afiles ...string) error {
+	Debugf("null:pack %v %v", afiles)
 	return nil
 }
 func (NullToolchain) Ld(aout string, afile string) error {
