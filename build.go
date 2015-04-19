@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 // Build returns a Target representing the result of compiling the Package pkg
@@ -95,6 +96,7 @@ func (g *gc) String() string {
 }
 
 func (g *gc) compile() error {
+	t0 := time.Now()
 	Infof("compile %v %v", g.pkg.p.ImportPath, g.gofiles)
 	includes := g.pkg.ctx.IncludePaths()
 	importpath := g.pkg.p.ImportPath
@@ -102,7 +104,9 @@ func (g *gc) compile() error {
 		// TODO(dfc) gross
 		includes = append(includes, g.pkg.ExtraIncludes)
 	}
-	return g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.p.Dir, g.Objfile(), g.gofiles, g.pkg.Complete())
+	err := g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.p.Dir, g.Objfile(), g.gofiles, g.pkg.Complete())
+	g.pkg.ctx.Record("compile", time.Since(t0))
+	return err
 }
 
 func (g *gc) Objfile() string {
@@ -150,7 +154,7 @@ func (p *pack) Result() error {
 }
 
 func (p *pack) pack(objs ...ObjTarget) {
-	Debugf("pack %v", p.pkg)
+	Infof("pack [%v]", objs)
 	afiles := make([]string, 0, len(objs))
 	for _, obj := range objs {
 		err := obj.Result()
@@ -161,7 +165,10 @@ func (p *pack) pack(objs ...ObjTarget) {
 		// pkg.a (compiled Go code) is always first
 		afiles = append(afiles, obj.Objfile())
 	}
-	p.c <- p.pkg.ctx.tc.Pack(afiles...)
+	t0 := time.Now()
+	err := p.pkg.ctx.tc.Pack(afiles...)
+	p.pkg.ctx.Record("pack", time.Since(t0))
+	p.c <- err
 }
 
 func (p *pack) Pkgfile() string {
@@ -190,8 +197,11 @@ func (a *asm) Objfile() string {
 }
 
 func (a *asm) asm() error {
+	t0 := time.Now()
 	Infof("asm %v", a.sfile)
-	return a.pkg.ctx.tc.Asm(a.pkg.p.Dir, a.Objfile(), filepath.Join(a.pkg.p.Dir, a.sfile))
+	err := a.pkg.ctx.tc.Asm(a.pkg.p.Dir, a.Objfile(), filepath.Join(a.pkg.p.Dir, a.sfile))
+	a.pkg.ctx.Record("asm", time.Since(t0))
+	return err
 }
 
 // Asm returns a Target representing the result of assembling
@@ -212,6 +222,7 @@ type ld struct {
 }
 
 func (l *ld) link() error {
+	t0 := time.Now()
 	target := filepath.Join(objdir(l.pkg), l.pkg.p.Name)
 	Infof("link %v [%v]", target, l.afile.Pkgfile())
 	includes := l.pkg.ctx.IncludePaths()
@@ -220,7 +231,9 @@ func (l *ld) link() error {
 		includes = append(includes, l.pkg.ExtraIncludes)
 		target += ".test"
 	}
-	return l.pkg.ctx.tc.Ld(includes, target, l.afile.Pkgfile())
+	err := l.pkg.ctx.tc.Ld(includes, target, l.afile.Pkgfile())
+	l.pkg.ctx.Record("link", time.Since(t0))
+	return err
 }
 
 // Ld returns a Target representing the result of linking a

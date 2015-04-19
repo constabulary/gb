@@ -1,9 +1,11 @@
 package gb
 
 import (
+	"fmt"
 	"go/build"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 const debugTargetCache = false
@@ -85,4 +87,35 @@ func (c *targetCache) targetOrMissing(name string, f func() Target) Target {
 		Debugf("targetCache:targetOrMissing MISS %v", name)
 	}
 	return f()
+}
+
+// Statistics records the various Durations
+type Statistics struct {
+	sync.Mutex
+	stats map[string]time.Duration
+}
+
+func (s *Statistics) Record(name string, d time.Duration) {
+	s.Lock()
+	defer s.Unlock()
+	if s.stats == nil {
+		s.stats = make(map[string]time.Duration)
+	}
+	s.stats[name] += d
+}
+
+func (s *Statistics) Total() time.Duration {
+	s.Lock()
+	defer s.Unlock()
+	var d time.Duration
+	for _, v := range s.stats {
+		d += v
+	}
+	return d
+}
+
+func (s *Statistics) String() string {
+	s.Lock()
+	defer s.Unlock()
+	return fmt.Sprintf("%v", s.stats)
 }

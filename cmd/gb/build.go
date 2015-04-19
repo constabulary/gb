@@ -44,10 +44,6 @@ var BuildCmd = &Command{
 	Run: func(proj *gb.Project, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
 		t0 := time.Now()
-		defer func() {
-			gb.Infof("build duration: %v", time.Since(t0))
-		}()
-
 		tc, err := gb.NewGcToolchain(*goroot, *goos, *goarch)
 		if err != nil {
 			gb.Fatalf("unable to construct toolchain: %v", err)
@@ -56,8 +52,9 @@ var BuildCmd = &Command{
 		ctx.Force = F
 		ctx.SkipInstall = FF
 		defer func() {
-			gb.Debugf("build statistics: %v", ctx.Statistics.String())
+			gb.Infof("build duration: %v %v", time.Since(t0), ctx.Statistics.String())
 		}()
+
 		pkgs, err := resolvePackages(ctx, args...)
 		if err != nil {
 			return err
