@@ -2,6 +2,7 @@ package gb
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 )
 
@@ -105,7 +106,11 @@ func (g *gc) compile() error {
 }
 
 func (g *gc) Objfile() string {
-	return filepath.Join(objdir(g.pkg), g.pkg.Name()+".a")
+	return objfile(g.pkg)
+}
+
+func objfile(pkg *Package) string {
+	return filepath.Join(objdir(pkg), path.Base(pkg.p.ImportPath)+".a")
 }
 
 func (g *gc) Pkgfile() string {
@@ -160,7 +165,7 @@ func (p *pack) pack(objs ...ObjTarget) {
 }
 
 func (p *pack) Pkgfile() string {
-	return filepath.Join(objdir(p.pkg), p.pkg.Name()+".a")
+	return objfile(p.pkg)
 }
 
 // Pack returns a Target representing the result of packing a
