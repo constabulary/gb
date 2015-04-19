@@ -7,6 +7,7 @@ package gb
 // imported from $GOROOT/src/cmd/go/test.go
 
 import (
+	"fmt"
 	"go/ast"
 	"go/build"
 	"go/doc"
@@ -81,7 +82,7 @@ var testFileSet = token.NewFileSet()
 func (t *testFuncs) load(filename, pkg string, seen *bool) error {
 	f, err := parser.ParseFile(testFileSet, filename, nil, parser.ParseComments)
 	if err != nil {
-		return err
+		return fmt.Errorf("load failed: %v", err)
 	}
 	for _, d := range f.Decls {
 		n, ok := d.(*ast.FuncDecl)

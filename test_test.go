@@ -4,16 +4,26 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestTestPackage(t *testing.T) {
+	Verbose = true
+	defer func() { Verbose = false }()
 	tests := []struct {
 		pkg string
 		err error
-	}{{
-		pkg: "a",
-		err: nil,
-	}}
+	}{
+		{
+			pkg: "a",
+			err: nil,
+		}, {
+			pkg: "b",
+			err: nil,
+		}, {
+			pkg: "c",
+			err: nil,
+		}}
 
 	root, err := filepath.Abs("testdata")
 	if err != nil {
@@ -32,6 +42,7 @@ func TestTestPackage(t *testing.T) {
 		err := Test(pkg).Result()
 		if err != tt.err {
 			t.Errorf("Test(tt.pkg): want %v, got %v", tt.err, err)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 }

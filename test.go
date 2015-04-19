@@ -39,6 +39,7 @@ func testPackage(pkg *Package) Target {
 		Name:       pkg.p.Name,
 		ImportPath: pkg.p.ImportPath,
 		Dir:        pkg.p.Dir,
+		SrcRoot:    pkg.p.SrcRoot,
 
 		GoFiles:     gofiles,
 		CgoFiles:    cgofiles,
@@ -84,6 +85,7 @@ func buildTestMain(pkg *Package) (*Package, error) {
 		Name:       pkg.p.Name,
 		ImportPath: "testmain",
 		Dir:        dir,
+		SrcRoot:    pkg.p.SrcRoot,
 
 		GoFiles: []string{"_testmain.go"},
 

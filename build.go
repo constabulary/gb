@@ -100,9 +100,9 @@ func (g *gc) compile() error {
 	Infof("compile %v %v", g.pkg.p.ImportPath, g.gofiles)
 	includes := g.pkg.ctx.IncludePaths()
 	importpath := g.pkg.p.ImportPath
-	if g.pkg.Scope == "test" {
+	if g.pkg.Scope == "test" && g.pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
-		includes = append(includes, g.pkg.ExtraIncludes)
+		includes = append([]string{g.pkg.ExtraIncludes}, includes...)
 	}
 	err := g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.p.Dir, g.Objfile(), g.gofiles, g.pkg.Complete())
 	g.pkg.ctx.Record("compile", time.Since(t0))
@@ -226,9 +226,9 @@ func (l *ld) link() error {
 	target := filepath.Join(objdir(l.pkg), l.pkg.p.Name)
 	Infof("link %v [%v]", target, l.afile.Pkgfile())
 	includes := l.pkg.ctx.IncludePaths()
-	if l.pkg.Scope == "test" {
+	if l.pkg.Scope == "test" && l.pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
-		includes = append(includes, l.pkg.ExtraIncludes)
+		includes = append([]string{l.pkg.ExtraIncludes}, includes...)
 		target += ".test"
 	}
 	err := l.pkg.ctx.tc.Ld(includes, target, l.afile.Pkgfile())
