@@ -3,6 +3,7 @@ package gb
 // gc toolchain
 
 import (
+	"fmt"
 	"go/build"
 	"os"
 	"path/filepath"
@@ -31,20 +32,25 @@ func NewGcToolchain(goroot, goos, goarch string) (Toolchain, error) {
 }
 
 func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
-	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
+	Debugf("gc:gc %v", struct {
+		ImportPath string
+		Srcdir     string
+		Outfile    string
+		Gofiles    []string
+	}{importpath, srcdir, outfile, files})
 
 	args := []string{"-p", importpath, "-pack"}
+	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-I", d)
 	}
 	if complete {
 		args = append(args, "-complete")
 	}
-	args = append(args, "-o", outfile)
 	args = append(args, files...)
 	err := os.MkdirAll(filepath.Dir(outfile), 0755)
 	if err != nil {
-		return err
+		return fmt.Errorf("gc:gc: %v", err)
 	}
 	return run(srcdir, t.gc, args...)
 }
@@ -67,7 +73,7 @@ func (t *gcToolchain) Asm(srcdir, ofile, sfile string) error {
 	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, sfile}
 	err := os.MkdirAll(filepath.Dir(ofile), 0755)
 	if err != nil {
-		return err
+		return fmt.Errorf("gc:asm: %v", err)
 	}
 	return run(srcdir, t.as, args...)
 }
@@ -80,7 +86,7 @@ func (t *gcToolchain) Ld(searchpaths []string, outfile, afile string) error {
 	args = append(args, afile)
 	err := os.MkdirAll(filepath.Dir(outfile), 0755)
 	if err != nil {
-		return err
+		return fmt.Errorf("gc:ld: %v", err)
 	}
 	return run(".", t.ld, args...)
 }

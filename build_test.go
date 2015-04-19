@@ -16,6 +16,9 @@ func TestBuild(t *testing.T) {
 	}, {
 		pkg: "b", // actually command
 		err: nil,
+	}, {
+		pkg: "c",
+		err: nil,
 	}}
 
 	root, err := filepath.Abs("testdata")
@@ -31,6 +34,8 @@ func TestBuild(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := proj.NewContext(tc)
+		ctx.Force = true
+		ctx.SkipInstall = true
 		pkg := ctx.ResolvePackage(tt.pkg)
 		err := Build(pkg).Result()
 		if err != tt.err {

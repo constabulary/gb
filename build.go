@@ -21,10 +21,10 @@ func Build(pkg *Package) Target {
 // buildPackage returns a Target repesenting the results of compiling
 // pkg and its dependencies.
 func buildPackage(pkg *Package) Target {
-	return pkg.ctx.targetOrMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
-		if err := pkg.Result(); err != nil {
-			return errTarget{err}
-		}
+	if err := pkg.Result(); err != nil {
+		return errTarget{fmt.Errorf("buildPackage: %v", err)}
+	}
+	return pkg.ctx.targetOrMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.p.ImportPath), func() Target {
 		deps := buildDependencies(pkg.ctx, pkg.p.Imports...)
 		return Compile(pkg, deps...)
 	})
@@ -49,9 +49,9 @@ func buildCommand(pkg *Package) Target {
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
 	if err := pkg.Result(); err != nil {
-		return errTarget{err}
+		return errTarget{fmt.Errorf("compile: %v", err)}
 	}
-	return pkg.ctx.addTargetIfMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
+	return pkg.ctx.addTargetIfMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.p.ImportPath), func() Target {
 		if !isStale(pkg) {
 			return cachedPackage(pkg)
 		}
@@ -94,15 +94,12 @@ func (g *gc) String() string {
 }
 
 func (g *gc) compile() error {
-	Infof("compile %v %v", g.pkg.ImportPath, g.gofiles)
+	Infof("compile %v %v", g.pkg.p.ImportPath, g.gofiles)
 	includes := g.pkg.ctx.IncludePaths()
-	importpath := g.pkg.ImportPath
+	importpath := g.pkg.p.ImportPath
 	if g.pkg.Scope == "test" {
 		// TODO(dfc) gross
-		includes = append(includes, testobjdir(g.pkg))
-		if g.pkg.Name() == "main" {
-			importpath = "testmain"
-		}
+		includes = append(includes, g.pkg.ExtraIncludes)
 	}
 	return g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.p.Dir, g.Objfile(), g.gofiles, g.pkg.Complete())
 }
@@ -148,7 +145,7 @@ func (p *pack) Result() error {
 }
 
 func (p *pack) pack(objs ...ObjTarget) {
-	Debugf("pack %v", p.pkg.ImportPath)
+	Debugf("pack %v", p.pkg)
 	afiles := make([]string, 0, len(objs))
 	for _, obj := range objs {
 		err := obj.Result()
@@ -184,7 +181,7 @@ type asm struct {
 }
 
 func (a *asm) Objfile() string {
-	return filepath.Join(a.pkg.ctx.workdir, a.pkg.ImportPath, stripext(a.sfile)+".6")
+	return filepath.Join(a.pkg.ctx.workdir, a.pkg.p.ImportPath, stripext(a.sfile)+".6")
 }
 
 func (a *asm) asm() error {
@@ -211,11 +208,11 @@ type ld struct {
 
 func (l *ld) link() error {
 	target := filepath.Join(objdir(l.pkg), l.pkg.p.Name)
-	Infof("link %v (%v)", target, l.afile.Pkgfile())
+	Infof("link %v [%v]", target, l.afile.Pkgfile())
 	includes := l.pkg.ctx.IncludePaths()
 	if l.pkg.Scope == "test" {
 		// TODO(dfc) gross
-		includes = append(includes, testobjdir(l.pkg))
+		includes = append(includes, l.pkg.ExtraIncludes)
 		target += ".test"
 	}
 	return l.pkg.ctx.tc.Ld(includes, target, l.afile.Pkgfile())
@@ -241,9 +238,9 @@ func stripext(path string) string {
 func objdir(pkg *Package) string {
 	switch pkg.Scope {
 	case "test":
-		return filepath.Join(testobjdir(pkg), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		return filepath.Join(testobjdir(pkg), filepath.Dir(filepath.FromSlash(pkg.p.ImportPath)))
 	default:
-		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.p.ImportPath)))
 	}
 }
 

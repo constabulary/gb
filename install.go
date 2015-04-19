@@ -77,7 +77,7 @@ func pkgdir(pkg *Package) string {
 	if pkg.Scope == "test" {
 		panic("pkgdir called with test scope")
 	}
-	return filepath.Join(pkg.ctx.Pkgdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	return filepath.Join(pkg.ctx.Pkgdir(), filepath.Dir(filepath.FromSlash(pkg.p.ImportPath)))
 }
 
 func pkgfile(pkg *Package) string {
@@ -85,9 +85,14 @@ func pkgfile(pkg *Package) string {
 }
 
 // isStale returns true if the source pkg is considered to be stale with
-// respect to its cached copy.
+// respect to its installed version.
 func isStale(pkg *Package) bool {
 	if pkg.ctx.Force {
+		return true
+	}
+
+	if pkg.Scope == "test" {
+		// tests are always stale, they are never installed
 		return true
 	}
 
@@ -100,5 +105,5 @@ func isStale(pkg *Package) bool {
 		return true
 	}
 
-	return false
+	return true
 }

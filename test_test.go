@@ -31,7 +31,7 @@ func TestTestPackage(t *testing.T) {
 		pkg := ctx.ResolvePackage(tt.pkg)
 		err := Test(pkg).Result()
 		if err != tt.err {
-			t.Errorf("ctx.Build(tt.pkg): want %v, got %v", tt.err, err)
+			t.Errorf("Test(tt.pkg): want %v, got %v", tt.err, err)
 		}
 	}
 }

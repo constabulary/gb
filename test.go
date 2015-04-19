@@ -12,6 +12,7 @@ import (
 // package pkg, and its dependencies, and linking it with the
 // test runner.
 func Test(pkg *Package) Target {
+	// wait for the package to be resolved
 	if err := pkg.Result(); err != nil {
 		return errTarget{err}
 	}
@@ -36,7 +37,7 @@ func testPackage(pkg *Package) Target {
 	Debugf("testing %q: building deps: %v", pkg.Name(), deps)
 	testpkg := newPackage(pkg.ctx, &build.Package{
 		Name:       pkg.p.Name,
-		ImportPath: pkg.ImportPath,
+		ImportPath: pkg.p.ImportPath,
 		Dir:        pkg.p.Dir,
 
 		GoFiles:     gofiles,
@@ -67,21 +68,21 @@ func testPackage(pkg *Package) Target {
 
 func buildTestMain(pkg *Package) (*Package, error) {
 	if err := pkg.Result(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("buildTestmain: %v", err)
 	}
 	if pkg.Scope != "test" {
 		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name())
 	}
 	dir := objdir(pkg)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("buildTestmain: %v", err)
 	}
 	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), pkg.p); err != nil {
 		return nil, err
 	}
 	testmain := newPackage(pkg.ctx, &build.Package{
-		Name:       "main",
-		ImportPath: pkg.p.ImportPath,
+		Name:       pkg.p.Name,
+		ImportPath: "testmain",
 		Dir:        dir,
 
 		GoFiles: []string{"_testmain.go"},
@@ -89,6 +90,6 @@ func buildTestMain(pkg *Package) (*Package, error) {
 		Imports: pkg.p.Imports,
 	})
 	testmain.Scope = "test"
-	testmain.ImportPath = "testmain"
+	testmain.ExtraIncludes = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.p.ImportPath), "_test")
 	return testmain, nil
 }

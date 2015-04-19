@@ -2,6 +2,7 @@
 package gb
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -18,6 +19,12 @@ var (
 )
 
 var Fatalf = log.Fatalf
+
+func fatalf(format string, args ...interface{}) {
+	Logger.Printf("FATAL "+format, args...)
+	fmt.Scanln()
+	os.Exit(1)
+}
 
 func Errorf(format string, args ...interface{}) {
 	Logger.Printf("ERROR "+format, args...)
