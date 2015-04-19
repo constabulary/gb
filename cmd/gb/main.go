@@ -61,9 +61,13 @@ func main() {
 	name := args[1]
 	cmd, ok := commands[name]
 	if !ok {
-		gb.Errorf("unknown command %q", args[1])
-		fs.PrintDefaults()
-		os.Exit(1)
+		if _, err := lookupPlugin(name); err != nil {
+			gb.Errorf("unknown command %q", name)
+			fs.PrintDefaults()
+			os.Exit(1)
+		}
+		cmd = commands["plugin"]
+		args = append([]string{"plugin"}, args...)
 	}
 
 	// add extra flags if necessary

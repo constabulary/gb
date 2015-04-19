@@ -19,13 +19,11 @@ var PluginCmd = &Command{
 			return fmt.Errorf("plugin: no command supplied")
 		}
 
-		plugin := "gb-" + args[0]
-		args[0] = plugin
-
-		path, err := exec.LookPath(plugin)
+		path, err := lookupPlugin(args[0])
 		if err != nil {
-			return fmt.Errorf("plugin: unable to locate %q: %v", plugin, err)
+			return err
 		}
+		args[0] = path
 
 		env := cmd.MergeEnv(os.Environ(), map[string]string{
 			"GB_PROJECT_DIR": proj.Projectdir(),
@@ -43,4 +41,13 @@ var PluginCmd = &Command{
 
 		return cmd.Run()
 	},
+}
+
+func lookupPlugin(arg string) (string, error) {
+	plugin := "gb-" + arg
+	path, err := exec.LookPath(plugin)
+	if err != nil {
+		return "", fmt.Errorf("plugin: unable to locate %q: %v", plugin, err)
+	}
+	return path, nil
 }
