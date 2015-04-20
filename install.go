@@ -3,6 +3,7 @@ package gb
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 )
@@ -81,7 +82,7 @@ func pkgdir(pkg *Package) string {
 }
 
 func pkgfile(pkg *Package) string {
-	return filepath.Join(pkgdir(pkg), pkg.Name()+".a")
+	return filepath.Join(pkgdir(pkg), path.Base(pkg.p.ImportPath)+".a")
 }
 
 // isStale returns true if the source pkg is considered to be stale with
@@ -120,6 +121,23 @@ func isStale(pkg *Package) bool {
 	}
 
 	return false
+}
+
+// stale returns true if pkg or any of its transitive dependencies are not stale
+func stale(pkg *Package) bool {
+	var f func(*Package) bool
+	f = func(pkg *Package) bool {
+		if err := pkg.Result(); err != nil {
+			return true
+		}	
+		for _, dep := range pkg.p.Imports {
+			if f(resolvePackage(pkg.ctx, dep)) {
+				return true
+			}
+		}
+		return isStale(pkg)
+	}
+	return f(pkg)
 }
 
 func stringList(args ...[]string) []string {

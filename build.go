@@ -32,22 +32,6 @@ func buildPackage(pkg *Package) Target {
 	})
 }
 
-// buildCommand returns a Target repesenting the results of compiling
-// pkg as a command and linking the result into pkg.Context.Bindir().
-func buildCommand(pkg *Package) Target {
-	var deps []Target
-	for _, dep := range pkg.p.Imports {
-		if _, ok := stdlib[dep]; ok {
-			continue
-		}
-		pkg := resolvePackage(pkg.ctx, dep)
-		deps = append(deps, buildPackage(pkg))
-	}
-	compile := Compile(pkg, deps...)
-	ld := Ld(pkg, compile)
-	return ld
-}
-
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
 	if err := pkg.Result(); err != nil {

@@ -10,6 +10,7 @@ type Package struct {
 	p             *build.Package
 	Scope         string // scope: build, test, etc
 	ExtraIncludes string // hook for test
+	Stale		bool	// is the package out of date wrt. its cached copy
 }
 
 // resolvePackage resolves the package at path using the current context.
@@ -32,6 +33,7 @@ func newPackage(ctx *Context, p *build.Package) *Package {
 		p:   p,
 	}
 	// seed pkg.c so calling result never blocks
+	pkg.Stale = isStale(&pkg)
 	pkg.c <- nil
 	return &pkg
 }
@@ -65,9 +67,12 @@ func (p *Package) resolvePackage(path string) {
 	pkg, err := p.ctx.Context.Import(path, p.ctx.Projectdir(), 0)
 	if err != nil {
 		err = fmt.Errorf("resolvePackage(%q): %v", path, err)
+		p.c <- err
+		return 
 	}
 	p.p = pkg
 	p.c <- err
+	return
 }
 
 // Complete indicates if this is a pure Go package
