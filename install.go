@@ -105,5 +105,27 @@ func isStale(pkg *Package) bool {
 		return true
 	}
 
-	return true
+	olderThan := func(file string) bool {
+		fi, err := os.Stat(file)
+		return err != nil || fi.ModTime().After(built)
+	}
+
+	p := pkg.p
+
+	srcs := stringList(p.GoFiles, p.CFiles, p.CXXFiles, p.MFiles, p.HFiles, p.SFiles, p.CgoFiles, p.SysoFiles, p.SwigFiles, p.SwigCXXFiles)
+	for _, src := range srcs {
+		if olderThan(filepath.Join(p.Dir, src)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func stringList(args ...[]string) []string {
+	var l []string
+	for _, arg := range args {
+		l = append(l, arg...)
+	}
+	return l
 }

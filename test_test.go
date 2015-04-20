@@ -23,6 +23,9 @@ func TestTestPackage(t *testing.T) {
 		}, {
 			pkg: "c",
 			err: nil,
+		}, {
+			pkg: "e",
+			err: nil,
 		}}
 
 	root, err := filepath.Abs("testdata")
