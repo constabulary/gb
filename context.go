@@ -26,6 +26,18 @@ type Context struct {
 	SkipInstall bool // do not cache compiled packages
 }
 
+// NewContext returns a new build context from this project.
+func (p *Project) NewContext(tc Toolchain) *Context {
+        context := build.Default
+        context.GOPATH = togopath(p.Srcdirs())
+        return &Context{
+                Project: p,
+                Context: &context,
+                tc:      tc,
+                workdir: mktmpdir(),
+        }
+}
+
 // IncludePaths returns the include paths visible in this context.
 func (c *Context) IncludePaths() []string {
 	return []string{

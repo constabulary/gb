@@ -19,18 +19,6 @@ type Project struct {
 	rootdir string
 }
 
-// NewContext returns a new build context from this project.
-func (p *Project) NewContext(tc Toolchain) *Context {
-	context := build.Default
-	context.GOPATH = togopath(p.Srcdirs())
-	return &Context{
-		Project: p,
-		Context: &context,
-		tc:      tc,
-		workdir: mktmpdir(),
-	}
-}
-
 func togopath(srcdirs []string) string {
 	var s []string
 	for _, srcdir := range srcdirs {
