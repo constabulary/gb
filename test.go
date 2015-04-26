@@ -12,41 +12,38 @@ import (
 // package pkg, and its dependencies, and linking it with the
 // test runner.
 func Test(pkg *Package) Target {
-	// wait for the package to be resolved
-	if err := pkg.Result(); err != nil {
-		return errTarget{err}
-	}
 	// commands are built as packages for testing.
 	return testPackage(pkg)
 }
 
 func testPackage(pkg *Package) Target {
 	var gofiles []string
-	gofiles = append(gofiles, pkg.p.GoFiles...)
-	gofiles = append(gofiles, pkg.p.TestGoFiles...)
+	gofiles = append(gofiles, pkg.GoFiles...)
+	gofiles = append(gofiles, pkg.TestGoFiles...)
 
 	var cgofiles []string
-	cgofiles = append(cgofiles, pkg.p.CgoFiles...)
+	cgofiles = append(cgofiles, pkg.CgoFiles...)
 
 	var imports []string
-	imports = append(imports, pkg.p.Imports...)
-	imports = append(imports, pkg.p.TestImports...)
+	imports = append(imports, pkg.Package.Imports...)
+	imports = append(imports, pkg.Package.TestImports...)
 
-	// build dependencies
-	deps := buildDependencies(pkg.ctx, imports...)
-	Debugf("testing %q: building deps: %v", pkg.Name(), deps)
 	testpkg := newPackage(pkg.ctx, &build.Package{
-		Name:       pkg.p.Name,
-		ImportPath: pkg.p.ImportPath,
-		Dir:        pkg.p.Dir,
-		SrcRoot:    pkg.p.SrcRoot,
+		Name:       pkg.Name,
+		ImportPath: pkg.ImportPath,
+		Dir:        pkg.Dir,
+		SrcRoot:    pkg.SrcRoot,
 
 		GoFiles:     gofiles,
 		CgoFiles:    cgofiles,
-		TestGoFiles: pkg.p.TestGoFiles, // passed directly to buildTestMain
+		TestGoFiles: pkg.TestGoFiles, // passed directly to buildTestMain
 
 		Imports: imports,
 	})
+
+	// build dependencies
+	deps := buildDependencies(testpkg)
+	Debugf("testing %q: building deps: %v", pkg.Name, deps)
 
 	testpkg.Scope = "test"
 
@@ -58,8 +55,8 @@ func testPackage(pkg *Package) Target {
 	}
 	buildmain := Ld(testmain, Compile(testmain, testobj))
 
-	cmd := exec.Command(filepath.Join(objdir(testmain), testmain.p.Name+".test"))
-	cmd.Dir = pkg.p.Dir // tests run in the original source directory
+	cmd := exec.Command(filepath.Join(objdir(testmain), testmain.Name+".test"))
+	cmd.Dir = pkg.Dir // tests run in the original source directory
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -68,30 +65,27 @@ func testPackage(pkg *Package) Target {
 }
 
 func buildTestMain(pkg *Package) (*Package, error) {
-	if err := pkg.Result(); err != nil {
-		return nil, fmt.Errorf("buildTestmain: %v", err)
-	}
 	if pkg.Scope != "test" {
-		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name())
+		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name)
 	}
 	dir := objdir(pkg)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, fmt.Errorf("buildTestmain: %v", err)
 	}
-	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), pkg.p); err != nil {
+	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), pkg.Package); err != nil {
 		return nil, err
 	}
 	testmain := newPackage(pkg.ctx, &build.Package{
-		Name:       pkg.p.Name,
+		Name:       pkg.Name,
 		ImportPath: "testmain",
 		Dir:        dir,
-		SrcRoot:    pkg.p.SrcRoot,
+		SrcRoot:    pkg.SrcRoot,
 
 		GoFiles: []string{"_testmain.go"},
 
-		Imports: pkg.p.Imports,
+		Imports: pkg.Package.Imports,
 	})
 	testmain.Scope = "test"
-	testmain.ExtraIncludes = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.p.ImportPath), "_test")
+	testmain.ExtraIncludes = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
 	return testmain, nil
 }

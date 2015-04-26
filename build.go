@@ -23,35 +23,29 @@ func Build(pkg *Package) Target {
 // buildPackage returns a Target repesenting the results of compiling
 // pkg and its dependencies.
 func buildPackage(pkg *Package) Target {
-	if err := pkg.Result(); err != nil {
-		return errTarget{fmt.Errorf("buildPackage: %v", err)}
-	}
-	return pkg.ctx.targetOrMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.p.ImportPath), func() Target {
-		deps := buildDependencies(pkg.ctx, pkg.p.Imports...)
+	return pkg.ctx.targetOrMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
+		deps := buildDependencies(pkg)
 		return Compile(pkg, deps...)
 	})
 }
 
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
-	if err := pkg.Result(); err != nil {
-		return errTarget{fmt.Errorf("compile: %v", err)}
-	}
-	return pkg.ctx.addTargetIfMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.p.ImportPath), func() Target {
+	return pkg.ctx.addTargetIfMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
 		if !isStale(pkg) {
 			return cachedPackage(pkg)
 		}
 		var gofiles []string
-		gofiles = append(gofiles, pkg.p.GoFiles...)
+		gofiles = append(gofiles, pkg.GoFiles...)
 		var objs []ObjTarget
-		if len(pkg.p.CgoFiles) > 0 {
+		if len(pkg.CgoFiles) > 0 {
 			// cgo, cgofiles := cgo(pkg, deps...)
 			// deps = append(deps, cgo[0])
 			// objs = append(objs, cgo...)
 			// gofiles = append(gofiles, cgofiles...)
 		}
 		objs = append(objs, Gc(pkg, gofiles, deps...))
-		for _, sfile := range pkg.p.SFiles {
+		for _, sfile := range pkg.SFiles {
 			objs = append(objs, Asm(pkg, sfile))
 		}
 		if pkg.Complete() {
@@ -81,14 +75,14 @@ func (g *gc) String() string {
 
 func (g *gc) compile() error {
 	t0 := time.Now()
-	Infof("compile %v %v", g.pkg.p.ImportPath, g.gofiles)
+	Infof("compile %v %v", g.pkg.ImportPath, g.gofiles)
 	includes := g.pkg.ctx.IncludePaths()
-	importpath := g.pkg.p.ImportPath
+	importpath := g.pkg.ImportPath
 	if g.pkg.Scope == "test" && g.pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{g.pkg.ExtraIncludes}, includes...)
 	}
-	err := g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.p.Dir, g.Objfile(), g.gofiles, g.pkg.Complete())
+	err := g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.Dir, g.Objfile(), g.gofiles, g.pkg.Complete())
 	g.pkg.ctx.Record("compile", time.Since(t0))
 	return err
 }
@@ -98,7 +92,7 @@ func (g *gc) Objfile() string {
 }
 
 func objfile(pkg *Package) string {
-	return filepath.Join(objdir(pkg), path.Base(pkg.p.ImportPath)+".a")
+	return filepath.Join(objdir(pkg), path.Base(pkg.ImportPath)+".a")
 }
 
 func (g *gc) Pkgfile() string {
@@ -177,13 +171,13 @@ type asm struct {
 }
 
 func (a *asm) Objfile() string {
-	return filepath.Join(a.pkg.ctx.workdir, a.pkg.p.ImportPath, stripext(a.sfile)+".6")
+	return filepath.Join(a.pkg.ctx.workdir, a.pkg.ImportPath, stripext(a.sfile)+".6")
 }
 
 func (a *asm) asm() error {
 	t0 := time.Now()
 	Infof("asm %v", a.sfile)
-	err := a.pkg.ctx.tc.Asm(a.pkg.p.Dir, a.Objfile(), filepath.Join(a.pkg.p.Dir, a.sfile))
+	err := a.pkg.ctx.tc.Asm(a.pkg.Dir, a.Objfile(), filepath.Join(a.pkg.Dir, a.sfile))
 	a.pkg.ctx.Record("asm", time.Since(t0))
 	return err
 }
@@ -207,7 +201,7 @@ type ld struct {
 
 func (l *ld) link() error {
 	t0 := time.Now()
-	target := filepath.Join(objdir(l.pkg), l.pkg.p.Name)
+	target := filepath.Join(objdir(l.pkg), l.pkg.Name)
 	Infof("link %v [%v]", target, l.afile.Pkgfile())
 	includes := l.pkg.ctx.IncludePaths()
 	if l.pkg.Scope == "test" && l.pkg.ExtraIncludes != "" {
@@ -240,24 +234,20 @@ func stripext(path string) string {
 func objdir(pkg *Package) string {
 	switch pkg.Scope {
 	case "test":
-		return filepath.Join(testobjdir(pkg), filepath.Dir(filepath.FromSlash(pkg.p.ImportPath)))
+		return filepath.Join(testobjdir(pkg), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	default:
-		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.p.ImportPath)))
+		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
 }
 
 func testobjdir(pkg *Package) string {
-	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.p.ImportPath), "_test")
+	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
 }
 
 // buildDependencies resolves the dependencies the package paths.
-func buildDependencies(ctx *Context, imports ...string) []Target {
+func buildDependencies(pkg *Package) []Target {
 	var deps []Target
-	for _, dep := range imports {
-		if _, ok := stdlib[dep]; ok {
-			continue
-		}
-		pkg := resolvePackage(ctx, dep)
+	for _, pkg := range pkg.Imports() {
 		deps = append(deps, buildPackage(pkg))
 	}
 	return deps

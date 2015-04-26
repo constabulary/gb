@@ -1,7 +1,6 @@
 package gb
 
 import (
-	"go/build"
 	"path/filepath"
 	"strings"
 )

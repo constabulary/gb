@@ -86,8 +86,8 @@ func resolvePackages(ctx *gb.Context, args ...string) ([]*gb.Package, error) {
 				return pkgs, err
 			}
 		}
-		pkg := ctx.ResolvePackage(arg)
-		if err := pkg.Result(); err != nil {
+		pkg, err := ctx.ResolvePackage(arg)
+		if err != nil {
 			if _, ok := err.(*build.NoGoError); ok {
 				gb.Debugf("skipping %q", arg)
 				continue

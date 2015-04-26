@@ -78,11 +78,11 @@ func pkgdir(pkg *Package) string {
 	if pkg.Scope == "test" {
 		panic("pkgdir called with test scope")
 	}
-	return filepath.Join(pkg.ctx.Pkgdir(), filepath.Dir(filepath.FromSlash(pkg.p.ImportPath)))
+	return filepath.Join(pkg.ctx.Pkgdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 }
 
 func pkgfile(pkg *Package) string {
-	return filepath.Join(pkgdir(pkg), path.Base(pkg.p.ImportPath)+".a")
+	return filepath.Join(pkgdir(pkg), path.Base(pkg.ImportPath)+".a")
 }
 
 // isStale returns true if the source pkg is considered to be stale with
@@ -111,7 +111,7 @@ func isStale(pkg *Package) bool {
 		return err != nil || fi.ModTime().After(built)
 	}
 
-	p := pkg.p
+	p := pkg.Package
 
 	srcs := stringList(p.GoFiles, p.CFiles, p.CXXFiles, p.MFiles, p.HFiles, p.SFiles, p.CgoFiles, p.SysoFiles, p.SwigFiles, p.SwigCXXFiles)
 	for _, src := range srcs {
@@ -121,23 +121,6 @@ func isStale(pkg *Package) bool {
 	}
 
 	return false
-}
-
-// stale returns true if pkg or any of its transitive dependencies are not stale
-func stale(pkg *Package) bool {
-	var f func(*Package) bool
-	f = func(pkg *Package) bool {
-		if err := pkg.Result(); err != nil {
-			return true
-		}	
-		for _, dep := range pkg.p.Imports {
-			if f(resolvePackage(pkg.ctx, dep)) {
-				return true
-			}
-		}
-		return isStale(pkg)
-	}
-	return f(pkg)
 }
 
 func stringList(args ...[]string) []string {

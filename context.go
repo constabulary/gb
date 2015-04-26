@@ -24,18 +24,21 @@ type Context struct {
 
 	Force       bool // force rebuild of packages
 	SkipInstall bool // do not cache compiled packages
+
+	pkgs map[string]*Package // map of package paths to resolved packages
 }
 
 // NewContext returns a new build context from this project.
 func (p *Project) NewContext(tc Toolchain) *Context {
-        context := build.Default
-        context.GOPATH = togopath(p.Srcdirs())
-        return &Context{
-                Project: p,
-                Context: &context,
-                tc:      tc,
-                workdir: mktmpdir(),
-        }
+	context := build.Default
+	context.GOPATH = togopath(p.Srcdirs())
+	return &Context{
+		Project: p,
+		Context: &context,
+		tc:      tc,
+		workdir: mktmpdir(),
+		pkgs:    make(map[string]*Package),
+	}
 }
 
 // IncludePaths returns the include paths visible in this context.
@@ -52,8 +55,46 @@ func (c *Context) Pkgdir() string {
 }
 
 // ResolvePackage resolves the package at path using the current context.
-func (c *Context) ResolvePackage(path string) *Package {
-	return resolvePackage(c, path)
+func (c *Context) ResolvePackage(path string) (*Package, error) {
+	return c.loadPackage(make(map[string]bool), path)
+}
+
+// loadPackage recursively resolves path and its imports and if successful
+// stores those packages in the Context's internal package cache.
+func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, error) {
+	if pkg, ok := c.pkgs[path]; ok {
+		// already loaded, just return
+		Debugf("loadPackage: %v [cached]", path)
+		return pkg, nil
+	}
+	Debugf("loadPackage: %v", path)
+
+	push := func(path string) {
+		stack[path] = true
+	}
+	pop := func(path string) {
+		delete(stack, path)
+	}
+
+	pkg, err := c.Context.Import(path, c.Projectdir(), 0)
+	if err != nil {
+		return nil, err
+	}
+	push(path)
+	for _, i := range pkg.Imports {
+		if stdlib[i] {
+			continue
+		}
+		if _, err := c.loadPackage(stack, i); err != nil {
+			return nil, err
+		}
+	}
+	pop(path)
+	c.pkgs[path] = &Package{
+		ctx:     c,
+		Package: pkg,
+	}
+	return c.pkgs[path], nil
 }
 
 // Destroy removes the temporary working files of this context.
