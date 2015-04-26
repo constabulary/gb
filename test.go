@@ -42,7 +42,7 @@ func testPackage(pkg *Package) Target {
 	})
 
 	// build dependencies
-	deps := buildDependencies(testpkg)
+	deps := buildDependencies(make(map[string]PkgTarget), testpkg)
 	Debugf("testing %q: building deps: %v", pkg.Name, deps)
 
 	testpkg.Scope = "test"

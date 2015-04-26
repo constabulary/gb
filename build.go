@@ -11,7 +11,7 @@ import (
 // and its dependencies. If pkg is a command, then the results of build include
 // linking the final binary into pkg.Context.Bindir().
 func Build(pkg *Package) Target {
-	t := buildPackage(pkg)
+	t := buildPackage(make(map[string]PkgTarget), pkg)
 	if err := t.Result(); err == nil {
 		if pkg.isMain() {
 			t = Ld(pkg, t.(PkgTarget))
@@ -22,37 +22,50 @@ func Build(pkg *Package) Target {
 
 // buildPackage returns a Target repesenting the results of compiling
 // pkg and its dependencies.
-func buildPackage(pkg *Package) Target {
-	return pkg.ctx.targetOrMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
-		deps := buildDependencies(pkg)
-		return Compile(pkg, deps...)
-	})
+func buildPackage(targets map[string]PkgTarget, pkg *Package) Target {
+	if target, ok := targets[pkg.ImportPath]; ok {
+		// already compiled
+		return target
+	}
+
+	deps := buildDependencies(targets, pkg)
+	target := Compile(pkg, deps...)
+	targets[pkg.ImportPath] = target
+	return target
+}
+
+// buildDependencies returns a []Target representing the results of
+// compiling the dependencies of pkg.
+func buildDependencies(targets map[string]PkgTarget, pkg *Package) []Target {
+	var deps []Target
+	for _, i := range pkg.Imports() {
+		deps = append(deps, buildPackage(targets, i))
+	}
+	return deps
 }
 
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
-	return pkg.ctx.addTargetIfMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
-		if !pkg.Stale {
-			return cachedPackage(pkg)
-		}
-		var gofiles []string
-		gofiles = append(gofiles, pkg.GoFiles...)
-		var objs []ObjTarget
-		if len(pkg.CgoFiles) > 0 {
-			// cgo, cgofiles := cgo(pkg, deps...)
-			// deps = append(deps, cgo[0])
-			// objs = append(objs, cgo...)
-			// gofiles = append(gofiles, cgofiles...)
-		}
-		objs = append(objs, Gc(pkg, gofiles, deps...))
-		for _, sfile := range pkg.SFiles {
-			objs = append(objs, Asm(pkg, sfile))
-		}
-		if pkg.Complete() {
-			return Install(pkg, objs[0].(PkgTarget))
-		}
-		return Install(pkg, Pack(pkg, objs...))
-	}).(PkgTarget)
+	if !pkg.Stale {
+		return cachedPackage(pkg)
+	}
+	var gofiles []string
+	gofiles = append(gofiles, pkg.GoFiles...)
+	var objs []ObjTarget
+	if len(pkg.CgoFiles) > 0 {
+		// cgo, cgofiles := cgo(pkg, deps...)
+		// deps = append(deps, cgo[0])
+		// objs = append(objs, cgo...)
+		// gofiles = append(gofiles, cgofiles...)
+	}
+	objs = append(objs, Gc(pkg, gofiles, deps...))
+	for _, sfile := range pkg.SFiles {
+		objs = append(objs, Asm(pkg, sfile))
+	}
+	if pkg.Complete() {
+		return Install(pkg, objs[0].(PkgTarget))
+	}
+	return Install(pkg, Pack(pkg, objs...))
 }
 
 // ObjTarget represents a compiled Go object (.5, .6, etc)
@@ -242,13 +255,4 @@ func objdir(pkg *Package) string {
 
 func testobjdir(pkg *Package) string {
 	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
-}
-
-// buildDependencies resolves the dependencies the package paths.
-func buildDependencies(pkg *Package) []Target {
-	var deps []Target
-	for _, pkg := range pkg.Imports() {
-		deps = append(deps, buildPackage(pkg))
-	}
-	return deps
 }

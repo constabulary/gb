@@ -20,8 +20,6 @@ type Context struct {
 
 	Statistics
 
-	targetCache
-
 	Force       bool // force rebuild of packages
 	SkipInstall bool // do not cache compiled packages
 
@@ -64,7 +62,6 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, error) {
 	if pkg, ok := c.pkgs[path]; ok {
 		// already loaded, just return
-		Debugf("loadPackage: %v [cached]", path)
 		return pkg, nil
 	}
 	Debugf("loadPackage: %v", path)
@@ -105,48 +102,6 @@ func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, err
 
 // Destroy removes the temporary working files of this context.
 func (c *Context) Destroy() error { return nil }
-
-type targetCache struct {
-	sync.Mutex
-	m map[string]Target
-}
-
-func (c *targetCache) addTargetIfMissing(name string, f func() Target) Target {
-	c.Lock()
-	defer c.Unlock()
-	if c.m == nil {
-		c.m = make(map[string]Target)
-	}
-	target, ok := c.m[name]
-	if ok {
-		if debugTargetCache {
-			Debugf("targetCache:addTargetIfMissing HIT %v", name)
-		}
-		return target
-	}
-	if debugTargetCache {
-		Debugf("targetCache:addTargetIfMissing MISS %v", name)
-	}
-	target = f()
-	c.m[name] = target
-	return target
-}
-
-func (c *targetCache) targetOrMissing(name string, f func() Target) Target {
-	c.Lock()
-	target, ok := c.m[name]
-	c.Unlock()
-	if ok {
-		if debugTargetCache {
-			Debugf("targetCache:targetOrMissing HIT %v", name)
-		}
-		return target
-	}
-	if debugTargetCache {
-		Debugf("targetCache:targetOrMissing MISS %v", name)
-	}
-	return f()
-}
 
 // Statistics records the various Durations
 type Statistics struct {
