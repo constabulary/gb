@@ -36,9 +36,12 @@ func TestBuild(t *testing.T) {
 		ctx := proj.NewContext(tc)
 		ctx.Force = true
 		ctx.SkipInstall = true
-		pkg := ctx.ResolvePackage(tt.pkg)
-		err := Build(pkg).Result()
+		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != tt.err {
+			t.Errorf("ctx.ResolvePackage(tt.pkg): want %v, got %v", tt.err, err)
+			continue
+		}
+		if err := Build(pkg); err != tt.err {
 			t.Errorf("ctx.Build(tt.pkg): want %v, got %v", tt.err, err)
 		}
 	}

@@ -36,19 +36,19 @@ func testContext(t *testing.T) *Context {
 
 func TestResolvePackage(t *testing.T) {
 	ctx := testContext(t)
-	pkg := ctx.ResolvePackage("a")
-	if err := pkg.Result(); err != nil {
+	_, err := ctx.ResolvePackage("a")
+	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestPackageName(t *testing.T) {
 	ctx := testContext(t)
-	pkg := ctx.ResolvePackage("aprime")
-	if err := pkg.Result(); err != nil {
+	pkg, err := ctx.ResolvePackage("aprime")
+	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := "a", pkg.Name(); got != want {
+	if got, want := "a", pkg.Name; got != want {
 		t.Fatalf("Package.Name(): got %v, want %v", got, want)
 	}
 }

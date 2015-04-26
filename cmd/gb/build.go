@@ -59,17 +59,8 @@ var BuildCmd = &Command{
 		if err != nil {
 			return err
 		}
-		results := make(chan gb.Target, len(pkgs))
-		go func() {
-			defer close(results)
-			for _, pkg := range pkgs {
-				results <- gb.Build(pkg)
-			}
-		}()
-		for result := range results {
-			if err := result.Result(); err != nil {
-				return err
-			}
+		if err := gb.Build(pkgs...); err != nil {
+			return err
 		}
 		return ctx.Destroy()
 	},

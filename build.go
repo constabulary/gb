@@ -7,17 +7,20 @@ import (
 	"time"
 )
 
-// Build returns a Target representing the result of compiling the Package pkg
-// and its dependencies. If pkg is a command, then the results of build include
+// Build builds each of pkgs in succession. If pkg is a command, then the results of build include
 // linking the final binary into pkg.Context.Bindir().
-func Build(pkg *Package) Target {
-	t := buildPackage(make(map[string]PkgTarget), pkg)
-	if err := t.Result(); err == nil {
+func Build(pkgs ...*Package) error {
+	targets := make(map[string]PkgTarget)
+	for _, pkg := range pkgs {
+		target := buildPackage(targets, pkg)
 		if pkg.isMain() {
-			t = Ld(pkg, t.(PkgTarget))
+			target = Ld(pkg, target.(PkgTarget))
+		}
+		if err := target.Result(); err != nil {
+			return err
 		}
 	}
-	return t
+	return nil
 }
 
 // buildPackage returns a Target repesenting the results of compiling

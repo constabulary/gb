@@ -41,9 +41,12 @@ func TestTestPackage(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := proj.NewContext(tc)
-		pkg := ctx.ResolvePackage(tt.pkg)
-		err := Test(pkg).Result()
-		if err != tt.err {
+		pkg, err := ctx.ResolvePackage(tt.pkg)
+		if err != nil {
+			t.Errorf("ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
+			continue
+		}
+		if err := Test(pkg).Result(); err != tt.err {
 			t.Errorf("Test(tt.pkg): want %v, got %v", tt.err, err)
 			time.Sleep(500 * time.Millisecond)
 		}
