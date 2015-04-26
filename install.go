@@ -111,6 +111,13 @@ func isStale(pkg *Package) bool {
 		return err != nil || fi.ModTime().After(built)
 	}
 
+	// Package is stale if a dependency is newer.
+	for _, p := range pkg.Imports() {
+		if olderThan(pkgfile(p)) {
+			return true
+		}
+	}
+
 	srcs := stringList(pkg.GoFiles, pkg.CFiles, pkg.CXXFiles, pkg.MFiles, pkg.HFiles, pkg.SFiles, pkg.CgoFiles, pkg.SysoFiles, pkg.SwigFiles, pkg.SwigCXXFiles)
 	for _, src := range srcs {
 		if olderThan(filepath.Join(pkg.Dir, src)) {
