@@ -30,6 +30,7 @@ func buildPackage(targets map[string]PkgTarget, pkg *Package) Target {
 		// already compiled
 		return target
 	}
+	Debugf("buildPackage: %v", pkg.ImportPath)
 
 	deps := buildDependencies(targets, pkg)
 	target := Compile(pkg, deps...)
