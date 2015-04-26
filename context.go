@@ -76,25 +76,31 @@ func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, err
 		delete(stack, path)
 	}
 
-	pkg, err := c.Context.Import(path, c.Projectdir(), 0)
+	p, err := c.Context.Import(path, c.Projectdir(), 0)
 	if err != nil {
 		return nil, err
 	}
 	push(path)
-	for _, i := range pkg.Imports {
+	var stale bool
+	for _, i := range p.Imports {
 		if stdlib[i] {
 			continue
 		}
-		if _, err := c.loadPackage(stack, i); err != nil {
+		pkg, err := c.loadPackage(stack, i)
+		if err != nil {
 			return nil, err
 		}
+		stale = stale || pkg.Stale
 	}
 	pop(path)
-	c.pkgs[path] = &Package{
+
+	pkg := Package{
 		ctx:     c,
-		Package: pkg,
+		Package: p,
 	}
-	return c.pkgs[path], nil
+	pkg.Stale = stale || isStale(&pkg)
+	c.pkgs[path] = &pkg
+	return &pkg, nil
 }
 
 // Destroy removes the temporary working files of this context.

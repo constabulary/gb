@@ -32,7 +32,7 @@ func buildPackage(pkg *Package) Target {
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
 	return pkg.ctx.addTargetIfMissing(fmt.Sprintf("compile:%s:%s", pkg.Scope, pkg.ImportPath), func() Target {
-		if !isStale(pkg) {
+		if !pkg.Stale {
 			return cachedPackage(pkg)
 		}
 		var gofiles []string
