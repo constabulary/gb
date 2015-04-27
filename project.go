@@ -44,10 +44,13 @@ func (p *Project) Projectdir() string {
 
 // Srcdirs returns the path to the source directories.
 // The first source directory will always be
-// filepath.Join(Projectdir(), "src)
+// filepath.Join(Projectdir(), "src")
 // but there may be additional directories.
 func (p *Project) Srcdirs() []string {
-	srcdirs := []string{filepath.Join(p.Projectdir(), "src")}
-	srcdirs = append(srcdirs, filepath.Join(p.Projectdir(), "vendor", "src"))
-	return srcdirs
+	return append(p.srcdir(), filepath.Join(p.Projectdir(), "vendor", "src"))
+}
+
+// srcdir returns the source directory of the project.
+func (p *Project) srcdir() []string {
+	return []string{filepath.Join(p.Projectdir(), "src")}
 }

@@ -3,8 +3,12 @@ package main
 import (
 	"flag"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
+
+	"go/build"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -86,11 +90,59 @@ func main() {
 
 	// must be below fs.Parse because the -q and -v flags will log.Infof
 	gb.Infof("project root %q", root)
-	args = fs.Args()
-	if len(args) == 0 {
-		args = []string{"."}
-	}
+	args = importPaths(ctx, fs.Args())
 	if err := cmd.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
 	}
+}
+
+// importPathsNoDotExpansion returns the import paths to use for the given
+// command line, but it does no ... expansion.
+func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
+	if len(args) == 0 {
+		return []string{"."}
+	}
+	var out []string
+	for _, a := range args {
+		// Arguments are supposed to be import paths, but
+		// as a courtesy to Windows developers, rewrite \ to /
+		// in command-line arguments.  Handles .\... and so on.
+		if filepath.Separator == '\\' {
+			a = strings.Replace(a, `\`, `/`, -1)
+		}
+
+		// Put argument in canonical form, but preserve leading ./.
+		if strings.HasPrefix(a, "./") {
+			a = "./" + path.Clean(a)
+			if a == "./." {
+				a = "."
+			}
+		} else {
+			a = path.Clean(a)
+		}
+		if a == "all" || a == "std" {
+			out = append(out, ctx.AllPackages(a)...)
+			continue
+		}
+		out = append(out, a)
+	}
+	return out
+}
+
+// importPaths returns the import paths to use for the given command line.
+func importPaths(ctx *gb.Context, args []string) []string {
+	args = importPathsNoDotExpansion(ctx, args)
+	var out []string
+	for _, a := range args {
+		if strings.Contains(a, "...") {
+			if build.IsLocalImport(a) {
+				out = append(out, ctx.AllPackagesInFS(a)...)
+			} else {
+				out = append(out, ctx.AllPackages(a)...)
+			}
+			continue
+		}
+		out = append(out, a)
+	}
+	return out
 }
