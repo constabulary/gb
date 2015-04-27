@@ -17,7 +17,6 @@ var TestCmd = &Command{
 		if err != nil {
 			gb.Fatalf("unable to construct toolchain: %v", err)
 		}
-		//ctx := proj.NewContext(new(gb.NullToolchain))
 		ctx := proj.NewContext(tc)
 		ctx.Force = F
 		ctx.SkipInstall = FF
@@ -29,7 +28,7 @@ var TestCmd = &Command{
 		if err != nil {
 			return err
 		}
-		if err := execute(gb.Test, pkgs...); err != nil {
+		if err := gb.Test(pkgs...); err != nil {
 			return err
 		}
 		return ctx.Destroy()

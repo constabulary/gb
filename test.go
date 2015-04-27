@@ -11,12 +11,23 @@ import (
 // Test returns a Target representing the result of compiling the
 // package pkg, and its dependencies, and linking it with the
 // test runner.
-func Test(pkg *Package) Target {
-	// commands are built as packages for testing.
-	return testPackage(pkg)
+func Test(pkgs ...*Package) error {
+	targets := make(map[string]PkgTarget)
+	roots := make([]Target, 0, len(pkgs))
+	for _, pkg := range pkgs {
+		// commands are built as packages for testing.
+		target := testPackage(targets, pkg)
+		roots = append(roots, target)
+	}
+	for _, root := range roots {
+		if err := root.Result(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func testPackage(pkg *Package) Target {
+func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 	gofiles = append(gofiles, pkg.TestGoFiles...)
@@ -42,7 +53,7 @@ func testPackage(pkg *Package) Target {
 	})
 
 	// build dependencies
-	deps := buildDependencies(make(map[string]PkgTarget), testpkg)
+	deps := buildDependencies(targets, testpkg)
 	Debugf("testing %q: building deps: %v", pkg.Name, deps)
 
 	testpkg.Scope = "test"

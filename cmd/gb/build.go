@@ -89,19 +89,3 @@ func resolvePackages(ctx *gb.Context, args ...string) ([]*gb.Package, error) {
 	}
 	return pkgs, nil
 }
-
-func execute(fn func(*gb.Package) gb.Target, pkgs ...*gb.Package) error {
-	results := make(chan gb.Target, len(pkgs))
-	go func() {
-		defer close(results)
-		for _, pkg := range pkgs {
-			results <- fn(pkg)
-		}
-	}()
-	for result := range results {
-		if err := result.Result(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
