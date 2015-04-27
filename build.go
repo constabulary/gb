@@ -11,12 +11,16 @@ import (
 // linking the final binary into pkg.Context.Bindir().
 func Build(pkgs ...*Package) error {
 	targets := make(map[string]PkgTarget)
+	roots := make([]Target, 0, len(pkgs))
 	for _, pkg := range pkgs {
 		target := buildPackage(targets, pkg)
 		if pkg.isMain() {
 			target = Ld(pkg, target.(PkgTarget))
 		}
-		if err := target.Result(); err != nil {
+		roots = append(roots, target)
+	}
+	for _, root := range roots {
+		if err := root.Result(); err != nil {
 			return err
 		}
 	}
