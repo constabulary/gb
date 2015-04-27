@@ -11,7 +11,7 @@ import (
 )
 
 type Command struct {
-	Run      func(project *gb.Project, args []string) error
+	Run      func(ctx *gb.Context, args []string) error
 	AddFlags func(fs *flag.FlagSet)
 }
 
@@ -57,6 +57,11 @@ func main() {
 	}
 
 	project := gb.NewProject(root)
+	tc, err := gb.NewGcToolchain(*goroot, *goos, *goarch)
+	if err != nil {
+		gb.Fatalf("unable to construct toolchain: %v", err)
+	}
+	ctx := project.NewContext(tc)
 
 	name := args[1]
 	cmd, ok := commands[name]
@@ -85,7 +90,7 @@ func main() {
 	if len(args) == 0 {
 		args = []string{"."}
 	}
-	if err := cmd.Run(project, args); err != nil {
+	if err := cmd.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
 	}
 }

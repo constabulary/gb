@@ -41,14 +41,9 @@ func addBuildFlags(fs *flag.FlagSet) {
 }
 
 var BuildCmd = &Command{
-	Run: func(proj *gb.Project, args []string) error {
+	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
 		t0 := time.Now()
-		tc, err := gb.NewGcToolchain(*goroot, *goos, *goarch)
-		if err != nil {
-			gb.Fatalf("unable to construct toolchain: %v", err)
-		}
-		ctx := proj.NewContext(tc)
 		ctx.Force = F
 		ctx.SkipInstall = FF
 		defer func() {

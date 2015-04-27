@@ -14,7 +14,7 @@ func init() {
 }
 
 var PluginCmd = &Command{
-	Run: func(proj *gb.Project, args []string) error {
+	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) < 1 {
 			return fmt.Errorf("plugin: no command supplied")
 		}
@@ -26,7 +26,7 @@ var PluginCmd = &Command{
 		args[0] = path
 
 		env := cmd.MergeEnv(os.Environ(), map[string]string{
-			"GB_PROJECT_DIR": proj.Projectdir(),
+			"GB_PROJECT_DIR": ctx.Projectdir(),
 		})
 
 		cmd := exec.Cmd{
