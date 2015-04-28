@@ -22,26 +22,26 @@ I gave a talk about `gb` and the rational for it's creation at GDG Berlin in Apr
 `gb` is the main command. It supports subcommands, of which there are currently two:
 
 - `build` - which takes one or more import paths, ie `gb build github.com/constabulary/gb/cmd/gb`, if executed inside `$PROJECT/src/some/path/`, `gb build` will build that path.
-- `test` - behaves identically to `gb build`, but runs tests
+- `test` - behaves identically to `gb build`, but runs tests.
 
 ## Incremental compilation
 
-By default `gb` always performs incremental compilation and caches the results in `$PROJECT/pkg/`. See the Flags section for options to alter this behaviour
+By default `gb` always performs incremental compilation and caches the results in `$PROJECT/pkg/`. See the Flags section for options to alter this behaviour.
 
 ## Flags
 
 The following flags are supported by `gb`. Note that these are flags to subcommands, so must come *after* the subcommand.
 - `-v` - increases verbosity, effectively lowering the output level from INFO to DEBUG.
 - `-q` - decreases verbosity, effectively raising the output level to ERROR. In a successful build, no output will be displayed.
-- `-goroot` - alters the path to the go toolchain in use, eg `gb build -goroot=$HOME/go1.4`
-- `-goos`, `-goarch` - analogous to `env GOOS=... GOARCH=... gb`
+- `-goroot` - alters the path to the go toolchain in use, eg `gb build -goroot=$HOME/go1.4`.
+- `-goos`, `-goarch` - analogous to `env GOOS=... GOARCH=... gb`.
 - `-f` - ignore cached packages if present, new packages built will overwrite any cached packages.
-- `-F` - do not cache pacakges, cached packages will still be used for incremental compilation, `-f -F` is advised to disable the package caching system.
+- `-F` - do not cache packages, cached packages will still be used for incremental compilation, `-f -F` is advised to disable the package caching system.
 
 ## Plugins
 
 `gb` supports git style plugins, anything in the path that starts with `gb-` is considered a plugin. Plugins are executed from the main `gb` tool. At the moment there are two plugins shipped with `gb`.
 
-- `env` - analogous to `go env`, useful for debugging the environment passed to `gb` plugins, tranditionally all environment variables in this set begin with `GB_`
+- `env` - analogous to `go env`, useful for debugging the environment passed to `gb` plugins, tranditionally all environment variables in this set begin with `GB_`.
 - `vendor` - is a simple wrapper around `go get` to allow easy bootstrapping of a project by fetching dependencies in to the `vendor/src/` directory.
 
