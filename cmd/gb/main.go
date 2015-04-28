@@ -100,8 +100,11 @@ func main() {
 func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
 	cwd, _ := os.Getwd()
 	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], cwd)
+	if srcdir == ".." {
+		srcdir = "."
+	}
 	if len(args) == 0 {
-		return []string{srcdir}
+		args = []string{srcdir}
 	}
 	var out []string
 	for _, a := range args {
@@ -112,12 +115,11 @@ func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
 			a = strings.Replace(a, `\`, `/`, -1)
 		}
 
-		// Put argument in canonical form, but preserve leading ./.
-		a = path.Join(srcdir, path.Clean(a))
 		if a == "all" || a == "std" {
 			out = append(out, ctx.AllPackages(a)...)
 			continue
 		}
+		a = path.Join(srcdir, path.Clean(a))
 		out = append(out, a)
 	}
 	return out
