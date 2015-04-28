@@ -46,7 +46,7 @@ func TestTestPackage(t *testing.T) {
 			t.Errorf("ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue
 		}
-		if err := Test(pkg).Result(); err != tt.err {
+		if err := Test(pkg); err != tt.err {
 			t.Errorf("Test(tt.pkg): want %v, got %v", tt.err, err)
 			time.Sleep(500 * time.Millisecond)
 		}

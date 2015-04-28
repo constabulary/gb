@@ -124,6 +124,11 @@ func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
 			out = append(out, ctx.AllPackages(a)...)
 			continue
 		}
+		srcroot := ctx.Srcdirs()[0]
+		a, err := filepath.Rel(srcroot, filepath.Join(srcroot, filepath.FromSlash(a)))
+		if err != nil {
+			panic(err)
+		}
 		out = append(out, a)
 	}
 	return out
