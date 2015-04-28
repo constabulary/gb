@@ -3,9 +3,7 @@ package gb
 import (
 	"fmt"
 	"go/build"
-	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -65,6 +63,10 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 // loadPackage recursively resolves path and its imports and if successful
 // stores those packages in the Context's internal package cache.
 func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, error) {
+	if build.IsLocalImport(path) {
+		// sanity check
+		return nil, fmt.Errorf("%q is not a valid import path", path)
+	}
 	if pkg, ok := c.pkgs[path]; ok {
 		// already loaded, just return
 		return pkg, nil
@@ -194,6 +196,7 @@ func (c *Context) AllPackages(pattern string) []string {
 }
 
 func matchPackages(c *Context, pattern string) []string {
+	Debugf("matchPackages: %v %v", c.srcdir(), pattern)
 	match := func(string) bool { return true }
 	treeCanMatch := func(string) bool { return true }
 	if pattern != "all" && pattern != "std" {
@@ -202,10 +205,6 @@ func matchPackages(c *Context, pattern string) []string {
 	}
 
 	var pkgs []string
-
-	have := map[string]bool{
-		"builtin": true, // ignore pseudo-package that exists only for documentation
-	}
 
 	for _, src := range c.srcdir() {
 		src = filepath.Clean(src) + string(filepath.Separator)
@@ -227,10 +226,6 @@ func matchPackages(c *Context, pattern string) []string {
 			if !treeCanMatch(name) {
 				return filepath.SkipDir
 			}
-			if have[name] {
-				return nil
-			}
-			have[name] = true
 			if !match(name) {
 				return nil
 			}
@@ -244,70 +239,5 @@ func matchPackages(c *Context, pattern string) []string {
 			return nil
 		})
 	}
-	return pkgs
-}
-
-// allPackagesInFS is like allPackages but is passed a pattern
-// beginning ./ or ../, meaning it should scan the tree rooted
-// at the given directory.  There are ... in the pattern too.
-func (c *Context) AllPackagesInFS(pattern string) []string {
-	return matchPackagesInFS(pattern)
-}
-
-func matchPackagesInFS(pattern string) []string {
-	// Find directory to begin the scan.
-	// Could be smarter but this one optimization
-	// is enough for now, since ... is usually at the
-	// end of a path.
-	i := strings.Index(pattern, "...")
-	dir, _ := path.Split(pattern[:i])
-
-	// pattern begins with ./ or ../.
-	// path.Clean will discard the ./ but not the ../.
-	// We need to preserve the ./ for pattern matching
-	// and in the returned import paths.
-	prefix := ""
-	if strings.HasPrefix(pattern, "./") {
-		prefix = "./"
-	}
-	match := matchPattern(pattern)
-
-	var pkgs []string
-	filepath.Walk(dir, func(path string, fi os.FileInfo, err error) error {
-		if err != nil || !fi.IsDir() {
-			return nil
-		}
-		if path == dir {
-			// filepath.Walk starts at dir and recurses. For the recursive case,
-			// the path is the result of filepath.Join, which calls filepath.Clean.
-			// The initial case is not Cleaned, though, so we do this explicitly.
-			//
-			// This converts a path like "./io/" to "io". Without this step, running
-			// "cd $GOROOT/src; go list ./io/..." would incorrectly skip the io
-			// package, because prepending the prefix "./" to the unclean path would
-			// result in "././io", and match("././io") returns false.
-			path = filepath.Clean(path)
-		}
-
-		// Avoid .foo, _foo, and testdata directory trees, but do not avoid "." or "..".
-		_, elem := filepath.Split(path)
-		dot := strings.HasPrefix(elem, ".") && elem != "." && elem != ".."
-		if dot || strings.HasPrefix(elem, "_") || elem == "testdata" {
-			return filepath.SkipDir
-		}
-
-		name := prefix + filepath.ToSlash(path)
-		if !match(name) {
-			return nil
-		}
-		if _, err = build.ImportDir(path, 0); err != nil {
-			if _, noGo := err.(*build.NoGoError); !noGo {
-				log.Print(err)
-			}
-			return nil
-		}
-		pkgs = append(pkgs, name)
-		return nil
-	})
 	return pkgs
 }

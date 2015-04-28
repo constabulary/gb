@@ -24,6 +24,19 @@ I gave a talk about `gb` and the rational for it's creation at GDG Berlin in Apr
 - `build` - which takes one or more import paths, ie `gb build github.com/constabulary/gb/cmd/gb`, if executed inside `$PROJECT/src/some/path/`, `gb build` will build that path.
 - `test` - behaves identically to `gb build`, but runs tests
 
+## Arguments
+
+Arguments to `gb` subcommands are package import paths or globs relative to the project `src/` directory
+
+- `gb build github.com/a/b` - builds `github.com/a/b`
+- `gb build github.com/a/b/...` - builds `github.com/a/b` and all packages below it
+- `gb build .../cmd/...` - builds anything that matches `.*/cmd/.*`
+- `gb build` - builds the package in the current directory.
+
+Other subcommands, like `test`, `vendor`, etc follow the same rule.
+
+*note*: only import paths within the `src/` directory will match, it is not possible to build source from the `vendor/src/` directory; it will be built if needed by virtue of being imported by a package in the `src/` directory.
+
 ## Incremental compilation
 
 By default `gb` always performs incremental compilation and caches the results in `$PROJECT/pkg/`. See the Flags section for options to alter this behaviour

@@ -8,8 +8,6 @@ import (
 	"runtime"
 	"strings"
 
-	"go/build"
-
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 )
@@ -91,6 +89,7 @@ func main() {
 	// must be below fs.Parse because the -q and -v flags will log.Infof
 	gb.Infof("project root %q", root)
 	args = importPaths(ctx, fs.Args())
+	gb.Debugf("args: %v", args)
 	if err := cmd.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
 	}
@@ -99,8 +98,10 @@ func main() {
 // importPathsNoDotExpansion returns the import paths to use for the given
 // command line, but it does no ... expansion.
 func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
+	cwd, _ := os.Getwd()
+	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], cwd)
 	if len(args) == 0 {
-		return []string{"."}
+		return []string{srcdir}
 	}
 	var out []string
 	for _, a := range args {
@@ -112,22 +113,10 @@ func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
 		}
 
 		// Put argument in canonical form, but preserve leading ./.
-		if strings.HasPrefix(a, "./") {
-			a = "./" + path.Clean(a)
-			if a == "./." {
-				a = "."
-			}
-		} else {
-			a = path.Clean(a)
-		}
+		a = path.Join(srcdir, path.Clean(a))
 		if a == "all" || a == "std" {
 			out = append(out, ctx.AllPackages(a)...)
 			continue
-		}
-		srcroot := ctx.Srcdirs()[0]
-		a, err := filepath.Rel(srcroot, filepath.Join(srcroot, filepath.FromSlash(a)))
-		if err != nil {
-			panic(err)
 		}
 		out = append(out, a)
 	}
@@ -140,11 +129,7 @@ func importPaths(ctx *gb.Context, args []string) []string {
 	var out []string
 	for _, a := range args {
 		if strings.Contains(a, "...") {
-			if build.IsLocalImport(a) {
-				out = append(out, ctx.AllPackagesInFS(a)...)
-			} else {
-				out = append(out, ctx.AllPackages(a)...)
-			}
+			out = append(out, ctx.AllPackages(a)...)
 			continue
 		}
 		out = append(out, a)
