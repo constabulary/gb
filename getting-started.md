@@ -131,4 +131,4 @@ And it does (modulo the linking bug).
 
 # Wrapping up
 
-Setting up, or converting code to a `gb` project is simple. Once you're done just check the whole project into your source control.
+Setting up, or converting code to a `gb` project is simple. Once you're done, just check the whole project into your source control.

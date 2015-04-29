@@ -17,6 +17,10 @@ I gave a talk about `gb` and the rational for it's creation at GDG Berlin in Apr
 
     go get github.com/constabulary/gb/...
 
+## Getting started
+
+See the [getting started](getting-started.md) document.
+
 ## Commands
 
 `gb` is the main command. It supports subcommands, of which there are currently two:
