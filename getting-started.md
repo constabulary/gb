@@ -83,24 +83,22 @@ Nearly, there, just missing the `golang.org/x/crypto/ssh` package, again we'll u
      2015/04/29 13:44:41 INFO compile golang.org/x/crypto/ssh/agent [client.go forward.go keyring.go server.go]
      2015/04/29 13:44:41 INFO compile github.com/pkg/sftp [attrs.go client.go packet.go release.go sftp.go]
      2015/04/29 13:44:42 INFO install compile {agent golang.org/x/crypto/ssh/agent /home/dfc/devel/sftp/vendor/src/golang.org/x/crypto/ssh/agent}
-     2015/04/29 13:44:42 INFO install compile {sftp github.com/pkg/sftp /home/dfc/devel/sftp/src/github.com/pkg/sftp}
-     2015/04/29 13:44:42 INFO compile github.com/pkg/sftp/examples/buffered-write-benchmark [main.go]
-     2015/04/29 13:44:42 INFO compile github.com/pkg/sftp/examples/gsftp [main.go]
-     2015/04/29 13:44:42 INFO compile github.com/pkg/sftp/examples/streaming-read-benchmark [main.go]
-     2015/04/29 13:44:42 INFO compile github.com/pkg/sftp/examples/streaming-write-benchmark [main.go]
-     2015/04/29 13:44:42 INFO compile github.com/pkg/sftp/examples/buffered-read-benchmark [main.go]
-     2015/04/29 13:44:42 INFO link /tmp/gb634560345/github.com/pkg/sftp/examples/main [/tmp/gb634560345/github.com/pkg/sftp/examples/buffered-read-benchmark.a]
-     2015/04/29 13:44:42 INFO link /tmp/gb634560345/github.com/pkg/sftp/examples/main [/tmp/gb634560345/github.com/pkg/sftp/examples/gsftp.a]
-     2015/04/29 13:44:42 INFO link /tmp/gb634560345/github.com/pkg/sftp/examples/main [/tmp/gb634560345/github.com/pkg/sftp/examples/buffered-write-benchmark.a]
-     2015/04/29 13:44:42 INFO link /tmp/gb634560345/github.com/pkg/sftp/examples/main [/tmp/gb634560345/github.com/pkg/sftp/examples/streaming-write-benchmark.a]
-     2015/04/29 13:44:42 INFO link /tmp/gb634560345/github.com/pkg/sftp/examples/main [/tmp/gb634560345/github.com/pkg/sftp/examples/streaming-read-benchmark.a]
-     2015/04/29 13:44:44 INFO build duration: 4.25611787s map[compile:4.240654481s link:9.331042949s]
+     2015/04/29 19:50:55 INFO compile github.com/pkg/sftp/examples/buffered-read-benchmark [main.go]
+     2015/04/29 19:50:55 INFO compile github.com/pkg/sftp/examples/buffered-write-benchmark [main.go]
+     2015/04/29 19:50:55 INFO compile github.com/pkg/sftp/examples/gsftp [main.go]
+     2015/04/29 19:50:55 INFO compile github.com/pkg/sftp/examples/streaming-read-benchmark [main.go]
+     2015/04/29 19:50:55 INFO compile github.com/pkg/sftp/examples/streaming-write-benchmark [main.go]
+     2015/04/29 19:50:56 INFO link /home/dfc/devel/sftp/bin/buffered-read-benchmark [/tmp/gb786934546/github.com/pkg/sftp/examples/buffered-read-benchmark/main.a]
+     2015/04/29 19:50:56 INFO link /home/dfc/devel/sftp/bin/gsftp [/tmp/gb786934546/github.com/pkg/sftp/examples/gsftp/main.a]
+     2015/04/29 19:50:56 INFO link /home/dfc/devel/sftp/bin/streaming-read-benchmark [/tmp/gb786934546/github.com/pkg/sftp/examples/streaming-read-benchmark/main.a]
+     2015/04/29 19:50:56 INFO link /home/dfc/devel/sftp/bin/streaming-write-benchmark [/tmp/gb786934546/github.com/pkg/sftp/examples/streaming-write-benchmark/main.a]
+     2015/04/29 19:50:56 INFO link /home/dfc/devel/sftp/bin/buffered-write-benchmark [/tmp/gb786934546/github.com/pkg/sftp/examples/buffered-write-benchmark/main.a]
+     2015/04/29 19:50:58 INFO build duration: 2.535541868s map[compile:1.895628229s link:9.827128875s]
 
 And now it builds. Some things to note
 
 - The package name `all` matches all the packages inside your project's `src/` directory. It's a simple way to build everything, you can use other import paths and globs.
 - There is no way to build your vendored source, it will be built if required to build your code in the `src/` directory.
-- There is currently a bug where commands are linked, but not moved into the project's `bin/` directory. This will be fixed shortly.
 
 ## More complicated example
 
@@ -119,15 +117,14 @@ Now, we know this project uses `godeps`, so already includes all its dependencie
 Let's see if it builds
 
      % gb build all
-     2015/04/29 13:52:40 INFO project root "/home/dfc/devel/confd"
-     ...
-     2015/04/29 13:52:40 INFO compile github.com/kelseyhightower/confd [confd.go config.go node_var.go version.go]
-     2015/04/29 13:52:40 INFO compile github.com/kelseyhightower/confd/integration/zookeeper [main.go]
-     2015/04/29 13:52:40 INFO link /tmp/gb137712104/github.com/kelseyhightower/confd/integration/main [/tmp/gb137712104/github.com/kelseyhightower/confd/integration/zookeeper.a]
-     2015/04/29 13:52:40 INFO link /tmp/gb137712104/github.com/kelseyhightower/main [/tmp/gb137712104/github.com/kelseyhightower/confd.a]
-     2015/04/29 13:52:42 INFO build duration: 1.657282147s map[compile:387.488748ms link:2.166243738s]
+     2015/04/29 19:52:16 INFO project root "/home/dfc/devel/confd"
+     2015/04/29 19:52:16 INFO compile github.com/kelseyhightower/confd [confd.go config.go node_var.go version.go]
+     2015/04/29 19:52:16 INFO compile github.com/kelseyhightower/confd/integration/zookeeper [main.go]
+     2015/04/29 19:52:16 INFO link /home/dfc/devel/confd/bin/zookeeper [/tmp/gb934182157/github.com/kelseyhightower/confd/integration/zookeeper/main.a]
+     2015/04/29 19:52:16 INFO link /home/dfc/devel/confd/bin/confd [/tmp/gb934182157/github.com/kelseyhightower/confd/main.a]
+     2015/04/29 19:52:17 INFO build duration: 1.7575955s map[compile:405.681764ms link:2.275663206s]
 
-And it does (modulo the linking bug).
+And it does.
 
 # Wrapping up
 
