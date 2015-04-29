@@ -44,10 +44,9 @@ func run(dir, command string, args ...string) error {
 func runOut(dir, command string, args ...string) ([]byte, error) {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = dir
-	output, err := cmd.CombinedOutput()
 	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		Errorf("%v: %s", cmd.Args, output)
 		err = fmt.Errorf("%v: %s", cmd.Args, err)
 	}
 	return output, err

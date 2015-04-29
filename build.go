@@ -2,7 +2,7 @@ package gb
 
 import (
 	"fmt"
-	"path"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -112,10 +112,6 @@ func (g *gc) Objfile() string {
 	return objfile(g.pkg)
 }
 
-func objfile(pkg *Package) string {
-	return filepath.Join(objdir(pkg), path.Base(pkg.ImportPath)+".a")
-}
-
 func (g *gc) Pkgfile() string {
 	return g.Objfile()
 }
@@ -222,7 +218,11 @@ type ld struct {
 
 func (l *ld) link() error {
 	t0 := time.Now()
-	target := filepath.Join(objdir(l.pkg), l.pkg.Name)
+	target := binfile(l.pkg)
+	if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+		return err
+	}
+
 	Infof("link %v [%v]", target, l.afile.Pkgfile())
 	includes := l.pkg.ctx.IncludePaths()
 	if l.pkg.Scope == "test" && l.pkg.ExtraIncludes != "" {
@@ -263,4 +263,31 @@ func objdir(pkg *Package) string {
 
 func testobjdir(pkg *Package) string {
 	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
+}
+
+// objfile returns the name of the object file for this package
+func objfile(pkg *Package) string {
+	return filepath.Join(objdir(pkg), objname(pkg))
+}
+
+func objname(pkg *Package) string {
+	switch pkg.Name {
+	case "main":
+		return filepath.Join(filepath.Base(filepath.FromSlash(pkg.ImportPath)), "main.a")
+	default:
+		return pkg.Name + ".a"
+	}
+}
+
+func binfile(pkg *Package) string {
+	return filepath.Join(pkg.ctx.Bindir(), binname(pkg))
+}
+
+func binname(pkg *Package) string {
+	switch pkg.Name {
+	case "main":
+		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
+	default:
+		panic("binname called with non main package: " + pkg.ImportPath)
+	}
 }

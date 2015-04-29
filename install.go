@@ -3,7 +3,6 @@ package gb
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 )
@@ -82,7 +81,7 @@ func pkgdir(pkg *Package) string {
 }
 
 func pkgfile(pkg *Package) string {
-	return filepath.Join(pkgdir(pkg), path.Base(pkg.ImportPath)+".a")
+	return filepath.Join(pkgdir(pkg), filepath.Base(filepath.FromSlash(pkg.ImportPath))+".a")
 }
 
 // isStale returns true if the source pkg is considered to be stale with

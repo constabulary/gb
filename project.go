@@ -54,3 +54,8 @@ func (p *Project) Srcdirs() []string {
 func (p *Project) srcdir() []string {
 	return []string{filepath.Join(p.Projectdir(), "src")}
 }
+
+// Bindir returns the path for compiled programs.
+func (p *Project) Bindir() string {
+	return filepath.Join(p.rootdir, "bin")
+}
