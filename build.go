@@ -284,7 +284,7 @@ func binfile(pkg *Package) string {
 	case "test":
 		return filepath.Join(testobjdir(pkg), binname(pkg))
 	default:
-	return filepath.Join(pkg.ctx.Bindir(), binname(pkg))
+		return filepath.Join(pkg.ctx.Bindir(), binname(pkg))
 	}
 }
 
@@ -293,7 +293,7 @@ func binname(pkg *Package) string {
 	case pkg.Name == "main":
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 	case pkg.Scope == "test":
-		return pkg.Name+".test"
+		return pkg.Name // +".test"
 	default:
 		panic("binname called with non main package: " + pkg.ImportPath)
 	}

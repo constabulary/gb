@@ -5,6 +5,7 @@ import (
 	"go/build"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 )
 
@@ -66,7 +67,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	}
 	buildmain := Ld(testmain, Compile(testmain, testobj))
 
-	cmd := exec.Command(filepath.Join(objdir(testmain), testmain.Name+".test"))
+	cmd := exec.Command(binfile(testmain) + ".test")
 	cmd.Dir = pkg.Dir // tests run in the original source directory
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -88,7 +89,7 @@ func buildTestMain(pkg *Package) (*Package, error) {
 	}
 	testmain := newPackage(pkg.ctx, &build.Package{
 		Name:       pkg.Name,
-		ImportPath: "testmain",
+		ImportPath: path.Join(pkg.ImportPath, "testmain"),
 		Dir:        dir,
 		SrcRoot:    pkg.SrcRoot,
 
