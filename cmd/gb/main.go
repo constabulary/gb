@@ -104,7 +104,7 @@ func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
 		srcdir = "."
 	}
 	if len(args) == 0 {
-		args = []string{srcdir}
+		args = []string{"."}
 	}
 	var out []string
 	for _, a := range args {
