@@ -28,8 +28,6 @@ Source inside a `gb` project follows the same rules as the `go` tool, see the [W
 
 will build the small `helloworld` command.
 
-*note*: there is a bug currently where binaries are not installed to the project's `bin/` directory as you would expect. This will be fixed shortly
-
 # Converting an existing project
 
 This section shows how to construct a `gb` project using existing code bases.
