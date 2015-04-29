@@ -108,7 +108,10 @@ func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, err
 }
 
 // Destroy removes the temporary working files of this context.
-func (c *Context) Destroy() error { return nil }
+func (c *Context) Destroy() error {
+	Debugf("removing work directory: %v", c.workdir)
+	return os.RemoveAll(c.workdir)
+}
 
 // Statistics records the various Durations
 type Statistics struct {
