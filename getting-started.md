@@ -39,7 +39,7 @@ In this example we'll create a `gb` project from the `github.com/pkg/sftp` codeb
 First, create a project,
 
      % mkdir -p ~/devel/sftp
-     % cd ~/devel/sfp
+     % cd ~/devel/sftp
 
 Now checkout `github.com/pkg/sftp` to the path it expects
 
