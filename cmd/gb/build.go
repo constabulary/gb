@@ -41,6 +41,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 }
 
 var BuildCmd = &Command{
+	ShortDesc: "build a package",
 	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
 		t0 := time.Now()

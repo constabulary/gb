@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,8 +14,9 @@ import (
 )
 
 type Command struct {
-	Run      func(ctx *gb.Context, args []string) error
-	AddFlags func(fs *flag.FlagSet)
+	ShortDesc string
+	Run       func(ctx *gb.Context, args []string) error
+	AddFlags  func(fs *flag.FlagSet)
 }
 
 func mustGetwd() string {
@@ -36,6 +38,18 @@ var (
 func init() {
 	fs.BoolVar(&gb.Quiet, "q", gb.Quiet, "suppress log messages below ERROR level")
 	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
+
+	// TODO some flags are specific to a specific commands
+	fs.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage:")
+		for name, cmd := range commands {
+			fmt.Fprintf(os.Stderr, "  gb %s [flags] [package] - %s\n",
+				name, cmd.ShortDesc)
+		}
+		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(os.Stderr, "Flags:")
+		fs.PrintDefaults()
+	}
 }
 
 var commands = make(map[string]*Command)
@@ -48,8 +62,9 @@ func registerCommand(name string, command *Command) {
 
 func main() {
 	args := os.Args
-	if len(args) < 2 {
-		gb.Fatalf("no command supplied")
+	if len(args) < 2 || args[1] == "-h" {
+		fs.Usage()
+		os.Exit(1)
 	}
 
 	gopath := filepath.SplitList(os.Getenv("GOPATH"))
@@ -70,7 +85,7 @@ func main() {
 	if !ok {
 		if _, err := lookupPlugin(name); err != nil {
 			gb.Errorf("unknown command %q", name)
-			fs.PrintDefaults()
+			fs.Usage()
 			os.Exit(1)
 		}
 		cmd = commands["plugin"]

@@ -11,6 +11,7 @@ func init() {
 }
 
 var TestCmd = &Command{
+	ShortDesc: "test a package",
 	Run: func(ctx *gb.Context, args []string) error {
 		t0 := time.Now()
 		ctx.Force = F

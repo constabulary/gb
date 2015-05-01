@@ -14,6 +14,7 @@ func init() {
 }
 
 var PluginCmd = &Command{
+	ShortDesc: "run a plugin",
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) < 1 {
 			return fmt.Errorf("plugin: no command supplied")
