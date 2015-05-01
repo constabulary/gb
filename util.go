@@ -2,6 +2,7 @@ package gb
 
 import "io"
 import "os"
+import "os/exec"
 import "path/filepath"
 import "fmt"
 
@@ -26,4 +27,20 @@ func copyfile(dst, src string) error {
 	}
 	_, err = io.Copy(w, r)
 	return err
+}
+
+func run(dir, command string, args ...string) error {
+	_, err := runOut(dir, command, args...)
+	return err
+}
+
+func runOut(dir, command string, args ...string) ([]byte, error) {
+	cmd := exec.Command(command, args...)
+	cmd.Dir = dir
+	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		err = fmt.Errorf("%v: %s\n%s", cmd.Args, err, output)
+	}
+	return output, err
 }

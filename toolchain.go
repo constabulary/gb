@@ -33,25 +33,6 @@ func Run(cmd *exec.Cmd, dep Target) Target {
 	return &target // TODO
 }
 
-func run(dir, command string, args ...string) error {
-	_, err := runOut(dir, command, args...)
-	if err != nil {
-		err = fmt.Errorf("run: %v: %v", append([]string{command}, args...), err)
-	}
-	return err
-}
-
-func runOut(dir, command string, args ...string) ([]byte, error) {
-	cmd := exec.Command(command, args...)
-	cmd.Dir = dir
-	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		err = fmt.Errorf("%v: %s", cmd.Args, err)
-	}
-	return output, err
-}
-
 type NullToolchain struct{}
 
 func (NullToolchain) Gc(importpath, srcdir, outfile string, files []string) error {
