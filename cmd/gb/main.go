@@ -72,13 +72,7 @@ func main() {
 	if err != nil {
 		gb.Fatalf("could not locate project root: %v", err)
 	}
-
-	project := gb.NewProject(root)
-	tc, err := gb.NewGcToolchain(*goroot, *goos, *goarch)
-	if err != nil {
-		gb.Fatalf("unable to construct toolchain: %v", err)
-	}
-	ctx := project.NewContext(tc)
+	gb.Infof("project root %q", root)
 
 	name := args[1]
 	cmd, ok := commands[name]
@@ -102,7 +96,13 @@ func main() {
 	}
 
 	// must be below fs.Parse because the -q and -v flags will log.Infof
-	gb.Infof("project root %q", root)
+	project := gb.NewProject(root)
+	tc, err := gb.NewGcToolchain(*goroot, *goos, *goarch)
+	if err != nil {
+		gb.Fatalf("unable to construct toolchain: %v", err)
+	}
+	ctx := project.NewContext(tc)
+
 	args = importPaths(ctx, fs.Args())
 	gb.Debugf("args: %v", args)
 	if err := cmd.Run(ctx, args); err != nil {
