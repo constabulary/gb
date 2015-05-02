@@ -20,7 +20,7 @@ func testProject(t *testing.T) *Project {
 
 func testContext(t *testing.T) *Context {
 	prj := testProject(t)
-	tc, err := NewGcToolchain(runtime.GOROOT(), runtime.GOOS, runtime.GOARCH)
+	tc, err := NewGcToolchain(runtime.GOROOT())
 	if err != nil {
 		t.Fatal(err)
 	}
