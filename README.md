@@ -1,5 +1,7 @@
 # gb
 
+[![wercker status](https://app.wercker.com/status/494a8ac6b836f39cc7e67036d957a43e/m "wercker status")](https://app.wercker.com/project/bykey/494a8ac6b836f39cc7e67036d957a43e)
+
 `gb` is a proof of concept replacement build tool for the [Go programming language](https://golang.org).
 
 I gave a talk about `gb` and the rational for it's creation at GDG Berlin in April 2015, [video](https://www.youtube.com/watch?v=c3dW80eO88I&index=12&list=PLseEp7p6Ewib4uUPTeaQoLfMUYXF_BQ-G) [slides](http://go-talks.appspot.com/github.com/davecheney/presentations/reproducible-builds.slide#1).
