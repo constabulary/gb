@@ -275,7 +275,7 @@ func objname(pkg *Package) string {
 	case "main":
 		return filepath.Join(filepath.Base(filepath.FromSlash(pkg.ImportPath)), "main.a")
 	default:
-		return pkg.Name + ".a"
+		return filepath.Base(filepath.FromSlash(pkg.ImportPath)) + ".a"
 	}
 }
 

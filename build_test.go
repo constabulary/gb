@@ -1,12 +1,10 @@
 package gb
 
-import (
-	"path/filepath"
-	"runtime"
-	"testing"
-)
+import "testing"
 
 func TestBuild(t *testing.T) {
+	Verbose = true
+	defer func() { Verbose = false }()
 	tests := []struct {
 		pkg string
 		err error
@@ -19,30 +17,21 @@ func TestBuild(t *testing.T) {
 	}, {
 		pkg: "c",
 		err: nil,
+	}, {
+		pkg: "d.v1",
+		err: nil,
 	}}
 
-	root, err := filepath.Abs("testdata")
-	if err != nil {
-		t.Fatal(err)
-	}
-	proj := NewProject(root)
-
-	tc, err := NewGcToolchain(runtime.GOROOT(), runtime.GOOS, runtime.GOARCH)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	for _, tt := range tests {
-		ctx := proj.NewContext(tc)
-		ctx.Force = true
-		ctx.SkipInstall = true
+		ctx := testContext(t)
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != tt.err {
-			t.Errorf("ctx.ResolvePackage(tt.pkg): want %v, got %v", tt.err, err)
+			t.Errorf("ctx.ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue
 		}
 		if err := Build(pkg); err != tt.err {
-			t.Errorf("ctx.Build(tt.pkg): want %v, got %v", tt.err, err)
+			t.Errorf("ctx.Build(%v): want %v, got %v", tt.pkg, tt.err, err)
 		}
+		ctx.Destroy()
 	}
 }

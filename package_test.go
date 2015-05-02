@@ -1,7 +1,6 @@
 package gb
 
 import (
-	"go/build"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -21,17 +20,14 @@ func testProject(t *testing.T) *Project {
 
 func testContext(t *testing.T) *Context {
 	prj := testProject(t)
-	ctx := build.Context{
-		GOARCH:   "amd64",
-		GOOS:     "linux",
-		GOROOT:   runtime.GOROOT(),
-		GOPATH:   prj.rootdir,
-		Compiler: "gc",
+	tc, err := NewGcToolchain(runtime.GOROOT(), runtime.GOOS, runtime.GOARCH)
+	if err != nil {
+		t.Fatal(err)
 	}
-	return &Context{
-		Project: prj,
-		Context: &ctx,
-	}
+	ctx := prj.NewContext(tc)
+	ctx.Force = true
+	ctx.SkipInstall = true
+	return ctx
 }
 
 func TestResolvePackage(t *testing.T) {
