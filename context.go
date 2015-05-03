@@ -73,6 +73,7 @@ func (c *Context) IncludePaths() []string {
 
 // Pkgdir returns the path to precompiled packages.
 func (c *Context) Pkgdir() string {
+	// TODO(dfc) c.Context.{GOOS,GOARCH} may be out of date wrt. tc.{goos,goarch}
 	return filepath.Join(c.Project.Pkgdir(), c.Context.GOOS, c.Context.GOARCH)
 }
 

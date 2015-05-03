@@ -7,6 +7,7 @@ import (
 	"go/build"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 type gcToolchain struct {
@@ -14,12 +15,14 @@ type gcToolchain struct {
 	gc, cc, ld, as, pack string
 }
 
-func GcToolchain(goroot, goos, goarch string) func(c *Context) error {
+func GcToolchain(goroot string) func(c *Context) error {
 	return func(c *Context) error {
 		archchar, err := build.ArchChar(goarch)
 		if err != nil {
 			return err
 		}
+		goos := runtime.GOOS
+		goarch := runtime.GOARCH
 		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
 		c.tc = &gcToolchain{
 			goroot: goroot,

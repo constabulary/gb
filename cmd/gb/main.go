@@ -29,8 +29,6 @@ func mustGetwd() string {
 
 var (
 	fs        = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	goos      = fs.String("goos", runtime.GOOS, "override GOOS")
-	goarch    = fs.String("goarch", runtime.GOARCH, "override GOARCH")
 	goroot    = fs.String("goroot", runtime.GOROOT(), "override GOROOT")
 	toolchain = fs.String("toolchain", "gc", "choose go compiler toolchain")
 )
@@ -98,7 +96,7 @@ func main() {
 	// must be below fs.Parse because the -q and -v flags will log.Infof
 	project := gb.NewProject(root)
 	ctx, err := project.NewContext(
-		gb.GcToolchain(*goroot, *goos, *goarch),
+		gb.GcToolchain(*goroot),
 	)
 	if err != nil {
 		gb.Fatalf("unable to construct context: %v", err)
