@@ -45,7 +45,7 @@ func (c *cachedPkgTarget) Pkgfile() string {
 }
 
 func (c *cachedPkgTarget) String() string {
-	return fmt.Sprintf("cached %v", c.pkg)
+	return fmt.Sprintf("cached %v", c.pkg.ImportPath)
 }
 
 func (c *cachedPkgTarget) Result() error {

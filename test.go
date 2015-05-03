@@ -40,8 +40,14 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	imports = append(imports, pkg.Package.Imports...)
 	imports = append(imports, pkg.Package.TestImports...)
 
+	name := pkg.Name
+	if name == "main" {
+		// rename the main package to its package name for testing.
+		name = filepath.Base(filepath.FromSlash(pkg.ImportPath))
+	}
+
 	testpkg := newPackage(pkg.ctx, &build.Package{
-		Name:       pkg.Name,
+		Name:       name,
 		ImportPath: pkg.ImportPath,
 		Dir:        pkg.Dir,
 		SrcRoot:    pkg.SrcRoot,

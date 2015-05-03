@@ -24,6 +24,9 @@ func TestTestPackage(t *testing.T) {
 		}, {
 			pkg: "e",
 			err: nil,
+		}, {
+			pkg: "cmd/f",
+			err: nil,
 		}}
 
 	for _, tt := range tests {
