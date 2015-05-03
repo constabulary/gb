@@ -95,11 +95,12 @@ func main() {
 
 	// must be below fs.Parse because the -q and -v flags will log.Infof
 	project := gb.NewProject(root)
-	tc, err := gb.NewGcToolchain(*goroot)
+	ctx, err := project.NewContext(
+		gb.GcToolchain(*goroot),
+	)
 	if err != nil {
-		gb.Fatalf("unable to construct toolchain: %v", err)
+		gb.Fatalf("unable to construct context: %v", err)
 	}
-	ctx := project.NewContext(tc)
 
 	args = importPaths(ctx, fs.Args())
 	gb.Debugf("args: %v", args)

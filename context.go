@@ -29,14 +29,35 @@ type Context struct {
 	pkgs map[string]*Package // map of package paths to resolved packages
 }
 
+// NullToolchain configures the Context to use the null toolchain.
+func NullToolchain(c *Context) error {
+	c.tc = new(nulltoolchain)
+	return nil
+}
+
 // NewContext returns a new build context from this project.
-func (p *Project) NewContext(tc Toolchain) *Context {
-	context := build.Default
-	context.GOPATH = togopath(p.Srcdirs())
+// By default this context will use the gc toolchain with the
+// host's GOOS and GOARCH values.
+func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
+	bc := build.Default
+	bc.GOPATH = togopath(p.Srcdirs())
+	defaults := []func(*Context) error{
+		GcToolchain(bc.GOROOT),
+	}
+	ctx := newContext(p, &bc)
+	for _, opt := range append(defaults, opts...) {
+		err := opt(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ctx, nil
+}
+
+func newContext(p *Project, bc *build.Context) *Context {
 	return &Context{
 		Project: p,
-		Context: &context,
-		tc:      tc,
+		Context: bc,
 		workdir: mktmpdir(),
 		pkgs:    make(map[string]*Package),
 	}
