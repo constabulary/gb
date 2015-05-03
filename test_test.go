@@ -6,7 +6,7 @@ import (
 )
 
 func TestTestPackage(t *testing.T) {
-	Verbose = false
+	Verbose = true
 	defer func() { Verbose = false }()
 	tests := []struct {
 		pkg string
@@ -31,7 +31,8 @@ func TestTestPackage(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
-		pkg, err := ctx.ResolvePackage(tt.pkg)
+		// TODO(dfc) can we resolve the duplication here ?
+		pkg, err := ctx.ResolvePackageWithTests(tt.pkg)
 		if err != nil {
 			t.Errorf("ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue

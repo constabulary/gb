@@ -82,6 +82,26 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 	return c.loadPackage(make(map[string]bool), path)
 }
 
+// ResolvePackageWithTests resolves the package at path using the current context
+// it also resolves the internal and external test dependenices, although these are
+// not returned, only cached in the Context.
+func (c *Context) ResolvePackageWithTests(path string) (*Package, error) {
+	p, err := c.ResolvePackage(path)
+	if err != nil {
+		return nil, err
+	}
+	var imports []string
+	imports = append(imports, p.Package.TestImports...)
+	imports = append(imports, p.Package.XTestImports...)
+	for _, i := range imports {
+		_, err := c.ResolvePackage(i)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return p, nil
+}
+
 // loadPackage recursively resolves path and its imports and if successful
 // stores those packages in the Context's internal package cache.
 func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, error) {
