@@ -12,7 +12,6 @@ type Toolchain interface {
 	Asm(srcdir, ofile, sfile string) error
 	Pack(...string) error
 	Ld([]string, string, string) error
-	Cc(srcdir, objdir, ofile, cfile string) error
 
 	//	Cgo(string, []string) error
 	//	Gcc(string, []string) error

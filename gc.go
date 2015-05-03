@@ -84,13 +84,6 @@ func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile strin
 	return run(srcdir, t.gc, args...)
 }
 
-func (t *gcToolchain) Cc(srcdir, objdir, outfile, cfile string) error {
-	args := []string{"-F", "-V", "-w", "-I", objdir, "-I", filepath.Join(t.goroot, "pkg", t.goos+"_"+t.goarch)}
-	args = append(args, "-o", outfile)
-	args = append(args, cfile)
-	return run(srcdir, t.cc, args...)
-}
-
 func (t *gcToolchain) Pack(afiles ...string) error {
 	args := []string{"r"}
 	args = append(args, afiles...)
