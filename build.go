@@ -187,6 +187,10 @@ type asm struct {
 	sfile string
 }
 
+func (a *asm) String() string {
+	return fmt.Sprintf("asm %v", a.sfile)
+}
+
 func (a *asm) Objfile() string {
 	return filepath.Join(a.pkg.ctx.workdir, a.pkg.ImportPath, stripext(a.sfile)+".6")
 }
