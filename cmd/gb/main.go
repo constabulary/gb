@@ -70,8 +70,6 @@ func main() {
 	if err != nil {
 		gb.Fatalf("could not locate project root: %v", err)
 	}
-	gb.Infof("project root %q", root)
-
 	name := args[1]
 	cmd, ok := commands[name]
 	if !ok {
@@ -95,6 +93,8 @@ func main() {
 
 	// must be below fs.Parse because the -q and -v flags will log.Infof
 	project := gb.NewProject(root)
+	gb.Infof("project root %q", project.Projectdir())
+
 	ctx, err := project.NewContext(
 		gb.GcToolchain(*goroot),
 	)
