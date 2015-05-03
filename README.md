@@ -54,7 +54,7 @@ The following flags are supported by `gb`. Note that these are flags to subcomma
 - `-q` - decreases verbosity, effectively raising the output level to ERROR. In a successful build, no output will be displayed.
 - `-goroot` - alters the path to the go toolchain in use, eg `gb build -goroot=$HOME/go1.4`.
 - `-goos`, `-goarch` - analogous to `env GOOS=... GOARCH=... gb`.
-- `-f` - ignore cached packages if present, new packages built will overwrite any cached packages.
+- `-f` - ignore cached packages if present, new packages built will overwrite any cached packages. This effectively disables incremental compilation.
 - `-F` - do not cache packages, cached packages will still be used for incremental compilation, `-f -F` is advised to disable the package caching system.
 
 ## Plugins
@@ -63,4 +63,3 @@ The following flags are supported by `gb`. Note that these are flags to subcomma
 
 - `env` - analogous to `go env`, useful for debugging the environment passed to `gb` plugins, tranditionally all environment variables in this set begin with `GB_`.
 - `vendor` - is a simple wrapper around `go get` to allow easy bootstrapping of a project by fetching dependencies in to the `vendor/src/` directory.
-
