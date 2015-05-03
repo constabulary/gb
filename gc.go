@@ -14,21 +14,24 @@ type gcToolchain struct {
 	gc, cc, ld, as, pack string
 }
 
-func NewGcToolchain(goroot, goos, goarch string) (Toolchain, error) {
-	tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
-	archchar, err := build.ArchChar(goarch)
-	if err != nil {
-		return nil, err
+func GcToolchain(goroot, goos, goarch string) func(c *Context) error {
+	return func(c *Context) error {
+		archchar, err := build.ArchChar(goarch)
+		if err != nil {
+			return err
+		}
+		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
+		c.tc = &gcToolchain{
+			goroot: goroot,
+			goos:   goos,
+			goarch: goarch,
+			gc:     filepath.Join(tooldir, archchar+"g"),
+			ld:     filepath.Join(tooldir, archchar+"l"),
+			as:     filepath.Join(tooldir, archchar+"a"),
+			pack:   filepath.Join(tooldir, "pack"),
+		}
+		return nil
 	}
-	return &gcToolchain{
-		goroot: goroot,
-		goos:   goos,
-		goarch: goarch,
-		gc:     filepath.Join(tooldir, archchar+"g"),
-		ld:     filepath.Join(tooldir, archchar+"l"),
-		as:     filepath.Join(tooldir, archchar+"a"),
-		pack:   filepath.Join(tooldir, "pack"),
-	}, nil
 }
 
 func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {

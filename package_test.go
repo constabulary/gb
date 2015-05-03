@@ -20,11 +20,12 @@ func testProject(t *testing.T) *Project {
 
 func testContext(t *testing.T) *Context {
 	prj := testProject(t)
-	tc, err := NewGcToolchain(runtime.GOROOT(), runtime.GOOS, runtime.GOARCH)
+	ctx, err := prj.NewContext(
+		GcToolchain(runtime.GOROOT(), runtime.GOOS, runtime.GOARCH),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ctx := prj.NewContext(tc)
 	ctx.Force = true
 	ctx.SkipInstall = true
 	return ctx
