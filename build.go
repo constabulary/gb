@@ -116,11 +116,13 @@ func (g *gc) Pkgfile() string {
 	return g.Objfile()
 }
 
-// Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
-func Gc(pkg *Package, gofiles []string, deps ...Target) interface {
+type objpkgtarget interface {
 	ObjTarget
 	Pkgfile() string // implements PkgTarget
-} {
+}
+
+// Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
+func Gc(pkg *Package, gofiles []string, deps ...Target) objpkgtarget {
 	gc := gc{
 		pkg:     pkg,
 		gofiles: gofiles,
@@ -255,23 +257,19 @@ func stripext(path string) string {
 	return path[:len(ext)]
 }
 
+// objfile returns the name of the object file for this package
+func objfile(pkg *Package) string {
+	return filepath.Join(objdir(pkg), objname(pkg))
+}
+
 // objdir returns the destination for object files compiled for this Package.
 func objdir(pkg *Package) string {
 	switch pkg.Scope {
 	case "test":
-		return filepath.Join(testobjdir(pkg), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	default:
 		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
-}
-
-func testobjdir(pkg *Package) string {
-	return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
-}
-
-// objfile returns the name of the object file for this package
-func objfile(pkg *Package) string {
-	return filepath.Join(objdir(pkg), objname(pkg))
 }
 
 func objname(pkg *Package) string {
@@ -286,7 +284,7 @@ func objname(pkg *Package) string {
 func binfile(pkg *Package) string {
 	switch pkg.Scope {
 	case "test":
-		return filepath.Join(testobjdir(pkg), binname(pkg))
+		return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
 	default:
 		return filepath.Join(pkg.ctx.Bindir(), binname(pkg))
 	}
@@ -297,7 +295,7 @@ func binname(pkg *Package) string {
 	case pkg.Name == "main":
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 	case pkg.Scope == "test":
-		return pkg.Name // +".test"
+		return pkg.Name
 	default:
 		panic("binname called with non main package: " + pkg.ImportPath)
 	}
