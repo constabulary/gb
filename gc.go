@@ -11,7 +11,7 @@ import (
 )
 
 type gcToolchain struct {
-	goroot, goos, goarch string
+	goos, goarch         string
 	gc, cc, ld, as, pack string
 }
 
@@ -53,7 +53,6 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 		}
 		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
 		c.tc = &gcToolchain{
-			goroot: goroot,
 			goos:   goos,
 			goarch: goarch,
 			gc:     filepath.Join(tooldir, archchar+"g"),
