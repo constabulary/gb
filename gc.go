@@ -17,12 +17,12 @@ type gcToolchain struct {
 
 func GcToolchain(goroot string) func(c *Context) error {
 	return func(c *Context) error {
+		goos := runtime.GOOS
+		goarch := runtime.GOARCH
 		archchar, err := build.ArchChar(goarch)
 		if err != nil {
 			return err
 		}
-		goos := runtime.GOOS
-		goarch := runtime.GOARCH
 		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
 		c.tc = &gcToolchain{
 			goroot: goroot,

@@ -42,7 +42,7 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	bc := build.Default
 	bc.GOPATH = togopath(p.Srcdirs())
 	defaults := []func(*Context) error{
-		GcToolchain(bc.GOROOT, bc.GOOS, bc.GOARCH),
+		GcToolchain(bc.GOROOT),
 	}
 	ctx := newContext(p, &bc)
 	for _, opt := range append(defaults, opts...) {
