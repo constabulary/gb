@@ -3,7 +3,6 @@ package gb
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 )
 
@@ -21,7 +20,7 @@ func testProject(t *testing.T) *Project {
 func testContext(t *testing.T) *Context {
 	prj := testProject(t)
 	ctx, err := prj.NewContext(
-		GcToolchain(runtime.GOROOT()),
+		GcToolchain(),
 	)
 	if err != nil {
 		t.Fatal(err)
