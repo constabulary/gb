@@ -96,7 +96,7 @@ func main() {
 	gb.Infof("project root %q", project.Projectdir())
 
 	ctx, err := project.NewContext(
-		gb.GcToolchain(*goroot),
+		gb.GcToolchain(gb.Goroot(*goroot)),
 	)
 	if err != nil {
 		gb.Fatalf("unable to construct context: %v", err)

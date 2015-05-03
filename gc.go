@@ -15,10 +15,38 @@ type gcToolchain struct {
 	gc, cc, ld, as, pack string
 }
 
-func GcToolchain(goroot string) func(c *Context) error {
+type gcoption struct {
+	goroot, goos, goarch string
+}
+
+// Goroot configures GcToolchain.
+func Goroot(goroot string) func(*gcoption) {
+	return func(opts *gcoption) {
+		opts.goroot = goroot
+	}
+}
+
+func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
+	defaults := []func(*gcoption){
+		func(opt *gcoption) {
+			opt.goroot = runtime.GOROOT()
+		},
+		func(opt *gcoption) {
+			opt.goos = runtime.GOOS
+		},
+		func(opt *gcoption) {
+			opt.goarch = runtime.GOARCH
+		},
+	}
+	var options gcoption
+	for _, opt := range append(defaults, opts...) {
+		opt(&options)
+	}
+
 	return func(c *Context) error {
-		goos := runtime.GOOS
-		goarch := runtime.GOARCH
+		goroot := options.goroot
+		goos := options.goos
+		goarch := options.goarch
 		archchar, err := build.ArchChar(goarch)
 		if err != nil {
 			return err
@@ -38,12 +66,7 @@ func GcToolchain(goroot string) func(c *Context) error {
 }
 
 func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
-	Debugf("gc:gc %v", struct {
-		ImportPath string
-		Srcdir     string
-		Outfile    string
-		Gofiles    []string
-	}{importpath, srcdir, outfile, files})
+	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
 
 	args := []string{"-p", importpath, "-pack"}
 	args = append(args, "-o", outfile)
