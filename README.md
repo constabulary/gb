@@ -4,7 +4,7 @@
 
 `gb` is a proof of concept replacement build tool for the [Go programming language](https://golang.org).
 
-I gave a talk about `gb` and the rational for it's creation at GDG Berlin in April 2015, [video](https://www.youtube.com/watch?v=c3dW80eO88I&index=12&list=PLseEp7p6Ewib4uUPTeaQoLfMUYXF_BQ-G) [slides](http://go-talks.appspot.com/github.com/davecheney/presentations/reproducible-builds.slide#1).
+I gave a talk about `gb` and the rational for it's creation at GDG Berlin in April 2015, [video](https://www.youtube.com/watch?v=c3dW80eO88I) [slides](http://go-talks.appspot.com/github.com/davecheney/presentations/reproducible-builds.slide#1).
 
 ## Project based
 
