@@ -65,6 +65,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	// build dependencies
 	deps := buildDependencies(targets, testpkg)
 	testpkg.Scope = "test"
+	testpkg.Stale = true
 
 	testobj := Compile(testpkg, deps...)
 
@@ -80,6 +81,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 		// build external test dependencies
 		deps := buildDependencies(targets, xtestpkg)
 		xtestpkg.Scope = "test"
+		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
 		testobj = Compile(xtestpkg, append(deps, testobj)...)
 	}
@@ -96,7 +98,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	cmd.Stderr = os.Stderr
 
 	Debugf("scheduling run of %v", cmd.Args)
-	return Run(cmd, buildmain)
+	return Run(pkg.ctx.permits, cmd, buildmain)
 }
 
 func buildTestMain(pkg *Package) (*Package, error) {

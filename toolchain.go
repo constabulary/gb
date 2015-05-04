@@ -19,10 +19,12 @@ type Toolchain interface {
 }
 
 // Run returns a Target representing the result of executing a CmdTarget.
-func Run(cmd *exec.Cmd, dep Target) Target {
+func Run(ch chan bool, cmd *exec.Cmd, dep Target) Target {
 	annotate := func() error {
+		<-ch
 		Infof("run %v", cmd.Args)
 		err := cmd.Run()
+		ch <- true
 		if err != nil {
 			err = fmt.Errorf("run %v: %v", cmd.Args, err)
 		}
