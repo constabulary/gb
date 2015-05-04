@@ -71,7 +71,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
 		xtestpkg := newPackage(pkg.ctx, &build.Package{
-			Name:       pkg.Name + "_test",
+			Name:       pkg.Name,
 			ImportPath: pkg.ImportPath + "_test",
 			Dir:        pkg.Dir,
 			GoFiles:    pkg.XTestGoFiles,
@@ -110,7 +110,11 @@ func buildTestMain(pkg *Package) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	Debugf("%#v", tests)
+	if len(pkg.Package.XTestGoFiles) > 0 {
+		// if there are external tests ensure that we import the
+		// test package into the final binary for side effects.
+		tests.ImportXtest = true
+	}
 	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), tests); err != nil {
 		return nil, err
 	}

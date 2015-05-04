@@ -6,7 +6,7 @@ import (
 )
 
 func TestTestPackage(t *testing.T) {
-	Verbose = true
+	Verbose = false
 	defer func() { Verbose = false }()
 	tests := []struct {
 		pkg string
@@ -44,6 +44,6 @@ func TestTestPackage(t *testing.T) {
 			t.Errorf("Test(%v): want %v, got %v", tt.pkg, tt.err, err)
 			time.Sleep(500 * time.Millisecond)
 		}
-		//		ctx.Destroy()
+		ctx.Destroy()
 	}
 }

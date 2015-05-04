@@ -89,6 +89,7 @@ func loadTestFuncs(ptest *build.Package) (*testFuncs, error) {
 	t := &testFuncs{
 		Package: ptest,
 	}
+	Debugf("loadTestFuncs: %v, %v", ptest.TestGoFiles, ptest.XTestGoFiles)
 	for _, file := range ptest.TestGoFiles {
 		if err := t.load(filepath.Join(ptest.Dir, file), "_test", &t.ImportTest, &t.NeedTest); err != nil {
 			return nil, err

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -266,7 +267,8 @@ func objfile(pkg *Package) string {
 func objdir(pkg *Package) string {
 	switch pkg.Scope {
 	case "test":
-		return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
+		return filepath.Join(pkg.ctx.workdir, ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	default:
 		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
