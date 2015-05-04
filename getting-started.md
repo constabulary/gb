@@ -44,7 +44,7 @@ First, create a project,
 Now checkout `github.com/pkg/sftp` to the path it expects
 
      % mkdir -p src/github.com/pkg/sftp
-     % git clone -q https://github.com/pkg/sftp src/github.com/pkg/sftp
+     % git clone https://github.com/pkg/sftp src/github.com/pkg/sftp
 
 Now, let's try to build this
 
