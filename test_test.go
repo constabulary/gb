@@ -6,7 +6,7 @@ import (
 )
 
 func TestTestPackage(t *testing.T) {
-	Verbose = false
+	Verbose = true
 	defer func() { Verbose = false }()
 	tests := []struct {
 		pkg string
@@ -29,6 +29,9 @@ func TestTestPackage(t *testing.T) {
 			err: nil,
 		}, {
 			pkg: "extest", // test external tests
+			err: nil,
+		}, {
+			pkg: "g", // test that _test files can modify the internal package under test
 			err: nil,
 		}}
 

@@ -71,7 +71,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
 		xtestpkg := newPackage(pkg.ctx, &build.Package{
-			Name:       pkg.Name,
+			Name:       name,
 			ImportPath: pkg.ImportPath + "_test",
 			Dir:        pkg.Dir,
 			GoFiles:    pkg.XTestGoFiles,
@@ -80,6 +80,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 		// build external test dependencies
 		deps := buildDependencies(targets, xtestpkg)
 		xtestpkg.Scope = "test"
+		xtestpkg.ExtraIncludes = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
 		testobj = Compile(xtestpkg, append(deps, testobj)...)
 	}
 
