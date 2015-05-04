@@ -27,6 +27,9 @@ func TestTestPackage(t *testing.T) {
 		}, {
 			pkg: "cmd/f",
 			err: nil,
+		}, {
+			pkg: "extest", // test external tests
+			err: nil,
 		}}
 
 	for _, tt := range tests {
@@ -41,6 +44,6 @@ func TestTestPackage(t *testing.T) {
 			t.Errorf("Test(%v): want %v, got %v", tt.pkg, tt.err, err)
 			time.Sleep(500 * time.Millisecond)
 		}
-		ctx.Destroy()
+		//		ctx.Destroy()
 	}
 }
