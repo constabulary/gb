@@ -68,7 +68,7 @@ func resolvePackages(ctx *gb.Context, args ...string) ([]*gb.Package, error) {
 	for _, arg := range args {
 		if arg == "." {
 			var err error
-			arg, err = filepath.Rel(ctx.Srcdirs()[0], mustGetwd())
+			arg, err = filepath.Rel(ctx.Srcdirs()[0], projectroot)
 			if err != nil {
 				return pkgs, err
 			}

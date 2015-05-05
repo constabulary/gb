@@ -114,13 +114,12 @@ func main() {
 // importPathsNoDotExpansion returns the import paths to use for the given
 // command line, but it does no ... expansion.
 func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
-	cwd := projectroot
-	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], cwd)
+	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], projectroot)
 	if srcdir == ".." {
 		srcdir = "."
 	}
 	if len(args) == 0 {
-		args = []string{"."}
+		args = []string{"..."}
 	}
 	var out []string
 	for _, a := range args {
