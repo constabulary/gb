@@ -30,6 +30,10 @@ See the [getting started](getting-started.md) document.
 - `build` - which takes one or more import paths, ie `gb build github.com/constabulary/gb/cmd/gb`, if executed inside `$PROJECT/src/some/path/`, `gb build` will build that path.
 - `test` - behaves identically to `gb build`, but runs tests.
 
+## Project root auto detection
+
+A `gb` project is defined as any directory that contains a `src/` subdirectory. `gb` automatically detects the root of the project by looking at the current working directory and walking backwards until it finds a directory called `src/`.
+
 ## Arguments
 
 Arguments to `gb` subcommands are package import paths or globs relative to the project `src/` directory
@@ -37,7 +41,7 @@ Arguments to `gb` subcommands are package import paths or globs relative to the 
 - `gb build github.com/a/b` - builds `github.com/a/b`
 - `gb build github.com/a/b/...` - builds `github.com/a/b` and all packages below it
 - `gb build .../cmd/...` - builds anything that matches `.*/cmd/.*`
-- `gb build` - builds the package in the current directory.
+- `gb build` - shorthand for `go build ...`, depending on the current working directory this will be the entire project, or a subtree.
 
 Other subcommands, like `test`, `vendor`, etc follow the same rule.
 
@@ -50,6 +54,7 @@ By default `gb` always performs incremental compilation and caches the results i
 ## Flags
 
 The following flags are supported by `gb`. Note that these are flags to subcommands, so must come *after* the subcommand.
+- `-R` - sets the base of the project root search path from the current working directory to the value supplied. Effectively `gb` changes working directory to this path before searching for the project root.
 - `-v` - increases verbosity, effectively lowering the output level from INFO to DEBUG.
 - `-q` - decreases verbosity, effectively raising the output level to ERROR. In a successful build, no output will be displayed.
 - `-goroot` - alters the path to the go toolchain in use, eg `gb build -goroot=$HOME/go1.4`.

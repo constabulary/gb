@@ -28,14 +28,16 @@ func mustGetwd() string {
 }
 
 var (
-	fs        = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	goroot    = fs.String("goroot", runtime.GOROOT(), "override GOROOT")
-	toolchain = fs.String("toolchain", "gc", "choose go compiler toolchain")
+	fs          = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	goroot      = fs.String("goroot", runtime.GOROOT(), "override GOROOT")
+	toolchain   = fs.String("toolchain", "gc", "choose go compiler toolchain")
+	projectroot string
 )
 
 func init() {
 	fs.BoolVar(&gb.Quiet, "q", gb.Quiet, "suppress log messages below ERROR level")
 	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
+	fs.StringVar(&projectroot, "R", mustGetwd(), "set the project root")
 
 	// TODO some flags are specific to a specific commands
 	fs.Usage = func() {
@@ -65,34 +67,34 @@ func main() {
 		os.Exit(1)
 	}
 
-	gopath := filepath.SplitList(os.Getenv("GOPATH"))
-	root, err := cmd.FindProjectroot(mustGetwd(), gopath)
-	if err != nil {
-		gb.Fatalf("could not locate project root: %v", err)
-	}
 	name := args[1]
-	cmd, ok := commands[name]
+	command, ok := commands[name]
 	if !ok {
 		if _, err := lookupPlugin(name); err != nil {
 			gb.Errorf("unknown command %q", name)
 			fs.Usage()
 			os.Exit(1)
 		}
-		cmd = commands["plugin"]
+		command = commands["plugin"]
 		args = append([]string{"plugin"}, args...)
 	}
 
 	// add extra flags if necessary
-	if cmd.AddFlags != nil {
-		cmd.AddFlags(fs)
+	if command.AddFlags != nil {
+		command.AddFlags(fs)
 	}
 
 	if err := fs.Parse(args[2:]); err != nil {
 		gb.Fatalf("could not parse flags: %v", err)
 	}
 
-	// must be below fs.Parse because the -q and -v flags will log.Infof
+	gopath := filepath.SplitList(os.Getenv("GOPATH"))
+	root, err := cmd.FindProjectroot(projectroot, gopath)
+	if err != nil {
+		gb.Fatalf("could not locate project root: %v", err)
+	}
 	project := gb.NewProject(root)
+
 	gb.Infof("project root %q", project.Projectdir())
 
 	ctx, err := project.NewContext(
@@ -104,7 +106,7 @@ func main() {
 
 	args = importPaths(ctx, fs.Args())
 	gb.Debugf("args: %v", args)
-	if err := cmd.Run(ctx, args); err != nil {
+	if err := command.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
 	}
 }
@@ -112,13 +114,12 @@ func main() {
 // importPathsNoDotExpansion returns the import paths to use for the given
 // command line, but it does no ... expansion.
 func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
-	cwd, _ := os.Getwd()
-	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], cwd)
+	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], projectroot)
 	if srcdir == ".." {
 		srcdir = "."
 	}
 	if len(args) == 0 {
-		args = []string{"."}
+		args = []string{"..."}
 	}
 	var out []string
 	for _, a := range args {
