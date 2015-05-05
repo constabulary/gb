@@ -4,11 +4,11 @@
 
 `gb` is a proof of concept replacement build tool for the [Go programming language](https://golang.org).
 
-I gave a talk about `gb` and the rational for it's creation at GDG Berlin in April 2015, [video](https://www.youtube.com/watch?v=c3dW80eO88I&index=12&list=PLseEp7p6Ewib4uUPTeaQoLfMUYXF_BQ-G) [slides](http://go-talks.appspot.com/github.com/davecheney/presentations/reproducible-builds.slide#1).
+I gave a talk about `gb` and the rational for its creation at GDG Berlin in April 2015, [video](https://www.youtube.com/watch?v=c3dW80eO88I) and [slides](http://go-talks.appspot.com/github.com/davecheney/presentations/reproducible-builds.slide#1).
 
 ## Project based
 
-`gb` operates on the concept of a project. A project has the following properties
+`gb` operates on the concept of a project. A project has the following properties:
 
 - A project is the consumer of your own source code, and possibly dependencies that your code consumes; nothing consumes the code from a project. Another way of thinking about it is, a project is where package `main` is.
 - A project is conceptually a `$GOPATH` workspace dedicated to your project's code.
@@ -54,7 +54,7 @@ The following flags are supported by `gb`. Note that these are flags to subcomma
 - `-q` - decreases verbosity, effectively raising the output level to ERROR. In a successful build, no output will be displayed.
 - `-goroot` - alters the path to the go toolchain in use, eg `gb build -goroot=$HOME/go1.4`.
 - `-goos`, `-goarch` - analogous to `env GOOS=... GOARCH=... gb`.
-- `-f` - ignore cached packages if present, new packages built will overwrite any cached packages.
+- `-f` - ignore cached packages if present, new packages built will overwrite any cached packages. This effectively disables incremental compilation.
 - `-F` - do not cache packages, cached packages will still be used for incremental compilation, `-f -F` is advised to disable the package caching system.
 
 ## Plugins
@@ -63,4 +63,3 @@ The following flags are supported by `gb`. Note that these are flags to subcomma
 
 - `env` - analogous to `go env`, useful for debugging the environment passed to `gb` plugins, tranditionally all environment variables in this set begin with `GB_`.
 - `vendor` - is a simple wrapper around `go get` to allow easy bootstrapping of a project by fetching dependencies in to the `vendor/src/` directory.
-

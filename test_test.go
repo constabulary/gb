@@ -27,6 +27,12 @@ func TestTestPackage(t *testing.T) {
 		}, {
 			pkg: "cmd/f",
 			err: nil,
+		}, {
+			pkg: "extest", // test external tests
+			err: nil,
+		}, {
+			pkg: "g", // test that _test files can modify the internal package under test
+			err: nil,
 		}}
 
 	for _, tt := range tests {

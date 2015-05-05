@@ -6,12 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 )
-
-const debugTargetCache = false
 
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
@@ -27,6 +26,8 @@ type Context struct {
 	SkipInstall bool // do not cache compiled packages
 
 	pkgs map[string]*Package // map of package paths to resolved packages
+
+	permits chan bool // used to limit concurrency of Run targets
 }
 
 // NullToolchain configures the Context to use the null toolchain.
@@ -55,11 +56,16 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 }
 
 func newContext(p *Project, bc *build.Context) *Context {
+	permits := make(chan bool, runtime.NumCPU())
+	for i := cap(permits); i > 0; i-- {
+		permits <- true
+	}
 	return &Context{
 		Project: p,
 		Context: bc,
 		workdir: mktmpdir(),
 		pkgs:    make(map[string]*Package),
+		permits: permits,
 	}
 }
 
@@ -113,7 +119,6 @@ func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, err
 		// already loaded, just return
 		return pkg, nil
 	}
-	Debugf("loadPackage: %v", path)
 
 	push := func(path string) {
 		stack[path] = true
@@ -145,6 +150,7 @@ func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, err
 		Package: p,
 	}
 	pkg.Stale = stale || isStale(&pkg)
+	Debugf("loadPackage: %v %v (%v)", path, pkg.Stale, pkg.Dir)
 	c.pkgs[path] = &pkg
 	return &pkg, nil
 }
