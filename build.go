@@ -97,7 +97,7 @@ func (g *gc) String() string {
 
 func (g *gc) compile() error {
 	t0 := time.Now()
-	Infof("compile %v %v", g.pkg.ImportPath, g.gofiles)
+	Infof("compile %s", g.pkg.ImportPath)
 	includes := g.pkg.ctx.IncludePaths()
 	importpath := g.pkg.ImportPath
 	if g.pkg.Scope == "test" && g.pkg.ExtraIncludes != "" {
@@ -152,7 +152,7 @@ func (p *pack) Result() error {
 }
 
 func (p *pack) pack(objs ...ObjTarget) {
-	Infof("pack [%v]", objs)
+	Debugf("pack [%v]", objs)
 	afiles := make([]string, 0, len(objs))
 	for _, obj := range objs {
 		err := obj.Result()
@@ -230,7 +230,7 @@ func (l *ld) link() error {
 		return err
 	}
 
-	Infof("link %v [%v]", target, l.afile.Pkgfile())
+	Infof("link %v", target)
 	includes := l.pkg.ctx.IncludePaths()
 	if l.pkg.Scope == "test" && l.pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross

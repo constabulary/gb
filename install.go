@@ -64,7 +64,7 @@ func (i *install) String() string {
 }
 
 func (i *install) install() error {
-	Infof("install %v [%v]", i.dest, i.PkgTarget)
+	Infof("install %v", i.dest)
 	return copyfile(i.dest, i.Pkgfile())
 }
 
