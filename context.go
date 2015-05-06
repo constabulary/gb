@@ -111,7 +111,7 @@ func (c *Context) ResolvePackageWithTests(path string) (*Package, error) {
 // loadPackage recursively resolves path and its imports and if successful
 // stores those packages in the Context's internal package cache.
 func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, error) {
-	if build.IsLocalImport(path) {
+	if path != "." && build.IsLocalImport(path) {
 		// sanity check
 		return nil, fmt.Errorf("%q is not a valid import path", path)
 	}
@@ -127,10 +127,23 @@ func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, err
 		delete(stack, path)
 	}
 
-	p, err := c.Context.Import(path, c.Projectdir(), 0)
-	if err != nil {
-		return nil, err
+	var p *build.Package
+	if path == "." {
+		// load root package in "src/"
+		var err error
+		p, err = c.Context.ImportDir(filepath.Join(c.Projectdir(), "src"), 0)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// load normal package
+		var err error
+		p, err = c.Context.Import(path, c.Projectdir(), 0)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
@@ -260,7 +273,7 @@ func matchPackages(c *Context, pattern string) []string {
 	for _, src := range c.srcdir() {
 		src = filepath.Clean(src) + string(filepath.Separator)
 		filepath.Walk(src, func(path string, fi os.FileInfo, err error) error {
-			if err != nil || !fi.IsDir() || path == src {
+			if err != nil || !fi.IsDir() {
 				return nil
 			}
 
@@ -271,6 +284,9 @@ func matchPackages(c *Context, pattern string) []string {
 			}
 
 			name := filepath.ToSlash(path[len(src):])
+			if name == "" {
+				name = "."
+			}
 			if pattern == "std" && strings.Contains(name, ".") {
 				return filepath.SkipDir
 			}

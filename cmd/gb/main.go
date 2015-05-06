@@ -111,9 +111,9 @@ func main() {
 	}
 }
 
-// importPathsNoDotExpansion returns the import paths to use for the given
+// importPathsNoThreeDotExpansion returns the import paths to use for the given
 // command line, but it does no ... expansion.
-func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
+func importPathsNoThreeDotExpansion(ctx *gb.Context, args []string) []string {
 	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], projectroot)
 	if srcdir == ".." {
 		srcdir = "."
@@ -142,7 +142,7 @@ func importPathsNoDotExpansion(ctx *gb.Context, args []string) []string {
 
 // importPaths returns the import paths to use for the given command line.
 func importPaths(ctx *gb.Context, args []string) []string {
-	args = importPathsNoDotExpansion(ctx, args)
+	args = importPathsNoThreeDotExpansion(ctx, args)
 	var out []string
 	for _, a := range args {
 		if strings.Contains(a, "...") {

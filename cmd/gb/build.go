@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"go/build"
-	"path/filepath"
 	"time"
 
 	"github.com/constabulary/gb"
@@ -66,13 +65,6 @@ var BuildCmd = &Command{
 func resolvePackages(ctx *gb.Context, args ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
 	for _, arg := range args {
-		if arg == "." {
-			var err error
-			arg, err = filepath.Rel(ctx.Srcdirs()[0], projectroot)
-			if err != nil {
-				return pkgs, err
-			}
-		}
 		pkg, err := ctx.ResolvePackage(arg)
 		if err != nil {
 			if _, ok := err.(*build.NoGoError); ok {
