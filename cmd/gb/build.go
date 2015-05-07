@@ -48,7 +48,7 @@ var BuildCmd = &Command{
 		ctx.Force = F
 		ctx.SkipInstall = FF
 		defer func() {
-			gb.Infof("build duration: %v %v", time.Since(t0), ctx.Statistics.String())
+			gb.Debugf("build duration: %v %v", time.Since(t0), ctx.Statistics.String())
 		}()
 
 		pkgs, err := resolvePackages(ctx, args...)

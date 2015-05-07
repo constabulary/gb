@@ -95,7 +95,7 @@ func main() {
 	}
 	project := gb.NewProject(root)
 
-	gb.Infof("project root %q", project.Projectdir())
+	gb.Debugf("project root %q", project.Projectdir())
 
 	ctx, err := project.NewContext(
 		gb.GcToolchain(gb.Goroot(*goroot)),
