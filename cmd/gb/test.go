@@ -20,7 +20,7 @@ var TestCmd = &Command{
 		ctx.Force = F
 		ctx.SkipInstall = FF
 		defer func() {
-			gb.Infof("test duration: %v %v", time.Since(t0), ctx.Statistics.String())
+			gb.Debugf("test duration: %v %v", time.Since(t0), ctx.Statistics.String())
 		}()
 
 		pkgs, err := resolvePackagesWithTests(ctx, args...)

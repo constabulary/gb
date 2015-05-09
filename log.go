@@ -3,7 +3,6 @@ package gb
 
 import (
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -13,35 +12,33 @@ var (
 
 	// Verbose enables logging output below INFO
 	Verbose = false
-
-	// Logger is the log.Logger object that backs this logger.
-	Logger = log.New(os.Stdout, "", log.LstdFlags)
 )
 
-var Fatalf = log.Fatalf
-
-func fatalf(format string, args ...interface{}) {
-	Logger.Printf("FATAL "+format, args...)
-	fmt.Scanln()
+func Fatalf(format string, args ...interface{}) {
+	fmt.Printf("FATAL "+format+"\n", args...)
 	os.Exit(1)
 }
 
 func Errorf(format string, args ...interface{}) {
-	Logger.Printf("ERROR "+format, args...)
+	fmt.Printf("ERROR "+format+"\n", args...)
 }
 
 func Warnf(format string, args ...interface{}) {
-	Logger.Printf("WARNING "+format, args...)
+	fmt.Printf("WARNING "+format+"\n", args...)
 }
 
 func Infof(format string, args ...interface{}) {
 	if !Quiet {
-		Logger.Printf("INFO "+format, args...)
+		if Verbose {
+			fmt.Printf("INFO "+format+"\n", args...)
+		} else {
+			fmt.Printf("# "+format+"\n", args...)
+		}
 	}
 }
 
 func Debugf(format string, args ...interface{}) {
 	if Verbose && !Quiet {
-		Logger.Printf("DEBUG "+format, args...)
+		fmt.Printf("DEBUG "+format+"\n", args...)
 	}
 }
