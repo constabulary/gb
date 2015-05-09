@@ -97,7 +97,7 @@ func (g *gc) String() string {
 
 func (g *gc) compile() error {
 	t0 := time.Now()
-	Infof("compile %s", g.pkg.ImportPath)
+	Infof(g.pkg.ImportPath)
 	includes := g.pkg.ctx.IncludePaths()
 	importpath := g.pkg.ImportPath
 	if g.pkg.Scope == "test" && g.pkg.ExtraIncludes != "" {
@@ -152,7 +152,6 @@ func (p *pack) Result() error {
 }
 
 func (p *pack) pack(objs ...ObjTarget) {
-	Debugf("pack [%v]", objs)
 	afiles := make([]string, 0, len(objs))
 	for _, obj := range objs {
 		err := obj.Result()
@@ -200,7 +199,6 @@ func (a *asm) Objfile() string {
 
 func (a *asm) asm() error {
 	t0 := time.Now()
-	Infof("asm %v", a.sfile)
 	err := a.pkg.ctx.tc.Asm(a.pkg.Dir, a.Objfile(), filepath.Join(a.pkg.Dir, a.sfile))
 	a.pkg.ctx.Record("asm", time.Since(t0))
 	return err
@@ -230,7 +228,6 @@ func (l *ld) link() error {
 		return err
 	}
 
-	Infof("link %v", target)
 	includes := l.pkg.ctx.IncludePaths()
 	if l.pkg.Scope == "test" && l.pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross

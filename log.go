@@ -32,7 +32,7 @@ func Infof(format string, args ...interface{}) {
 		if Verbose {
 			fmt.Printf("INFO "+format+"\n", args...)
 		} else {
-			fmt.Printf("# "+format+"\n", args...)
+			fmt.Printf(format+"\n", args...)
 		}
 	}
 }
