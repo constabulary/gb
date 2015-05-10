@@ -31,7 +31,11 @@ See the [getting started](getting-started.md) document.
 
 ## Project root auto detection
 
-A `gb` project is defined as any directory that contains a `src/` subdirectory. `gb` automatically detects the root of the project by looking at the current working directory and walking backwards until it finds a directory called `src/`.
+## Project root auto detection
+
+`gb` automatically detects your project's root directory based on your current working directory.
+
+A gb project is defined as any directory that contains a `src/` subdirectory. gb automatically detects the root of the project by looking at the current working directory and walking backwards until it finds a directory that contains a `src/` subdirectory.
 
 ## Arguments
 
