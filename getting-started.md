@@ -56,6 +56,8 @@ Now, let's try to build this
              /home/dfc/devel/sftp/src/github.com/kr/fs (from $GOPATH)
              /home/dfc/devel/sftp/vendor/src/github.com/kr/fs
 
+Note: `gb-vendor` is not part of `gb`, to install it use `go get -u -v github.com/constabulary/gb-vendor`
+
 The build failed because the dependency, `github.com/kr/fs` was not found in the project, which was expected (ignore the message about `$GOPATH` this is a side effect of reusing the `go/build` package for dependency resolution). So we can use the `gb vendor` plugin to fetch the code for `github.com/kr/fs`, and try again
 
      % gb vendor github.com/kr/fs
