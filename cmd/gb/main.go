@@ -67,6 +67,7 @@ func main() {
 	}
 
 	name := args[1]
+	parseargs := name != "plugin"
 	command, ok := commands[name]
 	if !ok {
 		if _, err := lookupPlugin(name); err != nil {
@@ -76,6 +77,7 @@ func main() {
 		}
 		command = commands["plugin"]
 		args = append([]string{"plugin"}, args...)
+		parseargs = false // don't parse args as import paths
 	}
 
 	// add extra flags if necessary
@@ -86,6 +88,7 @@ func main() {
 	if err := fs.Parse(args[2:]); err != nil {
 		gb.Fatalf("could not parse flags: %v", err)
 	}
+	args = fs.Args() // reset args to the leftovers from fs.Parse
 
 	gopath := filepath.SplitList(os.Getenv("GOPATH"))
 	root, err := cmd.FindProjectroot(projectroot, gopath)
@@ -103,7 +106,9 @@ func main() {
 		gb.Fatalf("unable to construct context: %v", err)
 	}
 
-	args = importPaths(ctx, fs.Args())
+	if parseargs {
+		args = importPaths(ctx, args)
+	}
 	gb.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
