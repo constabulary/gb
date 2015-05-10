@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func mktmpdir() string {
@@ -54,4 +55,10 @@ func runOut(dir, command string, args ...string) ([]byte, error) {
 		err = fmt.Errorf("%v: %s\n%s", cmd.Args, err, output)
 	}
 	return output, err
+}
+
+// joinlist joins a []string representing path items
+// using the operating system specific list separator.
+func joinlist(l []string) string {
+	return strings.Join(l, string(filepath.ListSeparator))
 }

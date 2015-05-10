@@ -2,7 +2,6 @@ package gb
 
 import (
 	"path/filepath"
-	"strings"
 )
 
 // Project represents a gb project. A gb project has a simlar layout to
@@ -23,7 +22,7 @@ func togopath(srcdirs []string) string {
 	for _, srcdir := range srcdirs {
 		s = append(s, filepath.Dir(srcdir))
 	}
-	return strings.Join(s, ":")
+	return joinlist(s)
 }
 
 func NewProject(root string) *Project {
