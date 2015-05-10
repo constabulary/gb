@@ -30,12 +30,6 @@ type Context struct {
 	permits chan bool // used to limit concurrency of Run targets
 }
 
-// NullToolchain configures the Context to use the null toolchain.
-func NullToolchain(c *Context) error {
-	c.tc = new(nulltoolchain)
-	return nil
-}
-
 // NewContext returns a new build context from this project.
 // By default this context will use the gc toolchain with the
 // host's GOOS and GOARCH values.

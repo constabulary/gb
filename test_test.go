@@ -6,7 +6,7 @@ import (
 )
 
 func TestTestPackage(t *testing.T) {
-	Verbose = true
+	Verbose = false
 	defer func() { Verbose = false }()
 	tests := []struct {
 		pkg string

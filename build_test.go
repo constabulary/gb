@@ -3,7 +3,7 @@ package gb
 import "testing"
 
 func TestBuild(t *testing.T) {
-	Verbose = true
+	Verbose = false
 	defer func() { Verbose = false }()
 	tests := []struct {
 		pkg string

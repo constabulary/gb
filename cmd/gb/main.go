@@ -30,7 +30,6 @@ func mustGetwd() string {
 var (
 	fs          = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	goroot      = fs.String("goroot", runtime.GOROOT(), "override GOROOT")
-	toolchain   = fs.String("toolchain", "gc", "choose go compiler toolchain")
 	projectroot string
 )
 
