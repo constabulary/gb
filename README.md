@@ -8,12 +8,11 @@ I gave a talk about `gb` and the rational for its creation at GDG Berlin in Apri
 
 ## Project based
 
-`gb` operates on the concept of a project. A project has the following properties:
+`gb` operates on the concept of a project. A gb project is a workspace for all the Go code that is required to build your project.
 
-- A project is the consumer of your own source code, and possibly dependencies that your code consumes; nothing consumes the code from a project. Another way of thinking about it is, a project is where package `main` is.
-- A project is conceptually a `$GOPATH` workspace dedicated to your project's code.
-- A project supports multiple locations for source code, at the moment `src/` for your source code, and `vendor/src/` for third party code that you have copied, cloned, forked, or otherwise included in the project.
-- The code that represents an `import` path is controlled by the project, by virtue of being present in one of the source code directories in the project.
+A gb project is a folder on disk that contains a subdirectory named <code>src/</code>. That's it, no environment variables to set. For the rest of this document we'll refer to your <code>gb</code> project as <code>$PROJECT</code>.
+
+You can create as many projects as you like and move between them simply by changing directories.
 
 ## Installation
 
