@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func mktmpdir() string {
@@ -51,7 +52,7 @@ func runOut(dir, command string, args ...string) ([]byte, error) {
 	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		err = fmt.Errorf("%v: %s\n%s", cmd.Args, err, output)
+		fmt.Printf("# %s\n%s", strings.Join(cmd.Args, " "), output)
 	}
 	return output, err
 }
