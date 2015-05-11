@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -14,14 +13,13 @@ type Context interface {
 
 // importPathsNoDotExpansion returns the import paths to use for the given
 // command line, but it does no ... expansion.
-func importPathsNoDotExpansion(ctx Context, args []string) []string {
-	cwd, _ := os.Getwd()
+func importPathsNoDotExpansion(ctx Context, cwd string, args []string) []string {
 	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], cwd)
 	if srcdir == ".." {
 		srcdir = "."
 	}
 	if len(args) == 0 {
-		args = []string{srcdir}
+		args = []string{"..."}
 	}
 	var out []string
 	for _, a := range args {
@@ -43,8 +41,8 @@ func importPathsNoDotExpansion(ctx Context, args []string) []string {
 }
 
 // importPaths returns the import paths to use for the given command line.
-func ImportPaths(ctx Context, args []string) []string {
-	args = importPathsNoDotExpansion(ctx, args)
+func ImportPaths(ctx Context, cwd string, args []string) []string {
+	args = importPathsNoDotExpansion(ctx, cwd, args)
 	var out []string
 	for _, a := range args {
 		if strings.Contains(a, "...") {
