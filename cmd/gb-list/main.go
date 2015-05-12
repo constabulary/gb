@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -17,11 +19,19 @@ func main() {
 	var (
 		projectroot string
 		format      string
+		formatStdin bool
 	)
 	flag.StringVar(&projectroot, "R", os.Getenv("GB_PROJECT_ROOT"), "set the project root")
 	flag.StringVar(&format, "f", "{{.ImportPath}}\n", "format template")
+	flag.BoolVar(&formatStdin, "s", false, "read format from stdin")
 
 	flag.Parse()
+
+	if formatStdin {
+		var formatBuffer bytes.Buffer
+		io.Copy(&formatBuffer, os.Stdin)
+		format = formatBuffer.String()
+	}
 
 	tmpl, err := template.New("list").Parse(format)
 	if err != nil {
