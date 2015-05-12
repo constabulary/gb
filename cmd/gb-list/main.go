@@ -24,6 +24,7 @@ func main() {
 	flag.StringVar(&projectroot, "R", os.Getenv("GB_PROJECT_DIR"), "set the project root")
 	flag.StringVar(&format, "f", "{{.ImportPath}}\n", "format template")
 	flag.BoolVar(&formatStdin, "s", false, "read format from stdin")
+	flag.BoolVar(&gb.Verbose, "v", false, "verbose")
 
 	flag.Parse()
 
