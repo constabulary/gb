@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -20,11 +21,13 @@ func main() {
 		projectroot string
 		format      string
 		formatStdin bool
+		jsonOutput  bool
 	)
 	flag.StringVar(&projectroot, "R", os.Getenv("GB_PROJECT_DIR"), "set the project root")
 	flag.StringVar(&format, "f", "{{.ImportPath}}\n", "format template")
 	flag.BoolVar(&formatStdin, "s", false, "read format from stdin")
 	flag.BoolVar(&gb.Verbose, "v", false, "verbose")
+	flag.BoolVar(&jsonOutput, "json", false, "outputs json")
 
 	flag.Parse()
 
@@ -32,11 +35,6 @@ func main() {
 		var formatBuffer bytes.Buffer
 		io.Copy(&formatBuffer, os.Stdin)
 		format = formatBuffer.String()
-	}
-
-	tmpl, err := template.New("list").Parse(format)
-	if err != nil {
-		gb.Fatalf("unable to parse template %q: %v", format, err)
 	}
 
 	gopath := filepath.SplitList(os.Getenv("GOPATH"))
@@ -58,9 +56,25 @@ func main() {
 	if err != nil {
 		gb.Fatalf("unable to resolve: %v", err)
 	}
-	for _, pkg := range pkgs {
-		if err := tmpl.Execute(os.Stdout, pkg); err != nil {
-			gb.Fatalf("unable to execute template: %v", err)
+
+	if jsonOutput {
+		for _, pkg := range pkgs {
+			encoded, err := json.MarshalIndent(NewPackageView(pkg), " ", "  ")
+			if err != nil {
+				gb.Fatalf("Error occurred during json encoding: %v", err)
+			}
+			fmt.Println(string(encoded))
+		}
+	} else {
+		tmpl, err := template.New("list").Parse(format)
+		if err != nil {
+			gb.Fatalf("unable to parse template %q: %v", format, err)
+		}
+
+		for _, pkg := range pkgs {
+			if err := tmpl.Execute(os.Stdout, pkg); err != nil {
+				gb.Fatalf("unable to execute template: %v", err)
+			}
 		}
 	}
 }
