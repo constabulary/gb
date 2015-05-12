@@ -104,7 +104,10 @@ func (g *gc) compile() error {
 		// TODO(dfc) gross
 		includes = append([]string{g.pkg.ExtraIncludes}, includes...)
 	}
-	err := g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.Dir, g.Objfile(), g.gofiles, g.pkg.Complete())
+	for i := range g.gofiles {
+		g.gofiles[i], _ = filepath.Rel(g.pkg.ctx.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
+	}
+	err := g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.ctx.Projectdir(), g.Objfile(), g.gofiles, g.pkg.Complete())
 	g.pkg.ctx.Record("compile", time.Since(t0))
 	return err
 }
