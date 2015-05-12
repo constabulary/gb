@@ -5,6 +5,7 @@
 package gb
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -71,19 +72,21 @@ func copyfile(dst, src string) error {
 }
 
 func run(dir, command string, args ...string) error {
-	_, err := runOut(dir, command, args...)
-	return err
+	var buf bytes.Buffer
+	return runOut(&buf, dir, command, args...)
 }
 
-func runOut(dir, command string, args ...string) ([]byte, error) {
+func runOut(output io.Writer, dir, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = dir
+	cmd.Stdout = output
+	cmd.Stderr = os.Stderr
 	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
-	output, err := cmd.CombinedOutput()
+	err := cmd.Run()
 	if err != nil {
 		fmt.Printf("# %s\n%s", strings.Join(cmd.Args, " "), output)
 	}
-	return output, err
+	return err
 }
 
 // joinlist joins a []string representing path items
