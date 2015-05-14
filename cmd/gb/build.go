@@ -49,7 +49,7 @@ var BuildCmd = &Command{
 			gb.Debugf("build duration: %v %v", time.Since(t0), ctx.Statistics.String())
 		}()
 
-		pkgs, err := cmd.ResolvePackages(ctx, projectroot, args...)
+		pkgs, err := cmd.ResolvePackages(ctx, args...)
 		if err != nil {
 			return err
 		}

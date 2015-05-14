@@ -21,7 +21,7 @@ var TestCmd = &Command{
 			gb.Debugf("test duration: %v %v", time.Since(t0), ctx.Statistics.String())
 		}()
 
-		pkgs, err := cmd.ResolvePackagesWithTests(ctx, projectroot, args...)
+		pkgs, err := cmd.ResolvePackagesWithTests(ctx, args...)
 		if err != nil {
 			return err
 		}
