@@ -11,12 +11,6 @@ import (
 	"github.com/constabulary/gb/cmd"
 )
 
-type Command struct {
-	ShortDesc string
-	Run       func(ctx *gb.Context, args []string) error
-	AddFlags  func(fs *flag.FlagSet)
-}
-
 func mustGetwd() string {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -49,11 +43,11 @@ func init() {
 	}
 }
 
-var commands = make(map[string]*Command)
+var commands = make(map[string]*cmd.Command)
 
 // registerCommand registers a command for main.
 // registerCommand should only be called from init().
-func registerCommand(name string, command *Command) {
+func registerCommand(name string, command *cmd.Command) {
 	commands[name] = command
 }
 

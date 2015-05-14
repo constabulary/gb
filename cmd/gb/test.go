@@ -11,7 +11,7 @@ func init() {
 	registerCommand("test", TestCmd)
 }
 
-var TestCmd = &Command{
+var TestCmd = &cmd.Command{
 	ShortDesc: "test a package",
 	Run: func(ctx *gb.Context, args []string) error {
 		t0 := time.Now()
