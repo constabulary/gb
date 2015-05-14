@@ -79,7 +79,7 @@ func (c *Context) Pkgdir() string {
 
 // ResolvePackage resolves the package at path using the current context.
 func (c *Context) ResolvePackage(path string) (*Package, error) {
-	return c.loadPackage(make(map[string]bool), path)
+	return c.loadPackage(nil, path)
 }
 
 // ResolvePackageWithTests resolves the package at path using the current context
@@ -104,7 +104,7 @@ func (c *Context) ResolvePackageWithTests(path string) (*Package, error) {
 
 // loadPackage recursively resolves path and its imports and if successful
 // stores those packages in the Context's internal package cache.
-func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, error) {
+func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	if build.IsLocalImport(path) {
 		// sanity check
 		return nil, fmt.Errorf("%q is not a valid import path", path)
@@ -115,10 +115,18 @@ func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, err
 	}
 
 	push := func(path string) {
-		stack[path] = true
+		stack = append(stack, path)
 	}
 	pop := func(path string) {
-		delete(stack, path)
+		stack = stack[:len(stack)-1]
+	}
+	onStack := func(path string) bool {
+		for _, p := range stack {
+			if p == path {
+				return true
+			}
+		}
+		return false
 	}
 
 	p, err := c.Context.Import(path, c.Projectdir(), 0)
@@ -130,6 +138,10 @@ func (c *Context) loadPackage(stack map[string]bool, path string) (*Package, err
 	for _, i := range p.Imports {
 		if stdlib[i] {
 			continue
+		}
+		if onStack(i) {
+			push(i)
+			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
 		}
 		pkg, err := c.loadPackage(stack, i)
 		if err != nil {
