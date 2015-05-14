@@ -22,7 +22,7 @@ type Resolver interface {
 }
 
 // ResolvePackages resolves import paths to packages.
-func ResolvePackages(r Resolver, projectroot string, paths ...string) ([]*gb.Package, error) {
+func ResolvePackages(r Resolver, paths ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
 	for _, path := range paths {
 		path = relImportPath(r.Srcdirs()[0], path)
@@ -42,7 +42,7 @@ func ResolvePackages(r Resolver, projectroot string, paths ...string) ([]*gb.Pac
 // ResolvePackagesWithTests is similar to ResolvePackages however
 // it also loads the test and external test packages of args into
 // the context.
-func ResolvePackagesWithTests(r Resolver, projectroot string, paths ...string) ([]*gb.Package, error) {
+func ResolvePackagesWithTests(r Resolver, paths ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
 	for _, path := range paths {
 		path = relImportPath(r.Srcdirs()[0], path)
