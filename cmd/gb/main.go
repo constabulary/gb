@@ -19,15 +19,15 @@ func mustGetwd() string {
 }
 
 var (
-	fs          = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	goroot      = fs.String("goroot", runtime.GOROOT(), "override GOROOT")
-	projectroot string
+	fs     = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	goroot = fs.String("goroot", runtime.GOROOT(), "override GOROOT")
+	cwd    string
 )
 
 func init() {
 	fs.BoolVar(&gb.Quiet, "q", gb.Quiet, "suppress log messages below ERROR level")
 	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
-	fs.StringVar(&projectroot, "R", mustGetwd(), "set the project root")
+	fs.StringVar(&cwd, "R", mustGetwd(), "set the project root") // actually the working directory to start the project root search
 
 	// TODO some flags are specific to a specific commands
 	fs.Usage = func() {
@@ -81,7 +81,7 @@ func main() {
 	}
 	args = fs.Args() // reset args to the leftovers from fs.Parse
 
-	root, err := cmd.FindProjectroot(projectroot)
+	root, err := cmd.FindProjectroot(cwd)
 	if err != nil {
 		gb.Fatalf("could not locate project root: %v", err)
 	}
@@ -97,7 +97,7 @@ func main() {
 	}
 
 	if parseargs {
-		args = cmd.ImportPaths(ctx, projectroot, args)
+		args = cmd.ImportPaths(ctx, cwd, args)
 	}
 	gb.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
