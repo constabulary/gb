@@ -2,6 +2,8 @@ package main
 
 import "github.com/constabulary/gb"
 
+// PackageView represents a package shown by list command in JSON format.
+// It is not stable and may be subject to change.
 type PackageView struct {
 	Dir         string
 	ImportPath  string
@@ -13,6 +15,7 @@ type PackageView struct {
 	TestImports []string
 }
 
+// NewPackageView creates a *PackageView from gb Package.
 func NewPackageView(pkg *gb.Package) *PackageView {
 	return &PackageView{
 		Dir:         pkg.Dir,

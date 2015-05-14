@@ -45,7 +45,7 @@ func main() {
 	flag.StringVar(&format, "f", "{{.ImportPath}}", "format template")
 	flag.BoolVar(&formatStdin, "s", false, "read format from stdin")
 	flag.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
-	flag.BoolVar(&jsonOutput, "json", false, "outputs json")
+	flag.BoolVar(&jsonOutput, "json", false, "outputs json. WARNING: gb.Package structure is not stable and will change in future")
 
 	flag.Parse()
 
@@ -80,11 +80,10 @@ func main() {
 		for _, pkg := range pkgs {
 			views = append(views, NewPackageView(pkg))
 		}
-		encoded, err := json.MarshalIndent(views, " ", "  ")
-		if err != nil {
+		encoder := json.NewEncoder(os.Stdout)
+		if err := encoder.Encode(views); err != nil {
 			gb.Fatalf("Error occurred during json encoding: %v", err)
 		}
-		fmt.Println(string(encoded))
 	} else {
 		tmpl, err := template.New("list").Parse(format)
 		if err != nil {
@@ -100,6 +99,7 @@ func main() {
 	}
 }
 
+// resolvePackages resolves packages within the given project and package names.
 func resolvePackages(ctx *gb.Context, projectroot string, args ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
 	for _, arg := range args {
