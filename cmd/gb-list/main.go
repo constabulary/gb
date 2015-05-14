@@ -80,6 +80,7 @@ func main() {
 	}
 }
 
+// resolvePackages resolves packages within the given project and package names.
 func resolvePackages(ctx *gb.Context, projectroot string, args ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
 	for _, arg := range args {
