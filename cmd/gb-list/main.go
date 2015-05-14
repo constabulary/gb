@@ -67,7 +67,7 @@ func main() {
 		gb.Fatalf("unable to construct context: %v", err)
 	}
 
-	args := cmd.ImportPaths(ctx, projectroot, flag.Args())
+	args := cmd.ImportPaths(ctx, cmd.MustGetwd(), flag.Args())
 	pkgs, err := cmd.ResolvePackages(ctx, args...)
 	if err != nil {
 		gb.Fatalf("unable to resolve: %v", err)

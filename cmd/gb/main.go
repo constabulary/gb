@@ -11,14 +11,6 @@ import (
 	"github.com/constabulary/gb/cmd"
 )
 
-func mustGetwd() string {
-	wd, err := os.Getwd()
-	if err != nil {
-		gb.Fatalf("unable to determine current working directory: %v", err)
-	}
-	return wd
-}
-
 var (
 	fs          = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	goroot      = fs.String("goroot", runtime.GOROOT(), "override GOROOT")
@@ -28,7 +20,7 @@ var (
 func init() {
 	fs.BoolVar(&gb.Quiet, "q", gb.Quiet, "suppress log messages below ERROR level")
 	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
-	fs.StringVar(&projectroot, "R", mustGetwd(), "set the project root")
+	fs.StringVar(&projectroot, "R", cmd.MustGetwd(), "set the project root")
 
 	// TODO some flags are specific to a specific commands
 	fs.Usage = func() {
