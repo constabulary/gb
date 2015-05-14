@@ -62,11 +62,10 @@ func main() {
 		for _, pkg := range pkgs {
 			views = append(views, NewPackageView(pkg))
 		}
-		encoded, err := json.MarshalIndent(views, " ", "  ")
-		if err != nil {
+		encoder := json.NewEncoder(os.Stdout)
+		if err := encoder.Encode(views); err != nil {
 			gb.Fatalf("Error occurred during json encoding: %v", err)
 		}
-		fmt.Println(string(encoded))
 	} else {
 		tmpl, err := template.New("list").Parse(format)
 		if err != nil {
