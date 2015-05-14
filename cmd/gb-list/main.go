@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -17,15 +20,21 @@ func main() {
 	var (
 		projectroot string
 		format      string
+		formatStdin bool
+		jsonOutput  bool
 	)
-	flag.StringVar(&projectroot, "R", os.Getenv("GB_PROJECT_ROOT"), "set the project root")
+	flag.StringVar(&projectroot, "R", os.Getenv("GB_PROJECT_DIR"), "set the project root")
 	flag.StringVar(&format, "f", "{{.ImportPath}}\n", "format template")
+	flag.BoolVar(&formatStdin, "s", false, "read format from stdin")
+	flag.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
+	flag.BoolVar(&jsonOutput, "json", false, "outputs json")
 
 	flag.Parse()
 
-	tmpl, err := template.New("list").Parse(format)
-	if err != nil {
-		gb.Fatalf("unable to parse template %q: %v", format, err)
+	if formatStdin {
+		var formatBuffer bytes.Buffer
+		io.Copy(&formatBuffer, os.Stdin)
+		format = formatBuffer.String()
 	}
 
 	gopath := filepath.SplitList(os.Getenv("GOPATH"))
@@ -47,9 +56,27 @@ func main() {
 	if err != nil {
 		gb.Fatalf("unable to resolve: %v", err)
 	}
-	for _, pkg := range pkgs {
-		if err := tmpl.Execute(os.Stdout, pkg); err != nil {
-			gb.Fatalf("unable to execute template: %v", err)
+
+	if jsonOutput {
+		views := make([]*PackageView, 0, len(pkgs))
+		for _, pkg := range pkgs {
+			views = append(views, NewPackageView(pkg))
+		}
+		encoded, err := json.MarshalIndent(views, " ", "  ")
+		if err != nil {
+			gb.Fatalf("Error occurred during json encoding: %v", err)
+		}
+		fmt.Println(string(encoded))
+	} else {
+		tmpl, err := template.New("list").Parse(format)
+		if err != nil {
+			gb.Fatalf("unable to parse template %q: %v", format, err)
+		}
+
+		for _, pkg := range pkgs {
+			if err := tmpl.Execute(os.Stdout, pkg); err != nil {
+				gb.Fatalf("unable to execute template: %v", err)
+			}
 		}
 	}
 }
