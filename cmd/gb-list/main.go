@@ -27,7 +27,7 @@ func main() {
 	flag.StringVar(&format, "f", "{{.ImportPath}}\n", "format template")
 	flag.BoolVar(&formatStdin, "s", false, "read format from stdin")
 	flag.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
-	flag.BoolVar(&jsonOutput, "json", false, "outputs json")
+	flag.BoolVar(&jsonOutput, "json", false, "outputs json. WARNING: gb.Package structure is not stable and will change in future")
 
 	flag.Parse()
 
