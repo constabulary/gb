@@ -13,7 +13,7 @@ func init() {
 	registerCommand("plugin", PluginCmd)
 }
 
-var PluginCmd = &Command{
+var PluginCmd = &cmd.Command{
 	ShortDesc: "run a plugin",
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) < 1 {
