@@ -28,8 +28,6 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"go/build"
-
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 )
@@ -70,7 +68,7 @@ func main() {
 	}
 
 	args := cmd.ImportPaths(ctx, projectroot, flag.Args())
-	pkgs, err := resolvePackages(ctx, projectroot, args...)
+	pkgs, err := cmd.ResolvePackages(ctx, projectroot, args...)
 	if err != nil {
 		gb.Fatalf("unable to resolve: %v", err)
 	}
@@ -98,27 +96,4 @@ func main() {
 			fmt.Fprintln(os.Stdout)
 		}
 	}
-}
-
-func resolvePackages(ctx *gb.Context, projectroot string, args ...string) ([]*gb.Package, error) {
-	var pkgs []*gb.Package
-	for _, arg := range args {
-		if arg == "." {
-			var err error
-			arg, err = filepath.Rel(ctx.Srcdirs()[0], projectroot)
-			if err != nil {
-				return pkgs, err
-			}
-		}
-		pkg, err := ctx.ResolvePackage(arg)
-		if err != nil {
-			if _, ok := err.(*build.NoGoError); ok {
-				gb.Debugf("skipping %q", arg)
-				continue
-			}
-			return pkgs, fmt.Errorf("failed to resolve package %q: %v", arg, err)
-		}
-		pkgs = append(pkgs, pkg)
-	}
-	return pkgs, nil
 }
