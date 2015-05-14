@@ -68,7 +68,7 @@ func main() {
 	}
 
 	args := cmd.ImportPaths(ctx, projectroot, flag.Args())
-	pkgs, err := cmd.ResolvePackages(ctx, projectroot, args...)
+	pkgs, err := cmd.ResolvePackages(ctx, args...)
 	if err != nil {
 		gb.Fatalf("unable to resolve: %v", err)
 	}
