@@ -25,6 +25,7 @@ type Command struct {
 
 // RunCommand detects the project root, parses flags and runs the Command.
 func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args []string) error {
+	gb.Infof("RunCommand: args: %v", args)
 	if cmd.AddFlags != nil {
 		cmd.AddFlags(fs)
 	}

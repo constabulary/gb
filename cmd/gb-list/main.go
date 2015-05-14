@@ -31,41 +31,38 @@ import (
 	"github.com/constabulary/gb/cmd"
 )
 
-func main() {
 	var (
 		projectroot string
 		format      string
 		formatStdin bool
 		jsonOutput  bool
 	)
-	flag.StringVar(&projectroot, "R", os.Getenv("GB_PROJECT_DIR"), "set the project root")
-	flag.StringVar(&format, "f", "{{.ImportPath}}", "format template")
-	flag.BoolVar(&formatStdin, "s", false, "read format from stdin")
-	flag.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
-	flag.BoolVar(&jsonOutput, "json", false, "outputs json. WARNING: gb.Package structure is not stable and will change in future")
 
-	flag.Parse()
+func main() {
+	fs := flag.NewFlagSet("gb-list", flag.ExitOnError)
+	fs.StringVar(&projectroot, "R", os.Getenv("GB_PROJECT_DIR"), "set the project root")
+	fs.StringVar(&format, "f", "{{.ImportPath}}", "format template")
+	fs.BoolVar(&formatStdin, "s", false, "read format from stdin")
+	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
+	fs.BoolVar(&jsonOutput, "json", false, "outputs json. WARNING: gb.Package structure is not stable and will change in future")
 
+	err :=cmd.RunCommand(fs, &cmd.Command {
+		ShortDesc: "lists the packages named by the import paths, one per line.",
+		Run: list,
+	}, os.Getenv("GB_PROJECT_DIR"), "", os.Args[1:])
+	if err != nil {
+		gb.Fatalf("gb-list failed: %v", err)
+	}
+}
+
+func list(ctx *gb.Context, args []string) error {
+	gb.Debugf("list: %v", args)
 	if formatStdin {
 		var formatBuffer bytes.Buffer
 		io.Copy(&formatBuffer, os.Stdin)
 		format = formatBuffer.String()
 	}
-
-	root, err := cmd.FindProjectroot(projectroot)
-	if err != nil {
-		gb.Fatalf("could not locate project root: %v", err)
-	}
-	project := gb.NewProject(root)
-
-	ctx, err := project.NewContext(
-		gb.GcToolchain(),
-	)
-	if err != nil {
-		gb.Fatalf("unable to construct context: %v", err)
-	}
-
-	args := cmd.ImportPaths(ctx, cmd.MustGetwd(), flag.Args())
+	args = cmd.ImportPaths(ctx, cmd.MustGetwd(), args)
 	pkgs, err := cmd.ResolvePackages(ctx, args...)
 	if err != nil {
 		gb.Fatalf("unable to resolve: %v", err)
@@ -78,19 +75,20 @@ func main() {
 		}
 		encoder := json.NewEncoder(os.Stdout)
 		if err := encoder.Encode(views); err != nil {
-			gb.Fatalf("Error occurred during json encoding: %v", err)
+			return fmt.Errorf("Error occurred during json encoding: %v", err)
 		}
 	} else {
 		tmpl, err := template.New("list").Parse(format)
 		if err != nil {
-			gb.Fatalf("unable to parse template %q: %v", format, err)
+			return fmt.Errorf("unable to parse template %q: %v", format, err)
 		}
 
 		for _, pkg := range pkgs {
 			if err := tmpl.Execute(os.Stdout, pkg); err != nil {
-				gb.Fatalf("unable to execute template: %v", err)
+				return fmt.Errorf("unable to execute template: %v", err)
 			}
 			fmt.Fprintln(os.Stdout)
 		}
 	}
+	return nil
 }
