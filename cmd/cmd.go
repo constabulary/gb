@@ -3,6 +3,9 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/constabulary/gb"
 )
@@ -19,4 +22,34 @@ type Command struct {
 
 	// AddFlags installs additional flags to be parsed before Run.
 	AddFlags func(fs *flag.FlagSet)
+}
+
+// RunCommand detects the project root, parses flags and runs the Command.
+func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args []string) error {
+	if cmd.AddFlags != nil {
+		cmd.AddFlags(fs)
+	}
+	if err := fs.Parse(args); err != nil {
+		fs.Usage()
+		os.Exit(1)
+	}
+	args = fs.Args() // reset to the remaining arguments
+
+	gopath := filepath.SplitList(os.Getenv("GOPATH"))
+	root, err := FindProjectroot(projectroot, gopath)
+	if err != nil {
+		return fmt.Errorf("could not locate project root: %v", err)
+	}
+	project := gb.NewProject(root)
+
+	gb.Debugf("project root %q", project.Projectdir())
+
+	ctx, err := project.NewContext(
+		gb.GcToolchain(gb.Goroot(goroot)),
+	)
+	if err != nil {
+		return fmt.Errorf("unable to construct context: %v", err)
+	}
+	gb.Debugf("args: %v", args)
+	return cmd.Run(ctx, args)
 }
