@@ -15,9 +15,9 @@ func testFindProjectroot(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		got, err := FindProjectroot(tt.path, tt.gopath)
+		got, err := FindProjectroot(tt.path)
 		if got != tt.want || err != tt.err {
-			t.Errorf("FindProjectroot(%v, %v): want: %v, %v, got %v, %v", tt.path, tt.gopath, tt.want, tt.err, got, err)
+			t.Errorf("FindProjectroot(%v): want: %v, %v, got %v, %v", tt.path, tt.want, tt.err, got, err)
 		}
 	}
 }

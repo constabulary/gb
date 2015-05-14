@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"text/template"
 
 	"github.com/constabulary/gb"
@@ -53,8 +52,7 @@ func main() {
 		format = formatBuffer.String()
 	}
 
-	gopath := filepath.SplitList(os.Getenv("GOPATH"))
-	root, err := cmd.FindProjectroot(projectroot, gopath)
+	root, err := cmd.FindProjectroot(projectroot)
 	if err != nil {
 		gb.Fatalf("could not locate project root: %v", err)
 	}

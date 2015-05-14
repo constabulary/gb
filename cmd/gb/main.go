@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/constabulary/gb"
@@ -82,8 +81,7 @@ func main() {
 	}
 	args = fs.Args() // reset args to the leftovers from fs.Parse
 
-	gopath := filepath.SplitList(os.Getenv("GOPATH"))
-	root, err := cmd.FindProjectroot(projectroot, gopath)
+	root, err := cmd.FindProjectroot(projectroot)
 	if err != nil {
 		gb.Fatalf("could not locate project root: %v", err)
 	}
