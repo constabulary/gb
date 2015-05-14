@@ -1,37 +1,24 @@
 package gb
 
 import (
+	"runtime/debug"
 	"strings"
 	"testing"
-	"time"
 )
 
 func testImportCycle(pkg string, t *testing.T) {
 	ctx := testContext(t)
 
-	// one of two goroutines should return to finish the test
-	done := make(chan bool, 2)
+	debug.SetMaxStack(1 << 18)
 
-	timeConstraint := time.AfterFunc(1*time.Second, func() {
-		t.Error("ctx.ResolvePackage have not finished in 1s")
-		done <- true
-	})
+	_, err := ctx.ResolvePackage(pkg)
+	if strings.Index(err.Error(), "cycle detected") == -1 {
+		t.Errorf("ctx.ResolvePackage returned wrong error. Expected cycle detection, got: %v", err)
+	}
 
-	go func() {
-		_, err := ctx.ResolvePackage(pkg)
-		timeConstraint.Stop()
-
-		if strings.Index(err.Error(), "cycle detected") == -1 {
-			t.Errorf("ctx.ResolvePackage returned wrong error. Expected cycle detection, got: %v", err)
-		}
-
-		if err == nil {
-			t.Errorf("ctx.ResolvePackage should have returned an error for cycle, returned nil")
-		}
-		done <- true
-	}()
-
-	<-done
+	if err == nil {
+		t.Errorf("ctx.ResolvePackage should have returned an error for cycle, returned nil")
+	}
 }
 
 func TestOneElementCycleDetection(t *testing.T) {
