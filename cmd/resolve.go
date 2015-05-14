@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"go/build"
-	"path/filepath"
 
 	"github.com/constabulary/gb"
 )
@@ -22,24 +21,18 @@ type Resolver interface {
 	ResolvePackageWithTests(path string) (*gb.Package, error)
 }
 
-// ResolvePackages resolves args, specified as import paths to packages.
-func ResolvePackages(r Resolver, projectroot string, args ...string) ([]*gb.Package, error) {
+// ResolvePackages resolves import paths to packages.
+func ResolvePackages(r Resolver, projectroot string, paths ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
-	for _, arg := range args {
-		if arg == "." {
-			var err error
-			arg, err = filepath.Rel(r.Srcdirs()[0], projectroot)
-			if err != nil {
-				return pkgs, err
-			}
-		}
-		pkg, err := r.ResolvePackage(arg)
+	for _, path := range paths {
+		path = relImportPath(r.Srcdirs()[0], path)
+		pkg, err := r.ResolvePackage(path)
 		if err != nil {
 			if _, ok := err.(*build.NoGoError); ok {
-				gb.Debugf("skipping %q", arg)
+				gb.Debugf("skipping %q", path)
 				continue
 			}
-			return pkgs, fmt.Errorf("failed to resolve package %q: %v", arg, err)
+			return pkgs, fmt.Errorf("failed to resolve import path %q: %v", path, err)
 		}
 		pkgs = append(pkgs, pkg)
 	}
@@ -49,23 +42,17 @@ func ResolvePackages(r Resolver, projectroot string, args ...string) ([]*gb.Pack
 // ResolvePackagesWithTests is similar to ResolvePackages however
 // it also loads the test and external test packages of args into
 // the context.
-func ResolvePackagesWithTests(r Resolver, projectroot string, args ...string) ([]*gb.Package, error) {
+func ResolvePackagesWithTests(r Resolver, projectroot string, paths ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
-	for _, arg := range args {
-		if arg == "." {
-			var err error
-			arg, err = filepath.Rel(r.Srcdirs()[0], projectroot)
-			if err != nil {
-				return pkgs, err
-			}
-		}
-		pkg, err := r.ResolvePackageWithTests(arg)
+	for _, path := range paths {
+		path = relImportPath(r.Srcdirs()[0], path)
+		pkg, err := r.ResolvePackageWithTests(path)
 		if err != nil {
 			if _, ok := err.(*build.NoGoError); ok {
-				gb.Debugf("skipping %q", arg)
+				gb.Debugf("skipping %q", path)
 				continue
 			}
-			return pkgs, fmt.Errorf("failed to resolve package %q: %v", arg, err)
+			return pkgs, fmt.Errorf("failed to resolve package %q: %v", path, err)
 		}
 		pkgs = append(pkgs, pkg)
 	}
