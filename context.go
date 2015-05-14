@@ -141,7 +141,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		}
 		if onStack(i) {
 			push(i)
-			return nil, fmt.Errorf("Import cycle detected: %s", strings.Join(stack, " -> "))
+			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
 		}
 		pkg, err := c.loadPackage(stack, i)
 		if err != nil {
