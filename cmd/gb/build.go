@@ -38,7 +38,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
 }
 
-var BuildCmd = &Command{
+var BuildCmd = &cmd.Command{
 	ShortDesc: "build a package",
 	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
