@@ -284,12 +284,17 @@ func objname(pkg *Package) string {
 }
 
 func binfile(pkg *Package) string {
+	var target string
 	switch pkg.Scope {
 	case "test":
-		return filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+		target =filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
 	default:
-		return filepath.Join(pkg.ctx.Bindir(), binname(pkg))
+		target = filepath.Join(pkg.ctx.Bindir(), binname(pkg))
 	}
+	if pkg.ctx.GOOS == "windows" {
+		target += ".exe"
+	}
+	return target
 }
 
 func binname(pkg *Package) string {
