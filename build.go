@@ -62,10 +62,9 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 	gofiles = append(gofiles, pkg.GoFiles...)
 	var objs []ObjTarget
 	if len(pkg.CgoFiles) > 0 {
-		// cgo, cgofiles := cgo(pkg, deps...)
-		// deps = append(deps, cgo[0])
-		// objs = append(objs, cgo...)
-		// gofiles = append(gofiles, cgofiles...)
+		return errTarget{
+			fmt.Errorf("%v: cgo not suppored, see https://github.com/constabulary/gb/issues/12", pkg.ImportPath),
+		}
 	}
 	objs = append(objs, Gc(pkg, gofiles, deps...))
 	for _, sfile := range pkg.SFiles {
@@ -287,7 +286,7 @@ func binfile(pkg *Package) string {
 	var target string
 	switch pkg.Scope {
 	case "test":
-		target =filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+		target = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
 	default:
 		target = filepath.Join(pkg.ctx.Bindir(), binname(pkg))
 	}
