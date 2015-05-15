@@ -1,8 +1,8 @@
 package gb
 
 import (
-"testing"
-"errors"
+	"errors"
+	"testing"
 )
 
 func TestBuild(t *testing.T) {
@@ -49,5 +49,5 @@ func sameErr(e1, e2 error) bool {
 	if e1 != nil && e2 != nil {
 		return e1.Error() == e2.Error()
 	}
-	return e1 == e2 
+	return e1 == e2
 }

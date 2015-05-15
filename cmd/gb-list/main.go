@@ -31,12 +31,12 @@ import (
 	"github.com/constabulary/gb/cmd"
 )
 
-	var (
-		projectroot string
-		format      string
-		formatStdin bool
-		jsonOutput  bool
-	)
+var (
+	projectroot string
+	format      string
+	formatStdin bool
+	jsonOutput  bool
+)
 
 func main() {
 	fs := flag.NewFlagSet("gb-list", flag.ExitOnError)
@@ -46,9 +46,9 @@ func main() {
 	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
 	fs.BoolVar(&jsonOutput, "json", false, "outputs json. WARNING: gb.Package structure is not stable and will change in future")
 
-	err :=cmd.RunCommand(fs, &cmd.Command {
+	err := cmd.RunCommand(fs, &cmd.Command{
 		ShortDesc: "lists the packages named by the import paths, one per line.",
-		Run: list,
+		Run:       list,
 	}, os.Getenv("GB_PROJECT_DIR"), "", os.Args[1:])
 	if err != nil {
 		gb.Fatalf("gb-list failed: %v", err)
