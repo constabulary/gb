@@ -83,6 +83,7 @@ func main() {
 
 	ctx, err := project.NewContext(
 		gb.GcToolchain(gb.Goroot(*goroot)),
+		gb.Ldflags(ldflags),
 	)
 	if err != nil {
 		gb.Fatalf("unable to construct context: %v", err)

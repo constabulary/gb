@@ -28,6 +28,8 @@ var (
 
 	// skip caching of packages
 	FF bool
+
+	ldflags string
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
@@ -36,6 +38,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&R, "r", false, "perform a release build")
 	fs.BoolVar(&F, "f", false, "rebuild up to date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
+	fs.StringVar(&ldflags, "ldflags", "", "flags passed to the linker")
 }
 
 var BuildCmd = &cmd.Command{

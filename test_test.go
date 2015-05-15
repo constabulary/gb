@@ -9,8 +9,9 @@ func TestTestPackage(t *testing.T) {
 	Verbose = false
 	defer func() { Verbose = false }()
 	tests := []struct {
-		pkg string
-		err error
+		pkg     string
+		ldflags []string
+		err     error
 	}{
 		{
 			pkg: "a",
@@ -33,10 +34,14 @@ func TestTestPackage(t *testing.T) {
 		}, {
 			pkg: "g", // test that _test files can modify the internal package under test
 			err: nil,
+		}, {
+			pkg:     "ldflags",
+			ldflags: []string{"-X", "ldflags.gitTagInfo", "banana", "-X", "ldflags.gitRevision", "f7926af2"},
 		}}
 
 	for _, tt := range tests {
 		ctx := testContext(t)
+		ctx.ldflags = tt.ldflags
 		// TODO(dfc) can we resolve the duplication here ?
 		pkg, err := ctx.ResolvePackageWithTests(tt.pkg)
 		if err != nil {
