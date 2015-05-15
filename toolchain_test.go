@@ -21,7 +21,7 @@ func (nulltoolchain) Pack(afiles ...string) error {
 	Debugf("null:pack %v %v", afiles)
 	return nil
 }
-func (nulltoolchain) Ld(_ []string, aout string, afile string) error {
+func (nulltoolchain) Ld(_, _ []string, aout string, afile string) error {
 	Debugf("null:ld %v %v", aout, afile)
 	return nil
 }

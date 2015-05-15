@@ -102,8 +102,8 @@ func (t *gcToolchain) Asm(srcdir, ofile, sfile string) error {
 	return run(srcdir, t.as, args...)
 }
 
-func (t *gcToolchain) Ld(searchpaths []string, outfile, afile string) error {
-	args := []string{"-o", outfile}
+func (t *gcToolchain) Ld(searchpaths, ldflags []string, outfile, afile string) error {
+	args := append(ldflags, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}

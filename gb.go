@@ -21,7 +21,7 @@ type Toolchain interface {
 	Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error
 	Asm(srcdir, ofile, sfile string) error
 	Pack(...string) error
-	Ld([]string, string, string) error
+	Ld([]string, []string, string, string) error
 
 	//	Cgo(string, []string) error
 	//	Gcc(string, []string) error
@@ -93,4 +93,44 @@ func runOut(output io.Writer, dir, command string, args ...string) error {
 // using the operating system specific list separator.
 func joinlist(l []string) string {
 	return strings.Join(l, string(filepath.ListSeparator))
+}
+
+func splitQuotedFields(s string) ([]string, error) {
+	// Split fields allowing '' or "" around elements.
+	// Quotes further inside the string do not count.
+	var f []string
+	for len(s) > 0 {
+		for len(s) > 0 && isWhitespace(s[0]) {
+			s = s[1:]
+		}
+		if len(s) == 0 {
+			break
+		}
+		// Accepted quoted string. No unescaping inside.
+		if s[0] == '"' || s[0] == '\'' {
+			quote := s[0]
+			s = s[1:]
+			i := 0
+			for i < len(s) && s[i] != quote {
+				i++
+			}
+			if i >= len(s) {
+				return nil, fmt.Errorf("unterminated %c string", quote)
+			}
+			f = append(f, s[:i])
+			s = s[i+1:]
+			continue
+		}
+		i := 0
+		for i < len(s) && !isWhitespace(s[i]) {
+			i++
+		}
+		f = append(f, s[:i])
+		s = s[i:]
+	}
+	return f, nil
+}
+
+func isWhitespace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
 }

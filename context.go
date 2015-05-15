@@ -28,6 +28,8 @@ type Context struct {
 	pkgs map[string]*Package // map of package paths to resolved packages
 
 	permits chan bool // used to limit concurrency of Run targets
+
+	ldflags []string // flags passed to the linker
 }
 
 // NewContext returns a new build context from this project.
@@ -47,6 +49,15 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		}
 	}
 	return ctx, nil
+}
+
+// Ldflags sets options passed to the linker.
+func Ldflags(flags string) func(*Context) error {
+	return func(c *Context) error {
+		var err error
+		c.ldflags, err = splitQuotedFields(flags)
+		return err
+	}
 }
 
 func newContext(p *Project, bc *build.Context) *Context {
