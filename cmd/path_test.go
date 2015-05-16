@@ -39,10 +39,9 @@ func TestFindProjectroot(t *testing.T) {
 	root := makeTestdata(t)
 	defer os.RemoveAll(root)
 	tests := []struct {
-		path   string
-		gopath []string
-		want   string
-		err    error
+		path string
+		want string
+		err  error
 	}{
 		{path: root, want: root},
 		{path: join(root, "src"), want: root},
