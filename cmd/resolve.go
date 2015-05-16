@@ -25,6 +25,9 @@ type Resolver interface {
 func ResolvePackages(r Resolver, paths ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
 	for _, path := range paths {
+		if path == "." {
+			return nil, fmt.Errorf("%q is not a package", r.Srcdirs()[0])
+		}
 		path = relImportPath(r.Srcdirs()[0], path)
 		pkg, err := r.ResolvePackage(path)
 		if err != nil {
