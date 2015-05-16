@@ -40,7 +40,7 @@ func relImportPath(root, path string) string {
 		var err error
 		path, err = filepath.Rel(root, path)
 		if err != nil {
-			gb.Fatalf("could not convert relative path %q to absolute: %v", err)
+			gb.Fatalf("could not convert relative path %q to absolute: %v", path, err)
 		}
 	}
 	return path
