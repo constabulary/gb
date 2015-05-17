@@ -59,13 +59,17 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 	}
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
-	var objs []ObjTarget
+	var cgoobj ObjTarget
 	if len(pkg.CgoFiles) > 0 {
-                cgo, cgofiles := cgo(pkg)
-                objs = append(objs, cgo...)
-                gofiles = append(gofiles, cgofiles...)		
+		var cgofiles []string
+		cgoobj, cgofiles = cgo(pkg)
+		deps = append(deps, cgoobj)
+		gofiles = append(gofiles, cgofiles...)
 	}
-	objs = append(objs, Gc(pkg, gofiles, deps...))
+	objs := []ObjTarget{Gc(pkg, gofiles, deps...)}
+	if cgoobj != nil {
+		objs = append(objs, cgoobj)
+	}
 	for _, sfile := range pkg.SFiles {
 		objs = append(objs, Asm(pkg, sfile))
 	}
