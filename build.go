@@ -136,6 +136,9 @@ type objpkgtarget interface {
 
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
 func Gc(pkg *Package, gofiles []string, deps ...Target) objpkgtarget {
+	if len(gofiles) == 0 {
+		return errTarget{fmt.Errorf("Gc: no Gofiles provided")}
+	}
 	gc := gc{
 		pkg:     pkg,
 		gofiles: gofiles,
@@ -188,8 +191,7 @@ func (p *pack) Pkgfile() string {
 // set of Context specific object files into an archive.
 func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
 	if len(deps) < 2 {
-		return errTarget{
-			fmt.Errorf("Pack requires at least two arguments: %v", deps)}
+		return errTarget{fmt.Errorf("Pack requires at least two arguments: %v", deps)}
 	}
 	pack := pack{
 		c:   make(chan error, 1),

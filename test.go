@@ -55,6 +55,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 		SrcRoot:    pkg.SrcRoot,
 
 		GoFiles:      gofiles,
+		CFiles:       pkg.CFiles,
 		CgoFiles:     cgofiles,
 		TestGoFiles:  pkg.TestGoFiles,  // passed directly to buildTestMain
 		XTestGoFiles: pkg.XTestGoFiles, // passed directly to buildTestMain
