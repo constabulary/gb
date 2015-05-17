@@ -180,6 +180,10 @@ func (p *pack) Pkgfile() string {
 // Pack returns a Target representing the result of packing a
 // set of Context specific object files into an archive.
 func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
+	if len(deps) < 2 {
+		return errTarget{
+			fmt.Errorf("Pack requires at least two arguments: %v", deps)}
+	}
 	pack := pack{
 		c:   make(chan error, 1),
 		pkg: pkg,
