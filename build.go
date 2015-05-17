@@ -96,7 +96,10 @@ func (g *gc) String() string {
 
 func (g *gc) compile() error {
 	t0 := time.Now()
-	Infof(g.pkg.ImportPath)
+	if g.pkg.Scope != "test" {
+		// only log compilation message if not in test scope
+		Infof(g.pkg.ImportPath)
+	}
 	includes := g.pkg.ctx.IncludePaths()
 	importpath := g.pkg.ImportPath
 	if g.pkg.Scope == "test" && g.pkg.ExtraIncludes != "" {
