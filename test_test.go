@@ -37,6 +37,8 @@ func TestTestPackage(t *testing.T) {
 		}, {
 			pkg:     "ldflags",
 			ldflags: []string{"-X", "ldflags.gitTagInfo", "banana", "-X", "ldflags.gitRevision", "f7926af2"},
+		}, {
+			pkg: "cgotest",
 		}}
 
 	for _, tt := range tests {
