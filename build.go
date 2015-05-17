@@ -106,7 +106,11 @@ func (g *gc) compile() error {
 		includes = append([]string{g.pkg.ExtraIncludes}, includes...)
 	}
 	for i := range g.gofiles {
-		g.gofiles[i], _ = filepath.Rel(g.pkg.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
+		if filepath.IsAbs(g.gofiles[i]) {
+			// terrible hack for cgo files which come with an absolute path
+			continue
+		}
+		g.gofiles[i], _ = filepath.Rel(g.pkg.ctx.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
 	}
 	err := g.pkg.tc.Gc(includes, importpath, g.pkg.Projectdir(), g.Objfile(), g.gofiles, g.pkg.Complete())
 	g.pkg.Record("compile", time.Since(t0))
