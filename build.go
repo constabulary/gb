@@ -262,11 +262,6 @@ func Ld(pkg *Package, afile PkgTarget) Target {
 	return &ld
 }
 
-func stripext(path string) string {
-	ext := filepath.Ext(path)
-	return path[:len(ext)]
-}
-
 // objfile returns the name of the object file for this package
 func objfile(pkg *Package) string {
 	return filepath.Join(objdir(pkg), objname(pkg))
