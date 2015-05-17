@@ -62,7 +62,7 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 	var objs []ObjTarget
 	if len(pkg.CgoFiles) > 0 {
 		return errTarget{
-			fmt.Errorf("%v: cgo not suppored, see https://github.com/constabulary/gb/issues/12", pkg.ImportPath),
+			fmt.Errorf("%v: cgo not supported, see https://github.com/constabulary/gb/issues/12", pkg.ImportPath),
 		}
 	}
 	objs = append(objs, Gc(pkg, gofiles, deps...))
