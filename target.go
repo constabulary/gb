@@ -52,6 +52,11 @@ func (e errTarget) Pkgfile() string {
 	panic(fmt.Sprintf("PkgFile called on errTarget: %v", e.error))
 }
 
+func (e errTarget) Objfile() string {
+	panic(fmt.Sprintf("Objfile called on errTarget: %v", e.error))
+}
+
+
 // nilTarget always returns nil immediately.
 type nilTarget struct{}
 
