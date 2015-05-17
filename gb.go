@@ -122,3 +122,9 @@ func splitQuotedFields(s string) ([]string, error) {
 func isWhitespace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
 }
+
+// stripext strips the extension from a filename.
+// The extension is defined by filepath.Ext.
+func stripext(path string) string {
+	return path[:len(path)-len(filepath.Ext(path))]
+}
