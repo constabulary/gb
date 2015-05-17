@@ -62,9 +62,9 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 	gofiles = append(gofiles, pkg.GoFiles...)
 	var objs []ObjTarget
 	if len(pkg.CgoFiles) > 0 {
-		return errTarget{
-			fmt.Errorf("%v: cgo not suppored, see https://github.com/constabulary/gb/issues/12", pkg.ImportPath),
-		}
+                cgo, cgofiles := cgo(pkg)
+                objs = append(objs, cgo...)
+                gofiles = append(gofiles, cgofiles...)		
 	}
 	objs = append(objs, Gc(pkg, gofiles, deps...))
 	for _, sfile := range pkg.SFiles {
