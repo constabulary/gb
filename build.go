@@ -2,7 +2,6 @@ package gb
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -62,9 +61,9 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 	gofiles = append(gofiles, pkg.GoFiles...)
 	var objs []ObjTarget
 	if len(pkg.CgoFiles) > 0 {
-                cgo, cgofiles := cgo(pkg)
-                objs = append(objs, cgo...)
-                gofiles = append(gofiles, cgofiles...)		
+		cgo, cgofiles := cgo(pkg)
+		objs = append(objs, cgo...)
+		gofiles = append(gofiles, cgofiles...)
 	}
 	objs = append(objs, Gc(pkg, gofiles, deps...))
 	for _, sfile := range pkg.SFiles {
@@ -233,7 +232,7 @@ type ld struct {
 func (l *ld) link() error {
 	t0 := time.Now()
 	target := binfile(l.pkg)
-	if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+	if err := mkdir(filepath.Dir(target)); err != nil {
 		return err
 	}
 

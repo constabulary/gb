@@ -1,13 +1,12 @@
 package gb
 
-import (	
-	"os"
+import (
 	"path/filepath"
 )
 
 // cgo support functions
 
-// cgo returns a slice of post processed source files and a slice of 
+// cgo returns a slice of post processed source files and a slice of
 // ObjTargets representing the result of compilation of the post .c
 // output.
 func cgo(pkg *Package) ([]ObjTarget, []string) {
@@ -15,7 +14,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	if err != nil {
 		return []ObjTarget{errTarget{err}}, nil
 	}
-	
+
 	return nil, nil
 }
 
@@ -23,11 +22,11 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 func runcgo(pkg *Package) error {
 	cgo := cgotool(pkg.ctx)
 	objdir := objdir(pkg)
-	if err := os.MkdirAll(objdir, 0755); err != nil {
+	if err := mkdir(objdir); err != nil {
 		return err
 	}
-	
-	args := []string {
+
+	args := []string{
 		"-objdir", objdir,
 		"-importpath", pkg.ImportPath,
 		"--",
@@ -37,7 +36,6 @@ func runcgo(pkg *Package) error {
 	args = append(args, pkg.CgoFiles...)
 	return run(pkg.Dir, cgo, args...)
 }
-
 
 func cgotool(ctx *Context) string {
 	return filepath.Join(ctx.GOROOT, "pkg", "tool", ctx.GOOS+"_"+ctx.GOARCH, "cgo")

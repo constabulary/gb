@@ -52,8 +52,12 @@ func mktmpdir() string {
 	return d
 }
 
+func mkdir(path string) error {
+	return os.MkdirAll(path, 0755)
+}
+
 func copyfile(dst, src string) error {
-	err := os.MkdirAll(filepath.Dir(dst), 0755)
+	err := mkdir(filepath.Dir(dst))
 	if err != nil {
 		return fmt.Errorf("copyfile: mkdirall: %v", err)
 	}
@@ -75,7 +79,7 @@ func run(dir, command string, args ...string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, dir, command, args...)
 	if err != nil {
-		fmt.Printf("# %s %s\n%s", command,strings.Join(args, " "), buf.String())
+		fmt.Printf("# %s %s\n%s", command, strings.Join(args, " "), buf.String())
 	}
 	return err
 }

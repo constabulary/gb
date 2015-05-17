@@ -1,14 +1,13 @@
 package gb
 
-// gc toolchain
-
 import (
 	"fmt"
 	"go/build"
-	"os"
 	"path/filepath"
 	"runtime"
 )
+
+// gc toolchain
 
 type gcToolchain struct {
 	goos, goarch, goroot string
@@ -77,8 +76,7 @@ func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile strin
 		args = append(args, "-complete")
 	}
 	args = append(args, files...)
-	err := os.MkdirAll(filepath.Dir(outfile), 0755)
-	if err != nil {
+	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
 	}
 	return run(srcdir, t.gc, args...)
@@ -95,8 +93,7 @@ func (t *gcToolchain) Asm(srcdir, ofile, sfile string) error {
 	// TODO(dfc) this is the go 1.4 include path, go 1.5 moves the path to $GOROOT/pkg/include
 	includedir := filepath.Join(t.goroot, "pkg", t.goos+"_"+t.goarch)
 	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", includedir, sfile}
-	err := os.MkdirAll(filepath.Dir(ofile), 0755)
-	if err != nil {
+	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
 	return run(srcdir, t.as, args...)
@@ -108,8 +105,7 @@ func (t *gcToolchain) Ld(searchpaths, ldflags []string, outfile, afile string) e
 		args = append(args, "-L", d)
 	}
 	args = append(args, afile)
-	err := os.MkdirAll(filepath.Dir(outfile), 0755)
-	if err != nil {
+	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:ld: %v", err)
 	}
 	return run(".", t.ld, args...)
