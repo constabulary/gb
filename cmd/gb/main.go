@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/constabulary/gb"
@@ -71,7 +72,11 @@ func main() {
 	if err := fs.Parse(args[2:]); err != nil {
 		gb.Fatalf("could not parse flags: %v", err)
 	}
-	args = fs.Args() // reset args to the leftovers from fs.Parse
+	args = fs.Args()              // reset args to the leftovers from fs.Parse
+	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
+	if err != nil {
+		gb.Fatalf("could not make project root absolute: %v", err)
+	}
 
 	root, err := cmd.FindProjectroot(cwd)
 	if err != nil {
