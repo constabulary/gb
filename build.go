@@ -2,7 +2,6 @@ package gb
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -233,7 +232,7 @@ type ld struct {
 func (l *ld) link() error {
 	t0 := time.Now()
 	target := binfile(l.pkg)
-	if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+	if err := mkdir(filepath.Dir(target)); err != nil {
 		return err
 	}
 

@@ -52,6 +52,10 @@ func mktmpdir() string {
 	return d
 }
 
+func mkdir(path string) error {
+	return os.MkdirAll(path, 0755)
+}
+
 func copyfile(dst, src string) error {
 	err := os.MkdirAll(filepath.Dir(dst), 0755)
 	if err != nil {
