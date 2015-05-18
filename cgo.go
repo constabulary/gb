@@ -50,7 +50,7 @@ func cgo(pkg *Package) (ObjTarget, []string) {
 	}
 	cgofiles = append(cgofiles, dynout)
 
-	allo, err := rungcc3(pkg.Dir, ofiles)
+	allo, err := rungcc3(pkg.Dir, ofiles[1:]) // skip _cgo_main.o
 	if err != nil {
 		return ErrTarget{err}, nil
 	}
@@ -120,7 +120,7 @@ func rungcc2(dir string, ofiles []string) (string, error) {
 		"-o", ofile,
 	}
 	args = append(args, ofiles...)
-	args = append(args, "-g", "-O2", "-ldl") // this has to go at the end, because reasons!
+	args = append(args, "-g", "-O2") // this has to go at the end, because reasons!
 	return ofile, run(dir, gcc, args...)
 }
 

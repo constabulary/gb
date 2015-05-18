@@ -27,6 +27,9 @@ func TestBuild(t *testing.T) {
 		pkg: "x",
 		err: errors.New("import cycle detected: x -> y -> x"),
 	}, {
+		pkg: "cgomain",
+		err: nil,
+	}, {
 		pkg: "cgotest",
 		err: nil,
 	}}
