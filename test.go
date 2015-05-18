@@ -63,7 +63,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	})
 
 	// build dependencies
-	deps := buildDependencies(targets, testpkg)
+	deps := BuildDependencies(targets, testpkg)
 	testpkg.Scope = "test"
 	testpkg.Stale = true
 
@@ -79,7 +79,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 			Imports:    pkg.XTestImports,
 		})
 		// build external test dependencies
-		deps := buildDependencies(targets, xtestpkg)
+		deps := BuildDependencies(targets, xtestpkg)
 		xtestpkg.Scope = "test"
 		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.workdir, filepath.FromSlash(pkg.ImportPath), "_test")

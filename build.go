@@ -36,15 +36,15 @@ func buildPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	}
 	Debugf("buildPackage: %v", pkg.ImportPath)
 
-	deps := buildDependencies(targets, pkg)
+	deps := BuildDependencies(targets, pkg)
 	target := Compile(pkg, deps...)
 	targets[pkg.ImportPath] = target
 	return target
 }
 
-// buildDependencies returns a []Target representing the results of
+// BuildDependencies returns a []Target representing the results of
 // compiling the dependencies of pkg.
-func buildDependencies(targets map[string]PkgTarget, pkg *Package) []Target {
+func BuildDependencies(targets map[string]PkgTarget, pkg *Package) []Target {
 	var deps []Target
 	for _, i := range pkg.Imports() {
 		deps = append(deps, buildPackage(targets, i))
