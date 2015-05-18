@@ -69,8 +69,7 @@ func runOut(output io.Writer, dir, command string, args ...string) error {
 	cmd.Dir = dir
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
-	// Debugf("cd %s; %s", cmd.Dir, cmd.Args)
-	fmt.Println(strings.Join(cmd.Args, " "))
+	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
 	return cmd.Run()
 }
 
