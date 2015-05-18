@@ -41,7 +41,7 @@ func mkdir(path string) error {
 }
 
 func copyfile(dst, src string) error {
-	err := os.MkdirAll(filepath.Dir(dst), 0755)
+	err := mkdir(filepath.Dir(dst))
 	if err != nil {
 		return fmt.Errorf("copyfile: mkdirall: %v", err)
 	}
@@ -61,7 +61,11 @@ func copyfile(dst, src string) error {
 
 func run(dir, command string, args ...string) error {
 	var buf bytes.Buffer
-	return runOut(&buf, dir, command, args...)
+	err := runOut(&buf, dir, command, args...)
+	if err != nil {
+		fmt.Printf("# %s %s\n%s", command, strings.Join(args, " "), buf.String())
+	}
+	return err
 }
 
 func runOut(output io.Writer, dir, command string, args ...string) error {
@@ -70,11 +74,7 @@ func runOut(output io.Writer, dir, command string, args ...string) error {
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
 	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
-	err := cmd.Run()
-	if err != nil {
-		fmt.Printf("# %s\n%s", strings.Join(cmd.Args, " "), output)
-	}
-	return err
+	return cmd.Run()
 }
 
 // joinlist joins a []string representing path items
