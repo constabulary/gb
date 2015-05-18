@@ -25,7 +25,7 @@ var TestCmd = &cmd.Command{
 		if err != nil {
 			return err
 		}
-		if err := gb.Test(pkgs...); err != nil {
+		if err := cmd.Test(pkgs...); err != nil {
 			return err
 		}
 		return ctx.Destroy()

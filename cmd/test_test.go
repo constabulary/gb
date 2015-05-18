@@ -1,12 +1,14 @@
-package gb
+package cmd
 
 import (
 	"testing"
 	"time"
+
+	"github.com/constabulary/gb"
 )
 
 func TestTestPackage(t *testing.T) {
-	Verbose = false
+	gb.Verbose = false
 	defer func() { Verbose = false }()
 	tests := []struct {
 		pkg     string
