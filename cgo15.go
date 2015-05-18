@@ -2,11 +2,7 @@
 
 package gb
 
-import (
-	"bytes"
-	"path/filepath"
-	"strings"
-)
+import "path/filepath"
 
 // cgo support functions
 
