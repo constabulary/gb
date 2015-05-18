@@ -9,10 +9,10 @@ import (
 
 func TestTestPackage(t *testing.T) {
 	gb.Verbose = false
-	defer func() { Verbose = false }()
+	defer func() { gb.Verbose = false }()
 	tests := []struct {
 		pkg     string
-		ldflags []string
+		ldflags string
 		err     error
 	}{
 		{
@@ -38,12 +38,11 @@ func TestTestPackage(t *testing.T) {
 			err: nil,
 		}, {
 			pkg:     "ldflags",
-			ldflags: []string{"-X", "ldflags.gitTagInfo", "banana", "-X", "ldflags.gitRevision", "f7926af2"},
+			ldflags: "-X ldflags.gitTagInfo banana -X ldflags.gitRevision f7926af2",
 		}}
 
 	for _, tt := range tests {
-		ctx := testContext(t)
-		ctx.ldflags = tt.ldflags
+		ctx := testContext(t, gb.Ldflags(tt.ldflags))
 		// TODO(dfc) can we resolve the duplication here ?
 		pkg, err := ctx.ResolvePackageWithTests(tt.pkg)
 		if err != nil {
