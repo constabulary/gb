@@ -22,10 +22,6 @@ type Toolchain interface {
 	Asm(srcdir, ofile, sfile string) error
 	Pack(...string) error
 	Ld([]string, []string, string, string) error
-
-	//	Cgo(string, []string) error
-	//	Gcc(string, []string) error
-	//	Libgcc() (string, error)
 }
 
 func mktmpdir() string {
@@ -73,7 +69,8 @@ func runOut(output io.Writer, dir, command string, args ...string) error {
 	cmd.Dir = dir
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
-	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	// Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	fmt.Println(strings.Join(cmd.Args, " "))
 	return cmd.Run()
 }
 
