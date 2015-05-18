@@ -1,6 +1,7 @@
 package gb
 
 import "go/build"
+
 import "fmt"
 
 // Package represents a resolved package from the Project with respect to the Context.

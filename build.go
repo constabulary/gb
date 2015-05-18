@@ -265,11 +265,11 @@ func stripext(path string) string {
 
 // objfile returns the name of the object file for this package
 func objfile(pkg *Package) string {
-	return filepath.Join(objdir(pkg), objname(pkg))
+	return filepath.Join(pkg.Objdir(), objname(pkg))
 }
 
 // objdir returns the destination for object files compiled for this Package.
-func objdir(pkg *Package) string {
+func (pkg *Package) Objdir() string {
 	switch pkg.Scope {
 	case "test":
 		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
