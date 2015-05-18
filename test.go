@@ -98,7 +98,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	cmd.Stderr = os.Stderr
 
 	Debugf("scheduling run of %v", cmd.Args)
-	return Run(pkg.permits, cmd, buildmain)
+	return pkg.Run(cmd, buildmain)
 }
 
 func buildTestMain(pkg *Package) (*Package, error) {

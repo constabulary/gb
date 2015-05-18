@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/build"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -179,6 +180,22 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 func (c *Context) Destroy() error {
 	Debugf("removing work directory: %v", c.workdir)
 	return os.RemoveAll(c.workdir)
+}
+
+// Run returns a Target representing the result of executing a CmdTarget.
+func (c *Context) Run(cmd *exec.Cmd, dep Target) Target {
+	annotate := func() error {
+		<-c.permits
+		Infof("run %v", cmd.Args)
+		err := cmd.Run()
+		c.permits <- true
+		if err != nil {
+			err = fmt.Errorf("run %v: %v", cmd.Args, err)
+		}
+		return err
+	}
+	target := newTarget(annotate, dep)
+	return &target // TODO
 }
 
 // Statistics records the various Durations
