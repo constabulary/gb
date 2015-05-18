@@ -59,13 +59,19 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 	}
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
-	var objs []ObjTarget
+	var cgoobj []ObjTarget
 	if len(pkg.CgoFiles) > 0 {
-		return ErrTarget{
-			fmt.Errorf("%v: cgo not supported, see https://github.com/constabulary/gb/issues/12", pkg.ImportPath),
+		var cgofiles []string
+		cgoobj, cgofiles = cgo(pkg)
+		for _, o := range cgoobj {
+			deps = append(deps, o)
 		}
+		gofiles = append(gofiles, cgofiles...)
 	}
-	objs = append(objs, Gc(pkg, gofiles, deps...))
+	objs := []ObjTarget{Gc(pkg, gofiles, deps...)}
+	if len(cgoobj) > 0 {
+		objs = append(objs, cgoobj...)
+	}
 	for _, sfile := range pkg.SFiles {
 		objs = append(objs, Asm(pkg, sfile))
 	}
@@ -106,6 +112,10 @@ func (g *gc) compile() error {
 		includes = append([]string{g.pkg.ExtraIncludes}, includes...)
 	}
 	for i := range g.gofiles {
+		if filepath.IsAbs(g.gofiles[i]) {
+			// terrible hack for cgo files which come with an absolute path
+			continue
+		}
 		g.gofiles[i], _ = filepath.Rel(g.pkg.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
 	}
 	err := g.pkg.tc.Gc(includes, importpath, g.pkg.Projectdir(), g.Objfile(), g.gofiles, g.pkg.Complete())
@@ -128,6 +138,9 @@ type objpkgtarget interface {
 
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
 func Gc(pkg *Package, gofiles []string, deps ...Target) objpkgtarget {
+	if len(gofiles) == 0 {
+		return ErrTarget{fmt.Errorf("Gc: no Gofiles provided")}
+	}
 	gc := gc{
 		pkg:     pkg,
 		gofiles: gofiles,
@@ -180,8 +193,7 @@ func (p *pack) Pkgfile() string {
 // set of Context specific object files into an archive.
 func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
 	if len(deps) < 2 {
-		return ErrTarget{
-			fmt.Errorf("Pack requires at least two arguments: %v", deps)}
+		return ErrTarget{fmt.Errorf("Pack requires at least two arguments: %v", deps)}
 	}
 	pack := pack{
 		c:   make(chan error, 1),
@@ -256,11 +268,6 @@ func Ld(pkg *Package, afile PkgTarget) Target {
 	}
 	ld.target = newTarget(ld.link, afile)
 	return &ld
-}
-
-func stripext(path string) string {
-	ext := filepath.Ext(path)
-	return path[:len(path)-len(ext)]
 }
 
 // objfile returns the name of the object file for this package

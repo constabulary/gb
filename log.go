@@ -1,4 +1,3 @@
-// Package gogo/log controls the logging output for gb derived programs.
 package gb
 
 import (

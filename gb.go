@@ -1,4 +1,4 @@
-// Package gb is a tool kit for compiling and testing Go programs.
+// Package gb is a tool kit for building Go packages and programs.
 //
 // The executable, cmd/gb, is located in the respective subdirectory
 // along with several plugin programs.
@@ -22,10 +22,6 @@ type Toolchain interface {
 	Asm(srcdir, ofile, sfile string) error
 	Pack(...string) error
 	Ld([]string, []string, string, string) error
-
-	//	Cgo(string, []string) error
-	//	Gcc(string, []string) error
-	//	Libgcc() (string, error)
 }
 
 func mktmpdir() string {
@@ -41,7 +37,7 @@ func mkdir(path string) error {
 }
 
 func copyfile(dst, src string) error {
-	err := os.MkdirAll(filepath.Dir(dst), 0755)
+	err := mkdir(filepath.Dir(dst))
 	if err != nil {
 		return fmt.Errorf("copyfile: mkdirall: %v", err)
 	}
@@ -61,7 +57,11 @@ func copyfile(dst, src string) error {
 
 func run(dir, command string, args ...string) error {
 	var buf bytes.Buffer
-	return runOut(&buf, dir, command, args...)
+	err := runOut(&buf, dir, command, args...)
+	if err != nil {
+		fmt.Printf("# %s %s\n%s", command, strings.Join(args, " "), buf.String())
+	}
+	return err
 }
 
 func runOut(output io.Writer, dir, command string, args ...string) error {
@@ -69,12 +69,9 @@ func runOut(output io.Writer, dir, command string, args ...string) error {
 	cmd.Dir = dir
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
-	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
-	err := cmd.Run()
-	if err != nil {
-		fmt.Printf("# %s\n%s", strings.Join(cmd.Args, " "), output)
-	}
-	return err
+	// Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	fmt.Println(strings.Join(cmd.Args, " "))
+	return cmd.Run()
 }
 
 // joinlist joins a []string representing path items
@@ -121,4 +118,10 @@ func splitQuotedFields(s string) ([]string, error) {
 
 func isWhitespace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
+}
+
+// stripext strips the extension from a filename.
+// The extension is defined by filepath.Ext.
+func stripext(path string) string {
+	return path[:len(path)-len(filepath.Ext(path))]
 }
