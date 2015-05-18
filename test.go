@@ -88,7 +88,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 
 	testmain, err := buildTestMain(testpkg)
 	if err != nil {
-		return errTarget{err}
+		return ErrTarget{err}
 	}
 	buildmain := Ld(testmain, Compile(testmain, testobj))
 

@@ -61,7 +61,7 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 	gofiles = append(gofiles, pkg.GoFiles...)
 	var objs []ObjTarget
 	if len(pkg.CgoFiles) > 0 {
-		return errTarget{
+		return ErrTarget{
 			fmt.Errorf("%v: cgo not supported, see https://github.com/constabulary/gb/issues/12", pkg.ImportPath),
 		}
 	}
@@ -180,7 +180,7 @@ func (p *pack) Pkgfile() string {
 // set of Context specific object files into an archive.
 func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
 	if len(deps) < 2 {
-		return errTarget{
+		return ErrTarget{
 			fmt.Errorf("Pack requires at least two arguments: %v", deps)}
 	}
 	pack := pack{
