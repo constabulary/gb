@@ -43,13 +43,13 @@ func (t *target) Result() error {
 }
 
 type ErrTarget struct {
-	error
+	Err error
 }
 
-func (e ErrTarget) Result() error { return e.error }
+func (e ErrTarget) Result() error { return e.Err }
 
 func (e ErrTarget) Pkgfile() string {
-	panic(fmt.Sprintf("PkgFile called on ErrTarget: %v", e.error))
+	panic(fmt.Sprintf("PkgFile called on ErrTarget: %v", e.Err))
 }
 
 // nilTarget always returns nil immediately.
