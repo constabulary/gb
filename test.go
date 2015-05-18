@@ -92,7 +92,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	}
 	buildmain := Ld(testmain, Compile(testmain, testobj))
 
-	cmd := exec.Command(binfile(testmain) + ".test")
+	cmd := exec.Command(testmain.Binfile() + ".test")
 	cmd.Dir = pkg.Dir // tests run in the original source directory
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

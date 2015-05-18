@@ -231,7 +231,7 @@ type ld struct {
 
 func (l *ld) link() error {
 	t0 := time.Now()
-	target := binfile(l.pkg)
+	target := l.pkg.Binfile()
 	if err := mkdir(filepath.Dir(target)); err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func objfile(pkg *Package) string {
 	return filepath.Join(pkg.Objdir(), objname(pkg))
 }
 
-// objdir returns the destination for object files compiled for this Package.
+// Objdir returns the destination for object files compiled for this Package.
 func (pkg *Package) Objdir() string {
 	switch pkg.Scope {
 	case "test":
@@ -288,7 +288,10 @@ func objname(pkg *Package) string {
 	}
 }
 
-func binfile(pkg *Package) string {
+// Binfile returns the destination of the compiled target of this command.
+// TODO(dfc) this should be Target.
+func (pkg *Package) Binfile() string {
+	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
 	var target string
 	switch pkg.Scope {
 	case "test":
