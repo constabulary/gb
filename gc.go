@@ -104,6 +104,7 @@ func (t *gcToolchain) Ld(searchpaths, ldflags []string, outfile, afile string) e
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}
+	args = append(args, "-extld=gcc", "-buildmode=exe")
 	args = append(args, afile)
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:ld: %v", err)

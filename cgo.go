@@ -13,21 +13,21 @@ import (
 // output.
 func cgo(pkg *Package) (ObjTarget, []string) {
 	if err := runcgo1(pkg); err != nil {
-		return errTarget{err}, nil
+		return ErrTarget{err}, nil
 	}
 
-	cgofiles := []string{filepath.Join(objdir(pkg), "_cgo_gotypes.go")}
+	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
 	for _, f := range pkg.CgoFiles {
-		cgofiles = append(cgofiles, filepath.Join(objdir(pkg), stripext(f)+".cgo1.go"))
+		cgofiles = append(cgofiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo1.go"))
 	}
 	cfiles := []string{
-		filepath.Join(objdir(pkg), "_cgo_main.c"),
-		filepath.Join(objdir(pkg), "_cgo_export.c"),
+		filepath.Join(pkg.Objdir(), "_cgo_main.c"),
+		filepath.Join(pkg.Objdir(), "_cgo_export.c"),
 	}
 	cfiles = append(cfiles, pkg.CFiles...)
 
 	for _, f := range pkg.CgoFiles {
-		cfiles = append(cfiles, filepath.Join(objdir(pkg), stripext(f)+".cgo2.c"))
+		cfiles = append(cfiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo2.c"))
 	}
 
 	var ofiles []string
@@ -35,24 +35,24 @@ func cgo(pkg *Package) (ObjTarget, []string) {
 		ofile := stripext(f) + ".o"
 		ofiles = append(ofiles, ofile)
 		if err := rungcc1(pkg.Dir, ofile, f); err != nil {
-			return errTarget{err}, nil
+			return ErrTarget{err}, nil
 		}
 	}
 
 	ofile, err := rungcc2(pkg.Dir, ofiles)
 	if err != nil {
-		return errTarget{err}, nil
+		return ErrTarget{err}, nil
 	}
 
 	dynout, err := runcgo2(pkg, ofile)
 	if err != nil {
-		return errTarget{err}, nil
+		return ErrTarget{err}, nil
 	}
 	cgofiles = append(cgofiles, dynout)
 
 	allo, err := rungcc3(pkg.Dir, ofiles)
 	if err != nil {
-		return errTarget{err}, nil
+		return ErrTarget{err}, nil
 	}
 
 	return cgoTarget(allo), cgofiles
@@ -65,8 +65,8 @@ func (t cgoTarget) Result() error   { return nil }
 
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.
 func runcgo1(pkg *Package) error {
-	cgo := cgotool(pkg.ctx)
-	objdir := objdir(pkg)
+	cgo := cgotool(pkg.Context)
+	objdir := pkg.Objdir()
 	if err := mkdir(objdir); err != nil {
 		return err
 	}
@@ -83,10 +83,9 @@ func runcgo1(pkg *Package) error {
 }
 
 // runcgo2 invokes the cgo tool to create _cgo_import.go
-// /home/dfc/go/pkg/tool/linux_amd64/cgo -objdir $WORK/github.com/mattn/go-sqlite3/_obj/ -dynpackage sqlite3 -dynimport $WORK/github.com/mattn/go-sqlite3/_obj/_cgo_.o -dynout $WORK/github.com/mattn/go-sqlite3/_obj/_cgo_import.go
 func runcgo2(pkg *Package, ofile string) (string, error) {
-	cgo := cgotool(pkg.ctx)
-	objdir := objdir(pkg)
+	cgo := cgotool(pkg.Context)
+	objdir := pkg.Objdir()
 	dynout := filepath.Join(objdir, "_cgo_import.go")
 
 	args := []string{
@@ -118,11 +117,10 @@ func rungcc2(dir string, ofiles []string) (string, error) {
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
 	args := []string{
 		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
-		"-g", "-O2",
 		"-o", ofile,
 	}
 	args = append(args, ofiles...)
-	args = append(args, "-ldl") // this has to go at the end, because reasons!
+	args = append(args, "-g", "-O2", "-ldl") // this has to go at the end, because reasons!
 	return ofile, run(dir, gcc, args...)
 }
 
@@ -159,4 +157,3 @@ func libgcc() (string, error) {
 func cgotool(ctx *Context) string {
 	return filepath.Join(ctx.GOROOT, "pkg", "tool", ctx.GOOS+"_"+ctx.GOARCH, "cgo")
 }
->>>>>>> cgo wip

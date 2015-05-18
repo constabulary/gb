@@ -114,7 +114,7 @@ func (g *gc) compile() error {
 			// terrible hack for cgo files which come with an absolute path
 			continue
 		}
-		g.gofiles[i], _ = filepath.Rel(g.pkg.ctx.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
+		g.gofiles[i], _ = filepath.Rel(g.pkg.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
 	}
 	err := g.pkg.tc.Gc(includes, importpath, g.pkg.Projectdir(), g.Objfile(), g.gofiles, g.pkg.Complete())
 	g.pkg.Record("compile", time.Since(t0))
@@ -137,7 +137,7 @@ type objpkgtarget interface {
 // Gc returns a Target representing the result of compiling a set of gofiles with the Context specified gc Compiler.
 func Gc(pkg *Package, gofiles []string, deps ...Target) objpkgtarget {
 	if len(gofiles) == 0 {
-		return errTarget{fmt.Errorf("Gc: no Gofiles provided")}
+		return ErrTarget{fmt.Errorf("Gc: no Gofiles provided")}
 	}
 	gc := gc{
 		pkg:     pkg,

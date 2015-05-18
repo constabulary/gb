@@ -79,7 +79,7 @@ func newContext(p *Project, bc *build.Context) *Context {
 func (c *Context) IncludePaths() []string {
 	return []string{
 		c.workdir,
-		c.Pkgdir(),
+		// c.Pkgdir(),
 	}
 }
 
