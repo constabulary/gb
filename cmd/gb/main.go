@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	fs  = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	cwd string
+	fs   = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	cwd  string
+	args []string
 )
 
 func init() {
@@ -67,9 +68,16 @@ func main() {
 		command.AddFlags(fs)
 	}
 
-	if err := fs.Parse(args[2:]); err != nil {
+	var err error
+	if command.FlagParse != nil {
+		err = command.FlagParse(fs, args)
+	} else {
+		err = fs.Parse(args[2:])
+	}
+	if err != nil {
 		gb.Fatalf("could not parse flags: %v", err)
 	}
+
 	args = fs.Args()              // reset args to the leftovers from fs.Parse
 	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
 	if err != nil {

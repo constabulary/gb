@@ -14,12 +14,12 @@ import (
 // Test returns a Target representing the result of compiling the
 // package pkg, and its dependencies, and linking it with the
 // test runner.
-func Test(pkgs ...*gb.Package) error {
+func Test(flags []string, pkgs ...*gb.Package) error {
 	targets := make(map[string]gb.PkgTarget)
 	roots := make([]gb.Target, 0, len(pkgs))
 	for _, pkg := range pkgs {
 		// commands are built as packages for testing.
-		target := testPackage(targets, pkg)
+		target := testPackage(targets, pkg, flags)
 		roots = append(roots, target)
 	}
 	for _, root := range roots {
@@ -30,7 +30,7 @@ func Test(pkgs ...*gb.Package) error {
 	return nil
 }
 
-func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package) gb.Target {
+func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package, flags []string) gb.Target {
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 	gofiles = append(gofiles, pkg.TestGoFiles...)
@@ -101,7 +101,7 @@ func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package) gb.Target {
 	}
 	buildmain := gb.Ld(testmain, gb.Compile(testmain, testobj))
 
-	cmd := exec.Command(testmain.Binfile() + ".test")
+	cmd := exec.Command(testmain.Binfile()+".test", flags...)
 	cmd.Dir = pkg.Dir // tests run in the original source directory
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
