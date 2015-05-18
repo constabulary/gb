@@ -51,3 +51,7 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	gb.Debugf("args: %v", args)
 	return cmd.Run(ctx, args)
 }
+
+func mkdir(path string) error {
+	return os.MkdirAll(path, 0755)
+}

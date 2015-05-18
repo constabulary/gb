@@ -1,4 +1,4 @@
-package gb
+package cmd
 
 import (
 	"fmt"
@@ -7,14 +7,16 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+
+	"github.com/constabulary/gb"
 )
 
 // Test returns a Target representing the result of compiling the
 // package pkg, and its dependencies, and linking it with the
 // test runner.
-func Test(pkgs ...*Package) error {
-	targets := make(map[string]PkgTarget)
-	roots := make([]Target, 0, len(pkgs))
+func Test(pkgs ...*gb.Package) error {
+	targets := make(map[string]gb.PkgTarget)
+	roots := make([]gb.Target, 0, len(pkgs))
 	for _, pkg := range pkgs {
 		// commands are built as packages for testing.
 		target := testPackage(targets, pkg)
@@ -28,7 +30,7 @@ func Test(pkgs ...*Package) error {
 	return nil
 }
 
-func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
+func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package) gb.Target {
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 	gofiles = append(gofiles, pkg.TestGoFiles...)
@@ -48,7 +50,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 
 	// internal tests
 
-	testpkg := NewPackage(pkg.Context, &build.Package{
+	testpkg := gb.NewPackage(pkg.Context, &build.Package{
 		Name:       name,
 		ImportPath: pkg.ImportPath,
 		Dir:        pkg.Dir,
@@ -63,15 +65,15 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	})
 
 	// build dependencies
-	deps := BuildDependencies(targets, testpkg)
+	deps := gb.BuildDependencies(targets, testpkg)
 	testpkg.Scope = "test"
 	testpkg.Stale = true
 
-	testobj := Compile(testpkg, deps...)
+	testobj := gb.Compile(testpkg, deps...)
 
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
-		xtestpkg := NewPackage(pkg.Context, &build.Package{
+		xtestpkg := gb.NewPackage(pkg.Context, &build.Package{
 			Name:       name,
 			ImportPath: pkg.ImportPath + "_test",
 			Dir:        pkg.Dir,
@@ -79,29 +81,29 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 			Imports:    pkg.XTestImports,
 		})
 		// build external test dependencies
-		deps := BuildDependencies(targets, xtestpkg)
+		deps := gb.BuildDependencies(targets, xtestpkg)
 		xtestpkg.Scope = "test"
 		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
-		testobj = Compile(xtestpkg, append(deps, testobj)...)
+		testobj = gb.Compile(xtestpkg, append(deps, testobj)...)
 	}
 
 	testmain, err := buildTestMain(testpkg)
 	if err != nil {
-		return ErrTarget{err}
+		return gb.ErrTarget{err}
 	}
-	buildmain := Ld(testmain, Compile(testmain, testobj))
+	buildmain := gb.Ld(testmain, gb.Compile(testmain, testobj))
 
 	cmd := exec.Command(testmain.Binfile() + ".test")
 	cmd.Dir = pkg.Dir // tests run in the original source directory
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	Debugf("scheduling run of %v", cmd.Args)
+	gb.Debugf("scheduling run of %v", cmd.Args)
 	return pkg.Run(cmd, buildmain)
 }
 
-func buildTestMain(pkg *Package) (*Package, error) {
+func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if pkg.Scope != "test" {
 		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name)
 	}
@@ -121,7 +123,7 @@ func buildTestMain(pkg *Package) (*Package, error) {
 	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), tests); err != nil {
 		return nil, err
 	}
-	testmain := NewPackage(pkg.Context, &build.Package{
+	testmain := gb.NewPackage(pkg.Context, &build.Package{
 		Name:       pkg.Name,
 		ImportPath: path.Join(pkg.ImportPath, "testmain"),
 		Dir:        dir,

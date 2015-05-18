@@ -43,11 +43,10 @@ func testProject(t *testing.T) *gb.Project {
 	return gb.NewProject(root)
 }
 
-func testContext(t *testing.T) *gb.Context {
+func testContext(t *testing.T, opts ...func(*gb.Context) error) *gb.Context {
 	prj := testProject(t)
-	ctx, err := prj.NewContext(
-		gb.GcToolchain(),
-	)
+	opts = append([]func(*gb.Context) error{gb.GcToolchain()}, opts...)
+	ctx, err := prj.NewContext(opts...)
 	if err != nil {
 		t.Fatal(err)
 	}
