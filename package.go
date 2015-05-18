@@ -12,8 +12,8 @@ type Package struct {
 	Stale         bool   // is the package out of date wrt. its cached copy
 }
 
-// newPackage creates a resolved Package.
-func newPackage(ctx *Context, p *build.Package) *Package {
+// NewPackage creates a resolved Package.
+func NewPackage(ctx *Context, p *build.Package) *Package {
 	pkg := Package{
 		Context: ctx,
 		Package: p,

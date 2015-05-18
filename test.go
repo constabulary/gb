@@ -48,7 +48,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 
 	// internal tests
 
-	testpkg := newPackage(pkg.Context, &build.Package{
+	testpkg := NewPackage(pkg.Context, &build.Package{
 		Name:       name,
 		ImportPath: pkg.ImportPath,
 		Dir:        pkg.Dir,
@@ -71,7 +71,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
-		xtestpkg := newPackage(pkg.Context, &build.Package{
+		xtestpkg := NewPackage(pkg.Context, &build.Package{
 			Name:       name,
 			ImportPath: pkg.ImportPath + "_test",
 			Dir:        pkg.Dir,
@@ -121,7 +121,7 @@ func buildTestMain(pkg *Package) (*Package, error) {
 	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), tests); err != nil {
 		return nil, err
 	}
-	testmain := newPackage(pkg.Context, &build.Package{
+	testmain := NewPackage(pkg.Context, &build.Package{
 		Name:       pkg.Name,
 		ImportPath: path.Join(pkg.ImportPath, "testmain"),
 		Dir:        dir,
