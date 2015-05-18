@@ -163,7 +163,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	pop(path)
 
 	pkg := Package{
-		ctx:     c,
+		Context: c,
 		Package: p,
 	}
 	pkg.Stale = stale || isStale(&pkg)

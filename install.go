@@ -9,7 +9,7 @@ import (
 
 // Install stores a copy of the compiled file in Project.Pkgdir
 func Install(pkg *Package, t PkgTarget) PkgTarget {
-	if pkg.ctx.SkipInstall {
+	if pkg.SkipInstall {
 		return t
 	}
 	if pkg.isMain() {
@@ -76,7 +76,7 @@ func pkgdir(pkg *Package) string {
 	if pkg.Scope == "test" {
 		panic("pkgdir called with test scope")
 	}
-	return filepath.Join(pkg.ctx.Pkgdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	return filepath.Join(pkg.Pkgdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 }
 
 func pkgfile(pkg *Package) string {
@@ -86,7 +86,7 @@ func pkgfile(pkg *Package) string {
 // isStale returns true if the source pkg is considered to be stale with
 // respect to its installed version.
 func isStale(pkg *Package) bool {
-	if pkg.ctx.Force {
+	if pkg.Force {
 		return true
 	}
 

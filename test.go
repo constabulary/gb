@@ -48,7 +48,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 
 	// internal tests
 
-	testpkg := newPackage(pkg.ctx, &build.Package{
+	testpkg := newPackage(pkg.Context, &build.Package{
 		Name:       name,
 		ImportPath: pkg.ImportPath,
 		Dir:        pkg.Dir,
@@ -71,7 +71,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
-		xtestpkg := newPackage(pkg.ctx, &build.Package{
+		xtestpkg := newPackage(pkg.Context, &build.Package{
 			Name:       name,
 			ImportPath: pkg.ImportPath + "_test",
 			Dir:        pkg.Dir,
@@ -82,7 +82,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 		deps := buildDependencies(targets, xtestpkg)
 		xtestpkg.Scope = "test"
 		xtestpkg.Stale = true
-		xtestpkg.ExtraIncludes = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
+		xtestpkg.ExtraIncludes = filepath.Join(pkg.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
 		testobj = Compile(xtestpkg, append(deps, testobj)...)
 	}
 
@@ -98,7 +98,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 	cmd.Stderr = os.Stderr
 
 	Debugf("scheduling run of %v", cmd.Args)
-	return Run(pkg.ctx.permits, cmd, buildmain)
+	return Run(pkg.permits, cmd, buildmain)
 }
 
 func buildTestMain(pkg *Package) (*Package, error) {
@@ -121,7 +121,7 @@ func buildTestMain(pkg *Package) (*Package, error) {
 	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), tests); err != nil {
 		return nil, err
 	}
-	testmain := newPackage(pkg.ctx, &build.Package{
+	testmain := newPackage(pkg.Context, &build.Package{
 		Name:       pkg.Name,
 		ImportPath: path.Join(pkg.ImportPath, "testmain"),
 		Dir:        dir,
@@ -132,6 +132,6 @@ func buildTestMain(pkg *Package) (*Package, error) {
 		Imports: pkg.Package.Imports,
 	})
 	testmain.Scope = "test"
-	testmain.ExtraIncludes = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
+	testmain.ExtraIncludes = filepath.Join(pkg.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
 	return testmain, nil
 }

@@ -99,17 +99,17 @@ func (g *gc) compile() error {
 		// only log compilation message if not in test scope
 		Infof(g.pkg.ImportPath)
 	}
-	includes := g.pkg.ctx.IncludePaths()
+	includes := g.pkg.IncludePaths()
 	importpath := g.pkg.ImportPath
 	if g.pkg.Scope == "test" && g.pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{g.pkg.ExtraIncludes}, includes...)
 	}
 	for i := range g.gofiles {
-		g.gofiles[i], _ = filepath.Rel(g.pkg.ctx.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
+		g.gofiles[i], _ = filepath.Rel(g.pkg.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
 	}
-	err := g.pkg.ctx.tc.Gc(includes, importpath, g.pkg.ctx.Projectdir(), g.Objfile(), g.gofiles, g.pkg.Complete())
-	g.pkg.ctx.Record("compile", time.Since(t0))
+	err := g.pkg.tc.Gc(includes, importpath, g.pkg.Projectdir(), g.Objfile(), g.gofiles, g.pkg.Complete())
+	g.pkg.Record("compile", time.Since(t0))
 	return err
 }
 
@@ -167,8 +167,8 @@ func (p *pack) pack(objs ...ObjTarget) {
 		afiles = append(afiles, obj.Objfile())
 	}
 	t0 := time.Now()
-	err := p.pkg.ctx.tc.Pack(afiles...)
-	p.pkg.ctx.Record("pack", time.Since(t0))
+	err := p.pkg.Context.tc.Pack(afiles...)
+	p.pkg.Record("pack", time.Since(t0))
 	p.c <- err
 }
 
@@ -202,13 +202,13 @@ func (a *asm) String() string {
 }
 
 func (a *asm) Objfile() string {
-	return filepath.Join(a.pkg.ctx.workdir, a.pkg.ImportPath, stripext(a.sfile)+".6")
+	return filepath.Join(a.pkg.workdir, a.pkg.ImportPath, stripext(a.sfile)+".6")
 }
 
 func (a *asm) asm() error {
 	t0 := time.Now()
-	err := a.pkg.ctx.tc.Asm(a.pkg.Dir, a.Objfile(), filepath.Join(a.pkg.Dir, a.sfile))
-	a.pkg.ctx.Record("asm", time.Since(t0))
+	err := a.pkg.tc.Asm(a.pkg.Dir, a.Objfile(), filepath.Join(a.pkg.Dir, a.sfile))
+	a.pkg.Record("asm", time.Since(t0))
 	return err
 }
 
@@ -236,14 +236,14 @@ func (l *ld) link() error {
 		return err
 	}
 
-	includes := l.pkg.ctx.IncludePaths()
+	includes := l.pkg.IncludePaths()
 	if l.pkg.Scope == "test" && l.pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{l.pkg.ExtraIncludes}, includes...)
 		target += ".test"
 	}
-	err := l.pkg.ctx.tc.Ld(includes, l.pkg.ctx.ldflags, target, l.afile.Pkgfile())
-	l.pkg.ctx.Record("link", time.Since(t0))
+	err := l.pkg.tc.Ld(includes, l.pkg.ldflags, target, l.afile.Pkgfile())
+	l.pkg.Record("link", time.Since(t0))
 	return err
 }
 
@@ -273,9 +273,9 @@ func objdir(pkg *Package) string {
 	switch pkg.Scope {
 	case "test":
 		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
-		return filepath.Join(pkg.ctx.workdir, ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		return filepath.Join(pkg.workdir, ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	default:
-		return filepath.Join(pkg.ctx.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		return filepath.Join(pkg.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
 }
 
@@ -292,11 +292,11 @@ func binfile(pkg *Package) string {
 	var target string
 	switch pkg.Scope {
 	case "test":
-		target = filepath.Join(pkg.ctx.workdir, filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+		target = filepath.Join(pkg.workdir, filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
 	default:
-		target = filepath.Join(pkg.ctx.Bindir(), binname(pkg))
+		target = filepath.Join(pkg.Bindir(), binname(pkg))
 	}
-	if pkg.ctx.GOOS == "windows" {
+	if pkg.GOOS == "windows" {
 		target += ".exe"
 	}
 	return target

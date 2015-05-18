@@ -5,7 +5,7 @@ import "fmt"
 
 // Package represents a resolved package from the Project with respect to the Context.
 type Package struct {
-	ctx *Context
+	*Context
 	*build.Package
 	Scope         string // scope: build, test, etc
 	ExtraIncludes string // hook for test
@@ -15,7 +15,7 @@ type Package struct {
 // newPackage creates a resolved Package.
 func newPackage(ctx *Context, p *build.Package) *Package {
 	pkg := Package{
-		ctx:     ctx,
+		Context: ctx,
 		Package: p,
 	}
 	// seed pkg.c so calling result never blocks
@@ -35,7 +35,7 @@ func (p *Package) Imports() []*Package {
 		if stdlib[i] {
 			continue
 		}
-		pkg, ok := p.ctx.pkgs[i]
+		pkg, ok := p.pkgs[i]
 		if !ok {
 			panic("could not locate package: " + i)
 		}
