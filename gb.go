@@ -1,4 +1,4 @@
-// Package gb is a tool kit for compiling and testing Go programs.
+// Package gb is a tool kit for building Go packages and programs.
 //
 // The executable, cmd/gb, is located in the respective subdirectory
 // along with several plugin programs.
