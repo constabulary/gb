@@ -4,8 +4,8 @@ package gb
 
 import (
 	"bytes"
-	"path/filepath"
 	"go/build"
+	"path/filepath"
 	"strings"
 )
 
@@ -64,10 +64,10 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 		return fn(ErrTarget{err})
 	}
 
-        allo, err := rungcc3(pkg.Dir, ofiles[1:]) // skip _cgo_main.o
-        if err != nil {
+	allo, err := rungcc3(pkg.Dir, ofiles[1:]) // skip _cgo_main.o
+	if err != nil {
 		return fn(ErrTarget{err})
-        }
+	}
 
 	return []ObjTarget{cgoTarget(defun), cgoTarget(imports), cgoTarget(allo)}, cgofiles
 }
@@ -113,17 +113,17 @@ func runcc1(pkg *Package) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cc := filepath.Join(pkg.GOROOT, "pkg", "tool", pkg.GOOS+"_"+pkg.GOARCH, archchar +"c")
+	cc := filepath.Join(pkg.GOROOT, "pkg", "tool", pkg.GOOS+"_"+pkg.GOARCH, archchar+"c")
 	objdir := pkg.Objdir()
 	ofile := filepath.Join(objdir, "_cgo_defun."+archchar)
 	args := []string{
-		"-F", "-V", "-w", 
+		"-F", "-V", "-w",
 		"-trimpath", pkg.Workdir(),
 		"-I", objdir,
 		"-I", filepath.Join(pkg.GOROOT, "pkg", pkg.GOOS+"_"+pkg.GOARCH), // for runtime.h
 		"-o", ofile,
-		"-D", "GOOS_"+pkg.GOOS,
-		"-D", "GOARCH_"+pkg.GOARCH,
+		"-D", "GOOS_" + pkg.GOOS,
+		"-D", "GOARCH_" + pkg.GOARCH,
 		filepath.Join(objdir, "_cgo_defun.c"),
 	}
 	return ofile, run(pkg.Dir, cc, args...)
@@ -135,16 +135,16 @@ func runcc2(pkg *Package) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cc := filepath.Join(pkg.GOROOT, "pkg", "tool", pkg.GOOS+"_"+pkg.GOARCH, archchar +"c")
+	cc := filepath.Join(pkg.GOROOT, "pkg", "tool", pkg.GOOS+"_"+pkg.GOARCH, archchar+"c")
 	objdir := pkg.Objdir()
 	ofile := filepath.Join(objdir, "_cgo_import."+archchar)
 	args := []string{
-		"-F", "-V", "-w", 
+		"-F", "-V", "-w",
 		"-trimpath", pkg.Workdir(),
 		"-I", objdir,
 		"-o", ofile,
-		"-D", "GOOS_"+pkg.GOOS,
-		"-D", "GOARCH_"+pkg.GOARCH,
+		"-D", "GOOS_" + pkg.GOOS,
+		"-D", "GOARCH_" + pkg.GOARCH,
 		filepath.Join(objdir, "_cgo_import.c"),
 	}
 	return ofile, run(pkg.Dir, cc, args...)
@@ -152,16 +152,16 @@ func runcc2(pkg *Package) (string, error) {
 
 // rungcc1 invokes gcc to compile cfile into ofile
 func rungcc1(dir, ofile, cfile string) error {
-        gcc := "gcc" // TODO(dfc) handle $CC and clang
-        args := []string{
-                "-fPIC", "-m64", "-pthread", "-fmessage-length=0",
-                "-I", dir,
-                "-I", filepath.Dir(ofile),
-                "-g", "-O2",
-                "-o", ofile,
-                "-c", cfile,
-        }
-        return run(dir, gcc, args...)
+	gcc := "gcc" // TODO(dfc) handle $CC and clang
+	args := []string{
+		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
+		"-I", dir,
+		"-I", filepath.Dir(ofile),
+		"-g", "-O2",
+		"-o", ofile,
+		"-c", cfile,
+	}
+	return run(dir, gcc, args...)
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.

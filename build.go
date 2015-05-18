@@ -64,7 +64,7 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 		var cgofiles []string
 		cgoobj, cgofiles = cgo(pkg)
 		for _, o := range cgoobj {
-		deps = append(deps, o)
+			deps = append(deps, o)
 		}
 		gofiles = append(gofiles, cgofiles...)
 	}

@@ -13,9 +13,12 @@ import (
 // cgo returns a slice of post processed source files and an
 // ObjTargets representing the result of compilation of the post .c
 // output.
-func cgo(pkg *Package) (ObjTarget, []string) {
+func cgo(pkg *Package) ([]ObjTarget, []string) {
+	fn := func(t ...ObjTarget) ([]ObjTarget, []string) {
+		return t, nil
+	}
 	if err := runcgo1(pkg); err != nil {
-		return ErrTarget{err}, nil
+		return fn(ErrTarget{err})
 	}
 
 	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
@@ -37,27 +40,27 @@ func cgo(pkg *Package) (ObjTarget, []string) {
 		ofile := stripext(f) + ".o"
 		ofiles = append(ofiles, ofile)
 		if err := rungcc1(pkg.Dir, ofile, f); err != nil {
-			return ErrTarget{err}, nil
+			return fn(ErrTarget{err})
 		}
 	}
 
 	ofile, err := rungcc2(pkg.Dir, ofiles)
 	if err != nil {
-		return ErrTarget{err}, nil
+		return fn(ErrTarget{err})
 	}
 
 	dynout, err := runcgo2(pkg, ofile)
 	if err != nil {
-		return ErrTarget{err}, nil
+		return fn(ErrTarget{err})
 	}
 	cgofiles = append(cgofiles, dynout)
 
 	allo, err := rungcc3(pkg.Dir, ofiles[1:]) // skip _cgo_main.o
 	if err != nil {
-		return ErrTarget{err}, nil
+		return fn(ErrTarget{err})
 	}
 
-	return cgoTarget(allo), cgofiles
+	return []ObjTarget{cgoTarget(allo)}, cgofiles
 }
 
 type cgoTarget string
