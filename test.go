@@ -82,7 +82,7 @@ func testPackage(targets map[string]PkgTarget, pkg *Package) Target {
 		deps := BuildDependencies(targets, xtestpkg)
 		xtestpkg.Scope = "test"
 		xtestpkg.Stale = true
-		xtestpkg.ExtraIncludes = filepath.Join(pkg.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
+		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 		testobj = Compile(xtestpkg, append(deps, testobj)...)
 	}
 
@@ -132,6 +132,6 @@ func buildTestMain(pkg *Package) (*Package, error) {
 		Imports: pkg.Package.Imports,
 	})
 	testmain.Scope = "test"
-	testmain.ExtraIncludes = filepath.Join(pkg.workdir, filepath.FromSlash(pkg.ImportPath), "_test")
+	testmain.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 	return testmain, nil
 }

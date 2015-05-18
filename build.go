@@ -202,7 +202,7 @@ func (a *asm) String() string {
 }
 
 func (a *asm) Objfile() string {
-	return filepath.Join(a.pkg.workdir, a.pkg.ImportPath, stripext(a.sfile)+".6")
+	return filepath.Join(a.pkg.Workdir(), a.pkg.ImportPath, stripext(a.sfile)+".6")
 }
 
 func (a *asm) asm() error {
@@ -273,9 +273,9 @@ func objdir(pkg *Package) string {
 	switch pkg.Scope {
 	case "test":
 		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
-		return filepath.Join(pkg.workdir, ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	default:
-		return filepath.Join(pkg.workdir, filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
 }
 
@@ -292,7 +292,7 @@ func binfile(pkg *Package) string {
 	var target string
 	switch pkg.Scope {
 	case "test":
-		target = filepath.Join(pkg.workdir, filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
 	default:
 		target = filepath.Join(pkg.Bindir(), binname(pkg))
 	}

@@ -88,6 +88,9 @@ func (c *Context) Pkgdir() string {
 	return filepath.Join(c.Project.Pkgdir(), c.Context.GOOS, c.Context.GOARCH)
 }
 
+// Workdir returns the path to this Context's working directory.
+func (c *Context) Workdir() string { return c.workdir }
+
 // ResolvePackage resolves the package at path using the current context.
 func (c *Context) ResolvePackage(path string) (*Package, error) {
 	return c.loadPackage(nil, path)
