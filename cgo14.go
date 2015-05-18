@@ -22,7 +22,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 		return fn(ErrTarget{err})
 	}
 
-	defun, err := runcc1(pkg)
+	defun, err := runcc(pkg, filepath.Join(pkg.Objdir(), "_cgo_defun.c"))
 	if err != nil {
 		return fn(ErrTarget{err})
 	}
@@ -55,11 +55,11 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 		return fn(ErrTarget{err})
 	}
 
-	_, err = runcgo2(pkg, ofile)
+	dynout, err := runcgo2(pkg, ofile)
 	if err != nil {
 		return fn(ErrTarget{err})
 	}
-	imports, err := runcc2(pkg) // TODO(dfc) should compile dynout from above
+	imports, err := runcc(pkg, dynout)
 	if err != nil {
 		return fn(ErrTarget{err})
 	}
@@ -108,14 +108,14 @@ func runcgo2(pkg *Package, ofile string) (string, error) {
 	return dynout, run(pkg.Dir, cgo, args...)
 }
 
-func runcc1(pkg *Package) (string, error) {
+func runcc(pkg *Package, cfile string) (string, error) {
 	archchar, err := build.ArchChar(pkg.GOARCH)
 	if err != nil {
 		return "", err
 	}
 	cc := filepath.Join(pkg.GOROOT, "pkg", "tool", pkg.GOOS+"_"+pkg.GOARCH, archchar+"c")
 	objdir := pkg.Objdir()
-	ofile := filepath.Join(objdir, "_cgo_defun."+archchar)
+	ofile := filepath.Join(stripext(cfile) + "." + archchar)
 	args := []string{
 		"-F", "-V", "-w",
 		"-trimpath", pkg.Workdir(),
@@ -124,28 +124,7 @@ func runcc1(pkg *Package) (string, error) {
 		"-o", ofile,
 		"-D", "GOOS_" + pkg.GOOS,
 		"-D", "GOARCH_" + pkg.GOARCH,
-		filepath.Join(objdir, "_cgo_defun.c"),
-	}
-	return ofile, run(pkg.Dir, cc, args...)
-}
-
-// /home/dfc/go/pkg/tool/linux_amd64/6c -F -V -w -trimpath $WORK -I $WORK/cgomain/_obj/ -I /home/dfc/go/pkg/linux_amd64 -o $WORK/cgomain/_obj/_cgo_import.6 -D GOOS_linux -D GOARCH_amd64 $WORK/cgomain/_obj/_cgo_import.c
-func runcc2(pkg *Package) (string, error) {
-	archchar, err := build.ArchChar(pkg.GOARCH)
-	if err != nil {
-		return "", err
-	}
-	cc := filepath.Join(pkg.GOROOT, "pkg", "tool", pkg.GOOS+"_"+pkg.GOARCH, archchar+"c")
-	objdir := pkg.Objdir()
-	ofile := filepath.Join(objdir, "_cgo_import."+archchar)
-	args := []string{
-		"-F", "-V", "-w",
-		"-trimpath", pkg.Workdir(),
-		"-I", objdir,
-		"-o", ofile,
-		"-D", "GOOS_" + pkg.GOOS,
-		"-D", "GOARCH_" + pkg.GOARCH,
-		filepath.Join(objdir, "_cgo_import.c"),
+		cfile,
 	}
 	return ofile, run(pkg.Dir, cc, args...)
 }
