@@ -10,26 +10,16 @@ import (
 // gc toolchain
 
 type gcToolchain struct {
-	goos, goarch, goroot string
+	goos, goarch string
 	gc, cc, ld, as, pack string
 }
 
 type gcoption struct {
-	goroot, goos, goarch string
-}
-
-// Goroot configures GcToolchain.
-func Goroot(goroot string) func(*gcoption) {
-	return func(opts *gcoption) {
-		opts.goroot = goroot
-	}
+	goos, goarch string
 }
 
 func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	defaults := []func(*gcoption){
-		func(opt *gcoption) {
-			opt.goroot = runtime.GOROOT()
-		},
 		func(opt *gcoption) {
 			opt.goos = runtime.GOOS
 		},
@@ -43,7 +33,7 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	}
 
 	return func(c *Context) error {
-		goroot := options.goroot
+		goroot := runtime.GOROOT()
 		goos := options.goos
 		goarch := options.goarch
 		archchar, err := build.ArchChar(goarch)
@@ -54,7 +44,6 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 		c.tc = &gcToolchain{
 			goos:   goos,
 			goarch: goarch,
-			goroot: goroot,
 			gc:     filepath.Join(tooldir, archchar+"g"),
 			ld:     filepath.Join(tooldir, archchar+"l"),
 			as:     filepath.Join(tooldir, archchar+"a"),
@@ -91,7 +80,7 @@ func (t *gcToolchain) Pack(afiles ...string) error {
 
 func (t *gcToolchain) Asm(srcdir, ofile, sfile string) error {
 	// TODO(dfc) this is the go 1.4 include path, go 1.5 moves the path to $GOROOT/pkg/include
-	includedir := filepath.Join(t.goroot, "pkg", t.goos+"_"+t.goarch)
+	includedir := filepath.Join(runtime.GOROOT(), "pkg", t.goos+"_"+t.goarch)
 	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", includedir, sfile}
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
