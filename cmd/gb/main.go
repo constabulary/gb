@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 )
 
 var (
-	fs     = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	goroot = fs.String("goroot", runtime.GOROOT(), "override GOROOT")
-	cwd    string
+	fs  = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	cwd string
 )
 
 func init() {
@@ -87,7 +85,7 @@ func main() {
 	gb.Debugf("project root %q", project.Projectdir())
 
 	ctx, err := project.NewContext(
-		gb.GcToolchain(gb.Goroot(*goroot)),
+		gb.GcToolchain(),
 		gb.Ldflags(ldflags),
 	)
 	if err != nil {
