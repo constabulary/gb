@@ -10,7 +10,7 @@ import (
 // gc toolchain
 
 type gcToolchain struct {
-	goos, goarch string
+	goos, goarch         string
 	gc, cc, ld, as, pack string
 }
 

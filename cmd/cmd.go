@@ -43,7 +43,7 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	gb.Debugf("project root %q", project.Projectdir())
 
 	ctx, err := project.NewContext(
-		gb.GcToolchain(gb.Goroot(goroot)),
+		gb.GcToolchain(),
 	)
 	if err != nil {
 		return fmt.Errorf("unable to construct context: %v", err)
