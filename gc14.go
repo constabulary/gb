@@ -60,7 +60,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
 	}
-	return pkg.run(srcdir, t.gc, args...)
+	return pkg.run(srcdir, nil, t.gc, args...)
 }
 
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
@@ -70,7 +70,7 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
-	return pkg.run(srcdir, t.as, args...)
+	return pkg.run(srcdir, nil, t.as, args...)
 }
 
 func (t *gcToolchain) Ld(pkg *Package, searchpaths, ldflags []string, outfile, afile string) error {
@@ -83,7 +83,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths, ldflags []string, outfile, a
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:ld: %v", err)
 	}
-	return pkg.run(".", t.ld, args...)
+	return pkg.run(".", nil, t.ld, args...)
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
@@ -97,5 +97,5 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 		"-D", "GOARCH_" + pkg.GOARCH,
 		cfile,
 	}
-	return pkg.run(pkg.Dir, t.cc, args...)
+	return pkg.run(pkg.Dir, nil, t.cc, args...)
 }

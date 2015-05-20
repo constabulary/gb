@@ -83,7 +83,7 @@ func runcgo1(pkg *Package) error {
 		"-I", pkg.Dir,
 	}
 	args = append(args, pkg.CgoFiles...)
-	return pkg.run(pkg.Dir, cgo, args...)
+	return pkg.run(pkg.Dir, nil, cgo, args...)
 }
 
 // runcgo2 invokes the cgo tool to create _cgo_import.go
@@ -97,5 +97,5 @@ func runcgo2(pkg *Package, ofile string) (string, error) {
 		"-dynimport", ofile,
 		"-dynout", dynout,
 	}
-	return dynout, pkg.run(pkg.Dir, cgo, args...)
+	return dynout, pkg.run(pkg.Dir, nil, cgo, args...)
 }

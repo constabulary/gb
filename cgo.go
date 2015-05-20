@@ -24,7 +24,7 @@ func rungcc1(ctx *Context, dir, ofile, cfile string) error {
 		"-o", ofile,
 		"-c", cfile,
 	}
-	return ctx.run(dir, gcc(), args...)
+	return ctx.run(dir, nil, gcc(), args...)
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
@@ -35,7 +35,7 @@ func rungcc2(ctx *Context, dir string, ofile string, ofiles []string) error {
 	}
 	args = append(args, ofiles...)
 	args = append(args, "-g", "-O2") // this has to go at the end, because reasons!
-	return ctx.run(dir, gcc(), args...)
+	return ctx.run(dir, nil, gcc(), args...)
 }
 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.
@@ -52,7 +52,7 @@ func rungcc3(ctx *Context, dir string, ofiles []string) (string, error) {
 	}
 	args = append(args, ofiles...)
 	args = append(args, "-Wl,-r", "-nostdlib", libgcc, "-Wl,--build-id=none")
-	return ofile, ctx.run(dir, gcc(), args...)
+	return ofile, ctx.run(dir, nil, gcc(), args...)
 }
 
 // libgcc returns the value of gcc -print-libgcc-file-name.
@@ -62,7 +62,7 @@ func libgcc(ctx *Context) (string, error) {
 		"-print-libgcc-file-name",
 	}
 	var buf bytes.Buffer
-	err := ctx.runOut(&buf, ".", gcc(), args...)
+	err := ctx.runOut(&buf, ".", nil, gcc(), args...)
 	return strings.TrimSpace(buf.String()), err
 }
 
