@@ -59,11 +59,6 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	return []ObjTarget{cgoTarget(allo)}, cgofiles
 }
 
-type cgoTarget string
-
-func (t cgoTarget) Objfile() string { return string(t) }
-func (t cgoTarget) Result() error   { return nil }
-
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.
 func runcgo1(pkg *Package) error {
 	cgo := cgotool(pkg.Context)
