@@ -28,15 +28,14 @@ func rungcc1(dir, ofile, cfile string) error {
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
-func rungcc2(dir string, ofiles []string) (string, error) {
-	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
+func rungcc2(dir string, ofile string, ofiles []string) error {
 	args := []string{
 		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
 		"-o", ofile,
 	}
 	args = append(args, ofiles...)
 	args = append(args, "-g", "-O2") // this has to go at the end, because reasons!
-	return ofile, run(dir, gcc(), args...)
+	return run(dir, gcc(), args...)
 }
 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.
@@ -106,4 +105,28 @@ func (t *gcToolchain) gccMachine() []string {
 	default:
 		return nil
 	}
+}
+
+// envList returns the value of the given environment variable broken
+// into fields, using the default value when the variable is empty.
+func envList(key, def string) []string {
+	v := os.Getenv(key)
+	if v == "" {
+		v = def
+	}
+	return strings.Fields(v)
+}
+
+// Return the flags to use when invoking the C or C++ compilers, or cgo.
+func cflags(p *Package, def bool) (cppflags, cflags, cxxflags, ldflags []string) {
+	var defaults string
+	if def {
+		defaults = "-g -O2"
+	}
+
+	cppflags = stringList(envList("CGO_CPPFLAGS", ""), p.CgoCPPFLAGS)
+	cflags = stringList(envList("CGO_CFLAGS", defaults), p.CgoCFLAGS)
+	cxxflags = stringList(envList("CGO_CXXFLAGS", defaults), p.CgoCXXFLAGS)
+	ldflags = stringList(envList("CGO_LDFLAGS", defaults), p.CgoLDFLAGS)
+	return
 }
