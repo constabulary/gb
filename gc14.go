@@ -62,13 +62,6 @@ func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile strin
 	return run(srcdir, t.gc, args...)
 }
 
-func (t *gcToolchain) Pack(afiles ...string) error {
-	args := []string{"r"}
-	args = append(args, afiles...)
-	dir := filepath.Dir(afiles[0])
-	return run(dir, t.pack, args...)
-}
-
 func (t *gcToolchain) Asm(srcdir, ofile, sfile string) error {
 	// TODO(dfc) this is the go 1.4 include path, go 1.5 moves the path to $GOROOT/pkg/include
 	includedir := filepath.Join(runtime.GOROOT(), "pkg", t.goos+"_"+t.goarch)

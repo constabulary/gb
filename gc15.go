@@ -39,7 +39,7 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 			goarch: goarch,
 			gc:     filepath.Join(tooldir, archchar+"g"),
 			ld:     filepath.Join(tooldir, archchar+"l"),
-			as:     filepath.Join(tooldir, "assemble"),
+			as:     filepath.Join(tooldir, "asm"),
 			pack:   filepath.Join(tooldir, "pack"),
 		}
 		return nil
@@ -62,13 +62,6 @@ func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile strin
 		return fmt.Errorf("gc:gc: %v", err)
 	}
 	return run(srcdir, t.gc, args...)
-}
-
-func (t *gcToolchain) Pack(afiles ...string) error {
-	args := []string{"r"}
-	args = append(args, afiles...)
-	dir := filepath.Dir(afiles[0])
-	return run(dir, t.pack, args...)
 }
 
 func (t *gcToolchain) Asm(srcdir, ofile, sfile string) error {
