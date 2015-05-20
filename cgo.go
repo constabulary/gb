@@ -28,14 +28,15 @@ func rungcc1(ctx *Context, dir, ofile, cfile string) error {
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
-func rungcc2(ctx *Context, dir string, ofile string, ofiles []string) error {
+func rungcc2(pkg *Package, dir string, ofile string, ofiles []string) error {
 	args := []string{
 		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
 		"-o", ofile,
 	}
 	args = append(args, ofiles...)
-	args = append(args, "-g", "-O2") // this has to go at the end, because reasons!
-	return ctx.run(dir, nil, gcc(), args...)
+	_, _, _, cgoLDFLAGS := cflags(pkg, true)
+	args = append(args, cgoLDFLAGS...) // this has to go at the end, because reasons!
+	return pkg.run(dir, nil, gcc(), args...)
 }
 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.

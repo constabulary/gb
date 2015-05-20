@@ -48,7 +48,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	}
 
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
-	if err := rungcc2(pkg.Context, pkg.Dir, ofile, ofiles); err != nil {
+	if err := rungcc2(pkg, pkg.Dir, ofile, ofiles); err != nil {
 		return fn(ErrTarget{err})
 	}
 
