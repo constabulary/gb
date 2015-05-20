@@ -59,9 +59,9 @@ func run(dir, command string, args ...string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, dir, command, args...)
 	if err != nil {
-		fmt.Printf("# %s %s\n%s", command, strings.Join(args, " "), buf.String())
+		return fmt.Errorf("# %s %s: %v\n%s", command, strings.Join(args, " "), err, buf.String())
 	}
-	return err
+	return nil
 }
 
 func runOut(output io.Writer, dir, command string, args ...string) error {
