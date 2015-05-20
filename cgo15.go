@@ -2,7 +2,11 @@
 
 package gb
 
-import "path/filepath"
+import (
+	"path/filepath"
+	"strconv"
+	"strings"
+)
 
 // cgo support functions
 
@@ -41,7 +45,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	}
 
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
-	if err := rungcc2(pkg.Context, pkg.Dir, ofile, ofiles); err != nil {
+	if err := rungcc2(pkg, pkg.Dir, ofile, ofiles); err != nil {
 		return fn(ErrTarget{err})
 	}
 
@@ -75,7 +79,20 @@ func runcgo1(pkg *Package) error {
 		"-I", pkg.Dir,
 	}
 	args = append(args, pkg.CgoFiles...)
-	return pkg.run(pkg.Dir, cgo, args...)
+
+	_, _, _, cgoLDFLAGS := cflags(pkg, true)
+
+	// Update $CGO_LDFLAGS with p.CgoLDFLAGS.
+	var cgoenv []string
+	if len(cgoLDFLAGS) > 0 {
+		flags := make([]string, len(cgoLDFLAGS))
+		for i, f := range cgoLDFLAGS {
+			flags[i] = strconv.Quote(f)
+		}
+		cgoenv = []string{"CGO_LDFLAGS=" + strings.Join(flags, " ")}
+	}
+
+	return pkg.run(pkg.Dir, cgoenv, cgo, args...)
 }
 
 // runcgo2 invokes the cgo tool to create _cgo_import.go
@@ -90,5 +107,5 @@ func runcgo2(pkg *Package, ofile string) (string, error) {
 		"-dynimport", ofile,
 		"-dynout", dynout,
 	}
-	return dynout, pkg.run(pkg.Dir, cgo, args...)
+	return dynout, pkg.run(pkg.Dir, nil, cgo, args...)
 }
