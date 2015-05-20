@@ -38,6 +38,7 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 			gc:     filepath.Join(tooldir, archchar+"g"),
 			ld:     filepath.Join(tooldir, archchar+"l"),
 			as:     filepath.Join(tooldir, archchar+"a"),
+			cc:     filepath.Join(tooldir, archchar+"c"),
 			pack:   filepath.Join(tooldir, "pack"),
 		}
 		return nil
@@ -83,4 +84,18 @@ func (t *gcToolchain) Ld(searchpaths, ldflags []string, outfile, afile string) e
 		return fmt.Errorf("gc:ld: %v", err)
 	}
 	return run(".", t.ld, args...)
+}
+
+func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
+	args := []string{
+		"-F", "-V", "-w",
+		"-trimpath", pkg.Workdir(),
+		"-I", pkg.Objdir(),
+		"-I", filepath.Join(pkg.GOROOT, "pkg", pkg.GOOS+"_"+pkg.GOARCH), // for runtime.h
+		"-o", ofile,
+		"-D", "GOOS_" + pkg.GOOS,
+		"-D", "GOARCH_" + pkg.GOARCH,
+		cfile,
+	}
+	return run(pkg.Dir, t.cc, args...)
 }

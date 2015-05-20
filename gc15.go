@@ -86,3 +86,7 @@ func (t *gcToolchain) Ld(searchpaths, ldflags []string, outfile, afile string) e
 	}
 	return run(".", t.ld, args...)
 }
+
+func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
+	return fmt.Errorf("gc15 does not support cc")
+}

@@ -22,6 +22,7 @@ type Toolchain interface {
 	Asm(srcdir, ofile, sfile string) error
 	Pack(...string) error
 	Ld([]string, []string, string, string) error
+	Cc(pkg *Package, ofile string, cfile string) error
 }
 
 func mktmpdir() string {

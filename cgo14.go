@@ -3,7 +3,6 @@
 package gb
 
 import (
-	"go/build"
 	"path/filepath"
 )
 
@@ -20,8 +19,8 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 		return fn(ErrTarget{err})
 	}
 
-	defun, err := runcc(pkg, filepath.Join(pkg.Objdir(), "_cgo_defun.c"))
-	if err != nil {
+	defun := filepath.Join(pkg.Objdir(), "_cgo_defun.o")
+	if err := pkg.tc.Cc(pkg, defun, filepath.Join(pkg.Objdir(), "_cgo_defun.c")); err != nil {
 		return fn(ErrTarget{err})
 	}
 
@@ -57,8 +56,8 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	if err != nil {
 		return fn(ErrTarget{err})
 	}
-	imports, err := runcc(pkg, dynout)
-	if err != nil {
+	imports := stripext(dynout) + ".o"
+	if err := pkg.tc.Cc(pkg, imports, dynout); err != nil {
 		return fn(ErrTarget{err})
 	}
 
@@ -104,25 +103,4 @@ func runcgo2(pkg *Package, ofile string) (string, error) {
 		"-dynout", dynout,
 	}
 	return dynout, run(pkg.Dir, cgo, args...)
-}
-
-func runcc(pkg *Package, cfile string) (string, error) {
-	archchar, err := build.ArchChar(pkg.GOARCH)
-	if err != nil {
-		return "", err
-	}
-	cc := filepath.Join(pkg.GOROOT, "pkg", "tool", pkg.GOOS+"_"+pkg.GOARCH, archchar+"c")
-	objdir := pkg.Objdir()
-	ofile := filepath.Join(stripext(cfile) + "." + archchar)
-	args := []string{
-		"-F", "-V", "-w",
-		"-trimpath", pkg.Workdir(),
-		"-I", objdir,
-		"-I", filepath.Join(pkg.GOROOT, "pkg", pkg.GOOS+"_"+pkg.GOARCH), // for runtime.h
-		"-o", ofile,
-		"-D", "GOOS_" + pkg.GOOS,
-		"-D", "GOARCH_" + pkg.GOARCH,
-		cfile,
-	}
-	return ofile, run(pkg.Dir, cc, args...)
 }
