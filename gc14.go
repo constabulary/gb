@@ -45,7 +45,7 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	}
 }
 
-func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
+func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
 	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
 
 	args := []string{"-p", importpath, "-pack"}
@@ -60,20 +60,20 @@ func (t *gcToolchain) Gc(searchpaths []string, importpath, srcdir, outfile strin
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
 	}
-	return run(srcdir, t.gc, args...)
+	return pkg.run(srcdir, t.gc, args...)
 }
 
-func (t *gcToolchain) Asm(srcdir, ofile, sfile string) error {
+func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	// TODO(dfc) this is the go 1.4 include path, go 1.5 moves the path to $GOROOT/pkg/include
 	includedir := filepath.Join(runtime.GOROOT(), "pkg", t.goos+"_"+t.goarch)
 	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", includedir, sfile}
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
-	return run(srcdir, t.as, args...)
+	return pkg.run(srcdir, t.as, args...)
 }
 
-func (t *gcToolchain) Ld(searchpaths, ldflags []string, outfile, afile string) error {
+func (t *gcToolchain) Ld(pkg *Package, searchpaths, ldflags []string, outfile, afile string) error {
 	args := append(ldflags, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
@@ -83,7 +83,7 @@ func (t *gcToolchain) Ld(searchpaths, ldflags []string, outfile, afile string) e
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:ld: %v", err)
 	}
-	return run(".", t.ld, args...)
+	return pkg.run(".", t.ld, args...)
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
@@ -97,5 +97,5 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 		"-D", "GOARCH_" + pkg.GOARCH,
 		cfile,
 	}
-	return run(pkg.Dir, t.cc, args...)
+	return pkg.run(pkg.Dir, t.cc, args...)
 }

@@ -118,7 +118,7 @@ func (g *gc) compile() error {
 		}
 		g.gofiles[i], _ = filepath.Rel(g.pkg.Projectdir(), filepath.Join(g.pkg.Dir, g.gofiles[i]))
 	}
-	err := g.pkg.tc.Gc(includes, importpath, g.pkg.Projectdir(), g.Objfile(), g.gofiles, g.pkg.Complete())
+	err := g.pkg.tc.Gc(g.pkg, includes, importpath, g.pkg.Projectdir(), g.Objfile(), g.gofiles, g.pkg.Complete())
 	g.pkg.Record("compile", time.Since(t0))
 	return err
 }
@@ -180,7 +180,7 @@ func (p *pack) pack(objs ...ObjTarget) {
 		afiles = append(afiles, obj.Objfile())
 	}
 	t0 := time.Now()
-	err := p.pkg.Context.tc.Pack(afiles...)
+	err := p.pkg.tc.Pack(p.pkg, afiles...)
 	p.pkg.Record("pack", time.Since(t0))
 	p.c <- err
 }
@@ -219,7 +219,7 @@ func (a *asm) Objfile() string {
 
 func (a *asm) asm() error {
 	t0 := time.Now()
-	err := a.pkg.tc.Asm(a.pkg.Dir, a.Objfile(), filepath.Join(a.pkg.Dir, a.sfile))
+	err := a.pkg.tc.Asm(a.pkg, a.pkg.Dir, a.Objfile(), filepath.Join(a.pkg.Dir, a.sfile))
 	a.pkg.Record("asm", time.Since(t0))
 	return err
 }
@@ -254,7 +254,7 @@ func (l *ld) link() error {
 		includes = append([]string{l.pkg.ExtraIncludes}, includes...)
 		target += ".test"
 	}
-	err := l.pkg.tc.Ld(includes, l.pkg.ldflags, target, l.afile.Pkgfile())
+	err := l.pkg.tc.Ld(l.pkg, includes, l.pkg.ldflags, target, l.afile.Pkgfile())
 	l.pkg.Record("link", time.Since(t0))
 	return err
 }

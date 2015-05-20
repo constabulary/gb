@@ -1,8 +1,10 @@
 package gb
 
 import (
+	"bytes"
 	"fmt"
 	"go/build"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -196,6 +198,27 @@ func (c *Context) Run(cmd *exec.Cmd, dep Target) Target {
 	}
 	target := newTarget(annotate, dep)
 	return &target // TODO
+}
+
+func (c *Context) run(dir, command string, args ...string) error {
+	var buf bytes.Buffer
+	err := c.runOut(&buf, dir, command, args...)
+	if err != nil {
+		return fmt.Errorf("# %s %s: %v\n%s", command, strings.Join(args, " "), err, buf.String())
+	}
+	return nil
+}
+
+func (c *Context) runOut(output io.Writer, dir, command string, args ...string) error {
+	cmd := exec.Command(command, args...)
+	cmd.Dir = dir
+	cmd.Stdout = output
+	cmd.Stderr = os.Stderr
+	<-c.permits
+	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	c.permits <- true
+	err := cmd.Run()
+	return err
 }
 
 // Statistics records the various Durations

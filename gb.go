@@ -5,12 +5,10 @@
 package gb
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -18,10 +16,10 @@ import (
 // Toolchain represents a standardised set of command line tools
 // used to build and test Go programs.
 type Toolchain interface {
-	Gc(searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error
-	Asm(srcdir, ofile, sfile string) error
-	Pack(...string) error
-	Ld([]string, []string, string, string) error
+	Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error
+	Asm(pkg *Package, srcdir, ofile, sfile string) error
+	Pack(pkg *Package, afiles ...string) error
+	Ld(*Package, []string, []string, string, string) error
 	Cc(pkg *Package, ofile string, cfile string) error
 }
 
@@ -54,24 +52,6 @@ func copyfile(dst, src string) error {
 	Debugf("copyfile(dst: %v, src: %v)", dst, src)
 	_, err = io.Copy(w, r)
 	return err
-}
-
-func run(dir, command string, args ...string) error {
-	var buf bytes.Buffer
-	err := runOut(&buf, dir, command, args...)
-	if err != nil {
-		return fmt.Errorf("# %s %s: %v\n%s", command, strings.Join(args, " "), err, buf.String())
-	}
-	return nil
-}
-
-func runOut(output io.Writer, dir, command string, args ...string) error {
-	cmd := exec.Command(command, args...)
-	cmd.Dir = dir
-	cmd.Stdout = output
-	cmd.Stderr = os.Stderr
-	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
-	return cmd.Run()
 }
 
 // joinlist joins a []string representing path items

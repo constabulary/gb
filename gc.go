@@ -13,9 +13,9 @@ type gcoption struct {
 	goos, goarch string
 }
 
-func (t *gcToolchain) Pack(afiles ...string) error {
+func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 	args := []string{"r"}
 	args = append(args, afiles...)
 	dir := filepath.Dir(afiles[0])
-	return run(dir, t.pack, args...)
+	return pkg.run(dir, t.pack, args...)
 }

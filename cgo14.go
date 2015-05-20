@@ -42,13 +42,13 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	for _, f := range cfiles {
 		ofile := stripext(f) + ".o"
 		ofiles = append(ofiles, ofile)
-		if err := rungcc1(pkg.Dir, ofile, f); err != nil {
+		if err := rungcc1(pkg.Context, pkg.Dir, ofile, f); err != nil {
 			return fn(ErrTarget{err})
 		}
 	}
 
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
-	if err := rungcc2(pkg.Dir, ofile, ofiles); err != nil {
+	if err := rungcc2(pkg.Context, pkg.Dir, ofile, ofiles); err != nil {
 		return fn(ErrTarget{err})
 	}
 
@@ -61,7 +61,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 		return fn(ErrTarget{err})
 	}
 
-	allo, err := rungcc3(pkg.Dir, ofiles[1:]) // skip _cgo_main.o
+	allo, err := rungcc3(pkg.Context, pkg.Dir, ofiles[1:]) // skip _cgo_main.o
 	if err != nil {
 		return fn(ErrTarget{err})
 	}
@@ -83,7 +83,7 @@ func runcgo1(pkg *Package) error {
 		"-I", pkg.Dir,
 	}
 	args = append(args, pkg.CgoFiles...)
-	return run(pkg.Dir, cgo, args...)
+	return pkg.run(pkg.Dir, cgo, args...)
 }
 
 // runcgo2 invokes the cgo tool to create _cgo_import.go
@@ -97,5 +97,5 @@ func runcgo2(pkg *Package, ofile string) (string, error) {
 		"-dynimport", ofile,
 		"-dynout", dynout,
 	}
-	return dynout, run(pkg.Dir, cgo, args...)
+	return dynout, pkg.run(pkg.Dir, cgo, args...)
 }
