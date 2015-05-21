@@ -62,6 +62,12 @@ func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package) gb.Target {
 		TestGoFiles:  pkg.TestGoFiles,  // passed directly to buildTestMain
 		XTestGoFiles: pkg.XTestGoFiles, // passed directly to buildTestMain
 
+		CgoCFLAGS:    pkg.CgoCFLAGS,
+		CgoCPPFLAGS:  pkg.CgoCPPFLAGS,
+		CgoCXXFLAGS:  pkg.CgoCXXFLAGS,
+		CgoLDFLAGS:   pkg.CgoLDFLAGS,
+		CgoPkgConfig: pkg.CgoPkgConfig,
+
 		Imports: imports,
 	})
 
