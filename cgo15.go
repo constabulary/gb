@@ -36,10 +36,15 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	}
 
 	var ofiles []string
+	var targets []Target
 	for _, f := range cfiles {
 		ofile := stripext(f) + ".o"
 		ofiles = append(ofiles, ofile)
-		if err := rungcc1(pkg.Context, pkg.Dir, ofile, f); err != nil {
+		targets = append(targets, rungcc1(pkg.Context, pkg.Dir, ofile, f))
+	}
+
+	for _, t := range targets {
+		if err := t.Result(); err != nil {
 			return fn(ErrTarget{err})
 		}
 	}

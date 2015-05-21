@@ -3,6 +3,7 @@ package gb
 import (
 	"bytes"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -15,16 +16,18 @@ func (t cgoTarget) Objfile() string { return string(t) }
 func (t cgoTarget) Result() error   { return nil }
 
 // rungcc1 invokes gcc to compile cfile into ofile
-func rungcc1(ctx *Context, dir, ofile, cfile string) error {
-	args := []string{
+func rungcc1(ctx *Context, dir, ofile, cfile string) Target {
+	cmd := exec.Command(gcc(),
 		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
 		"-I", dir,
 		"-I", filepath.Dir(ofile),
 		"-g", "-O2",
 		"-o", ofile,
 		"-c", cfile,
-	}
-	return ctx.run(dir, nil, gcc(), args...)
+	)
+	cmd.Dir = dir
+	return ctx.Run(cmd)
+	// return ctx.run(dir, nil, gcc(), args...)
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.

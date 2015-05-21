@@ -185,7 +185,7 @@ func (c *Context) Destroy() error {
 }
 
 // Run returns a Target representing the result of executing a CmdTarget.
-func (c *Context) Run(cmd *exec.Cmd, dep Target) Target {
+func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
 	annotate := func() error {
 		<-c.permits
 		Infof("run %v", cmd.Args)
@@ -196,7 +196,7 @@ func (c *Context) Run(cmd *exec.Cmd, dep Target) Target {
 		}
 		return err
 	}
-	target := newTarget(annotate, dep)
+	target := newTarget(annotate, deps...)
 	return &target // TODO
 }
 
