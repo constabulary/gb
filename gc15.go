@@ -4,7 +4,6 @@ package gb
 
 import (
 	"fmt"
-	"go/build"
 	"path/filepath"
 	"runtime"
 )
@@ -29,16 +28,12 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 		goroot := runtime.GOROOT()
 		goos := options.goos
 		goarch := options.goarch
-		archchar, err := build.ArchChar(goarch)
-		if err != nil {
-			return err
-		}
 		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
 		c.tc = &gcToolchain{
 			goos:   goos,
 			goarch: goarch,
-			gc:     filepath.Join(tooldir, archchar+"g"),
-			ld:     filepath.Join(tooldir, archchar+"l"),
+			gc:     filepath.Join(tooldir, "compile"),
+			ld:     filepath.Join(tooldir, "link"),
 			as:     filepath.Join(tooldir, "asm"),
 			pack:   filepath.Join(tooldir, "pack"),
 		}

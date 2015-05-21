@@ -188,7 +188,7 @@ func (c *Context) Destroy() error {
 func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
 	annotate := func() error {
 		<-c.permits
-		Infof("run %v", cmd.Args)
+		Debugf("run %v", cmd.Args)
 		err := cmd.Run()
 		c.permits <- true
 		if err != nil {

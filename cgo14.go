@@ -42,7 +42,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	for _, f := range cfiles {
 		ofile := stripext(f) + ".o"
 		ofiles = append(ofiles, ofile)
-		if err := rungcc1(pkg.Context, pkg.Dir, ofile, f); err != nil {
+		if err := rungcc1(pkg.Context, pkg.Dir, ofile, f).Result(); err != nil {
 			return fn(ErrTarget{err})
 		}
 	}
