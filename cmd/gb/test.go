@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/constabulary/gb"
@@ -13,13 +15,19 @@ func init() {
 }
 
 var (
-	testCover bool
-	tfs       []string // Arguments passed to the test binary
+	tfs           []string // Arguments passed to the test binary
+	testProfile   bool
+	testCover     bool
+	testCoverMode string
+	testCoverPkg  string
 )
 
 func addTestFlags(fs *flag.FlagSet) {
 	addBuildFlags(fs)
 	fs.BoolVar(&testCover, "cover", false, "enable coverage analysis")
+	fs.StringVar(&testCoverMode, "covermode", "set",
+		"Set covermode: set (default), count, atomic")
+	fs.StringVar(&testCoverPkg, "coverpkg", "", "enable coverage analysis")
 }
 
 var TestCmd = &cmd.Command{
@@ -35,14 +43,20 @@ var TestCmd = &cmd.Command{
 		if err != nil {
 			return err
 		}
-		if err := cmd.Test(cmd.TestFlags(fs, tfs), pkgs...); err != nil {
+		if err := cmd.Test(cmd.TestFlags(tfs), pkgs...); err != nil {
 			return err
 		}
 		return ctx.Destroy()
 	},
 	AddFlags: addTestFlags,
 	FlagParse: func(flags *flag.FlagSet, args []string) error {
-		args, tfs = cmd.TestExtraFlags(fs, args[2:])
+		var err error
+		args, tfs, err = cmd.TestFlagsExtraParse(args[2:])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "gb test: %s\n", err)
+			fmt.Fprintf(os.Stderr, `run "go help test" or "go help testflag" for more information`+"\n")
+			os.Exit(2)
+		}
 		return flags.Parse(args)
 	},
 }
