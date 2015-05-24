@@ -21,6 +21,9 @@ type Command struct {
 
 	// AddFlags installs additional flags to be parsed before Run.
 	AddFlags func(fs *flag.FlagSet)
+
+	// Allow plugins to modify arguments
+	FlagParse func(fs *flag.FlagSet, args []string) error
 }
 
 // RunCommand detects the project root, parses flags and runs the Command.

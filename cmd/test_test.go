@@ -11,9 +11,10 @@ func TestTestPackage(t *testing.T) {
 	gb.Verbose = false
 	defer func() { gb.Verbose = false }()
 	tests := []struct {
-		pkg     string
-		ldflags string
-		err     error
+		pkg      string
+		testArgs []string
+		ldflags  string
+		err      error
 	}{
 		{
 			pkg: "a",
@@ -41,6 +42,9 @@ func TestTestPackage(t *testing.T) {
 			ldflags: "-X ldflags.gitTagInfo banana -X ldflags.gitRevision f7926af2",
 		}, {
 			pkg: "cgotest",
+		}, {
+			pkg:      "testflags",
+			testArgs: []string{"-debug"},
 		}}
 
 	for _, tt := range tests {
@@ -51,7 +55,7 @@ func TestTestPackage(t *testing.T) {
 			t.Errorf("ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue
 		}
-		if err := Test(pkg); err != tt.err {
+		if err := Test(tt.testArgs, pkg); err != tt.err {
 			t.Errorf("Test(%v): want %v, got %v", tt.pkg, tt.err, err)
 			time.Sleep(500 * time.Millisecond)
 		}
