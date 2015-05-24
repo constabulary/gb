@@ -18,12 +18,6 @@ var EnvCmd = &cmd.Command{
 
 func env(ctx *gb.Context, args []string) error {
 	env := makeenv(ctx)
-	if len(args) > 0 {
-		for _, arg := range args {
-			fmt.Println(findenv(env, arg))
-		}
-		return nil
-	}
 	for _, e := range env {
 		fmt.Printf("%s=%q\n", e.name, e.val)
 	}
