@@ -34,6 +34,10 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	}
 	args = fs.Args() // reset to the remaining arguments
 
+	if projectroot == "" {
+		return fmt.Errorf("project root is blank")
+	}
+
 	root, err := FindProjectroot(projectroot)
 	if err != nil {
 		return fmt.Errorf("could not locate project root: %v", err)
