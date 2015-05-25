@@ -25,8 +25,7 @@ var (
 func addTestFlags(fs *flag.FlagSet) {
 	addBuildFlags(fs)
 	fs.BoolVar(&testCover, "cover", false, "enable coverage analysis")
-	fs.StringVar(&testCoverMode, "covermode", "set",
-		"Set covermode: set (default), count, atomic")
+	fs.StringVar(&testCoverMode, "covermode", "set", "Set covermode: set (default), count, atomic")
 	fs.StringVar(&testCoverPkg, "coverpkg", "", "enable coverage analysis")
 }
 

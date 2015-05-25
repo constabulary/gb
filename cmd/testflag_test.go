@@ -110,14 +110,10 @@ func TestTestFlagsPreParse(t *testing.T) {
 			}
 		}
 		pargs, eargs, err := TestFlagsExtraParse(tt.args)
-		if tt.err != nil && (err == nil ||
-			(err != nil && tt.err.Error() != err.Error())) {
-			t.Errorf("TestExtraFlags(%v): want err = '%v', got = '%v'",
-				tt.args, tt.err, err)
-		} else if tt.err == nil && (!reflect.DeepEqual(pargs, tt.pargs) ||
-			!reflect.DeepEqual(eargs, tt.eargs)) {
-			t.Errorf("TestExtraFlags(%v): want (%v,%v), got (%v,%v)",
-				tt.args, tt.pargs, tt.eargs, pargs, eargs)
+		if tt.err != nil && (err == nil || (err != nil && tt.err.Error() != err.Error())) {
+			t.Errorf("TestExtraFlags(%v): want err = '%v', got = '%v'", tt.args, tt.err, err)
+		} else if tt.err == nil && (!reflect.DeepEqual(pargs, tt.pargs) || !reflect.DeepEqual(eargs, tt.eargs)) {
+			t.Errorf("TestExtraFlags(%v): want (%v,%v), got (%v,%v)", tt.args, tt.pargs, tt.eargs, pargs, eargs)
 		}
 	}
 }
