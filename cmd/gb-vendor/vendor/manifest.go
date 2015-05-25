@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 )
 
 // gb-vendor manifest support
@@ -28,6 +29,18 @@ func (m *Manifest) AddDependency(dep Dependency) error {
 	return nil
 }
 
+// RemoveDependency removes a Dependency from the current Manifest
+// If the dependency does not exist then it returns an error
+func (m *Manifest) RemoveDependency(dep Dependency) error {
+	for i, d := range m.Dependencies {
+		if reflect.DeepEqual(d, dep) {
+			m.Dependencies = append(m.Dependencies[:i], m.Dependencies[i+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("dependency does not exist")
+}
+
 // HasImportpath reports whether the Manifest contains the import path.
 func (m *Manifest) HasImportpath(path string) bool {
 	for _, d := range m.Dependencies {
@@ -36,6 +49,17 @@ func (m *Manifest) HasImportpath(path string) bool {
 		}
 	}
 	return false
+}
+
+// GetDependencyForRepository return a dependency for specified URL
+// If the dependency does not exist it returns an error
+func (m *Manifest) GetDependencyForImportpath(path string) (Dependency, error) {
+	for _, d := range m.Dependencies {
+		if d.Importpath == path {
+			return d, nil
+		}
+	}
+	return Dependency{}, fmt.Errorf("dependency for %s does not exist", path)
 }
 
 // Dependency describes one vendored import path of code
