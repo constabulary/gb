@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -88,4 +89,11 @@ func main() {
 	if err := command.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
 	}
+}
+
+const vendorfile = "vendorfile"
+
+// manifestFile returns $PROJECT/vendor/$vendorfile
+func manifestFile(ctx *gb.Context) string {
+	return filepath.Join(ctx.Projectdir(), "vendor", vendorfile)
 }
