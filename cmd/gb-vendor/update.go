@@ -28,11 +28,19 @@ var UpdateCmd = &cmd.Command{
 
 		d, err := m.GetDependencyForImportpath(path)
 		if err != nil {
-			return fmt.Errorf("could not update dependency: %T %v", err, err)
+			return fmt.Errorf("could not get dependency: %T %v", err, err)
 		}
 
 		url := d.Repository
 		err = m.RemoveDependency(d)
+		if err != nil {
+			return fmt.Errorf("dependency could not be deleted from manifest: %T %v", err, err)
+		}
+
+		localClone := vendor.GitClone{
+			Path: filepath.Join(ctx.Projectdir(), "vendor", "src", path),
+		}
+		err = localClone.Destroy()
 		if err != nil {
 			return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
 		}
