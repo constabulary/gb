@@ -44,10 +44,6 @@ var DeleteCmd = &cmd.Command{
 			return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
 		}
 
-		if err := vendor.WriteManifest(manifestFile(ctx), m); err != nil {
-			return err
-		}
-
-		return nil
+		return vendor.WriteManifest(manifestFile(ctx), m)
 	},
 }
