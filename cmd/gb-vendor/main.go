@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -96,4 +97,56 @@ const vendorfile = "vendorfile"
 // manifestFile returns $PROJECT/vendor/$vendorfile
 func manifestFile(ctx *gb.Context) string {
 	return filepath.Join(ctx.Projectdir(), "vendor", vendorfile)
+}
+
+// copypath copies the contents of src to dst, excluding any path that
+// matches the exclude list.
+func copypath(dst string, src string, exclude ...string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if contains(exclude, filepath.Base(path)) {
+			return filepath.SkipDir
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		dst := filepath.Join(dst, path[len(src):])
+		return copyfile(dst, path)
+	})
+}
+
+func contains(list []string, arg string) bool {
+	for _, v := range list {
+		if v == arg {
+			return true
+		}
+	}
+	return false
+}
+
+func copyfile(dst, src string) error {
+	err := mkdir(filepath.Dir(dst))
+	if err != nil {
+		return fmt.Errorf("copyfile: mkdirall: %v", err)
+	}
+	r, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("copyfile: open(%q): %v", src, err)
+	}
+	defer r.Close()
+	w, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("copyfile: create(%q): %v", dst, err)
+	}
+	fmt.Printf("copyfile(dst: %v, src: %v)\n", dst, src)
+	_, err = io.Copy(w, r)
+	return err
+}
+
+func mkdir(path string) error {
+	return os.MkdirAll(path, 0755)
 }

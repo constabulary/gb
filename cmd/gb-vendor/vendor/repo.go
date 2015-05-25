@@ -22,6 +22,15 @@ type Repository interface {
 // WorkingCopy represents a local copy of a remote dvcs repository.
 type WorkingCopy interface {
 
+	// Dir is the root of this working copy
+	Dir() string
+
+	// Revision returns the revision of this working copy.
+	Revision() (string, error)
+
+	// Branch returns the branch to which this working copy belongs.
+	Branch() (string, error)
+
 	// Destroy removes the working copy
 	Destroy() error
 }
@@ -52,6 +61,18 @@ type GitRepo struct {
 // GitClone is a git WorkingCopy.
 type GitClone struct {
 	Path string
+}
+
+func (g *GitClone) Dir() string { return g.Path }
+
+func (g *GitClone) Revision() (string, error) {
+	rev, err := run("git", "-C", g.Path, "rev-parse", "HEAD")
+	return strings.TrimSpace(string(rev)), err
+}
+
+func (g *GitClone) Branch() (string, error) {
+	rev, err := run("git", "-C", g.Path, "rev-parse", "--abbrev-ref", "HEAD")
+	return strings.TrimSpace(string(rev)), err
 }
 
 func (g *GitClone) Destroy() error {

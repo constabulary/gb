@@ -2,6 +2,7 @@ package vendor
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 )
@@ -15,6 +16,26 @@ type Manifest struct {
 
 	// Depenencies is a list of vendored dependencies.
 	Dependencies []Dependency `json:"dependencies"`
+}
+
+// AddDependency adds a Dependency to the current Manifest.
+// If the dependency exists already then it returns and error.
+func (m *Manifest) AddDependency(dep Dependency) error {
+	if m.HasImportpath(dep.Importpath) {
+		return fmt.Errorf("already registered")
+	}
+	m.Dependencies = append(m.Dependencies, dep)
+	return nil
+}
+
+// HasImportpath reports whether the Manifest contains the import path.
+func (m *Manifest) HasImportpath(path string) bool {
+	for _, d := range m.Dependencies {
+		if d.Importpath == path {
+			return true
+		}
+	}
+	return false
 }
 
 // Dependency describes one vendored import path of code
@@ -68,7 +89,7 @@ func ReadManifest(path string) (*Manifest, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return new(Manifest), err
+			return new(Manifest), nil
 		}
 		return nil, err
 	}

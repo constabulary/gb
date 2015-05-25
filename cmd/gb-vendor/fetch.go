@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -18,12 +19,55 @@ var FetchCmd = &cmd.Command{
 		if len(args) != 1 {
 			return fmt.Errorf("fetch: import path missing")
 		}
+		path := args[0]
 
-		_, err := vendor.ReadManifest(manifestFile(ctx))
+		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
-			return fmt.Errorf("could not load manifest: %v", err)
+			return fmt.Errorf("could not load manifest: %T %v", err, err)
 		}
 
-		return nil
+		repo, err := vendor.RepositoryFromPath(path)
+		if err != nil {
+			return err
+		}
+
+		wc, err := repo.Clone()
+		if err != nil {
+			return err
+		}
+
+		rev, err := wc.Revision()
+		if err != nil {
+			return err
+		}
+
+		branch, err := wc.Branch()
+		if err != nil {
+			return err
+		}
+
+		dep := vendor.Dependency{
+			Importpath: path,
+			Repository: repo.(*vendor.GitRepo).URL,
+			Revision:   rev,
+			Branch:     branch,
+			Path:       "",
+		}
+
+		if err := m.AddDependency(dep); err != nil {
+			return err
+		}
+
+		dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
+		src := filepath.Join(wc.Dir(), dep.Path)
+
+		if err := copypath(dst, src, ".git"); err != nil {
+			return err
+		}
+
+		if err := vendor.WriteManifest(manifestFile(ctx), m); err != nil {
+			return err
+		}
+		return wc.Destroy()
 	},
 }
