@@ -23,7 +23,7 @@ func init() {
 	fs.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage:")
 		for name, cmd := range commands {
-			fmt.Fprintf(os.Stderr, "  gb %s [flags] [package] - %s\n",
+			fmt.Fprintf(os.Stderr, "  gb vendor %s [flags] [package] - %s\n",
 				name, cmd.ShortDesc)
 		}
 		fmt.Fprintln(os.Stderr)
