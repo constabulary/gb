@@ -91,7 +91,6 @@ func main() {
 
 const manifestfile = "manifest"
 
-// manifestFile returns $PROJECT/vendor/$vendorfile
 func manifestFile(ctx *gb.Context) string {
 	return filepath.Join(ctx.Projectdir(), "vendor", manifestfile)
 }

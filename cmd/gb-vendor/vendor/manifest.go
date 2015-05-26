@@ -10,7 +10,7 @@ import (
 
 // gb-vendor manifest support
 
-// Manfest describes the layout of $PROJECT/vendor/vendorfile.
+// Manifest describes the layout of $PROJECT/vendor/manifest.
 type Manifest struct {
 	// Manifest version. Current manifest version is 0.
 	Version int `json:"version"`
