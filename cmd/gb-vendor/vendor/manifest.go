@@ -1,6 +1,7 @@
 package vendor
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -103,8 +104,12 @@ func WriteManifest(path string, m *Manifest) error {
 }
 
 func writeManifest(w io.Writer, m *Manifest) error {
-	e := json.NewEncoder(w)
-	return e.Encode(m)
+	buf, err := json.MarshalIndent(m, "", "\t")
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(w, bytes.NewReader(buf))
+	return err
 }
 
 // ReadManifest reads a Manifest from path. If the Manifest is not
