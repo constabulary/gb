@@ -22,7 +22,7 @@ func init() {
 }
 
 func addDeleteFlags(fs *flag.FlagSet) {
-	fs.BoolVar(&deleteAll, "all", false, "update all dependencies")
+	fs.BoolVar(&deleteAll, "all", false, "delete all dependencies")
 }
 
 var DeleteCmd = &cmd.Command{
