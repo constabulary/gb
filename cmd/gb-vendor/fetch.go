@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"path/filepath"
 
@@ -9,8 +10,23 @@ import (
 	"github.com/constabulary/gb/cmd/gb-vendor/vendor"
 )
 
+var (
+	// gb vendor fetch command flags
+
+	// branch
+	branch string
+
+	// revision (commit)
+	revision string
+)
+
 func init() {
 	registerCommand("fetch", FetchCmd)
+}
+
+func addFetchFlags(fs *flag.FlagSet) {
+	fs.StringVar(&branch, "branch", "master", "branch of the package")
+	fs.StringVar(&revision, "revision", "", "revision of the package")
 }
 
 var FetchCmd = &cmd.Command{
@@ -32,6 +48,19 @@ var FetchCmd = &cmd.Command{
 		}
 
 		wc, err := repo.Clone()
+		if err != nil {
+			return err
+		}
+
+		if branch != "master" && revision != "" {
+			return fmt.Errorf("you cannot specify branch and revision at once")
+		}
+
+		if branch != "master" {
+			err = wc.CheckoutBranch(branch)
+		} else {
+			err = wc.CheckoutRevision(revision)
+		}
 		if err != nil {
 			return err
 		}
@@ -70,4 +99,5 @@ var FetchCmd = &cmd.Command{
 		}
 		return wc.Destroy()
 	},
+	AddFlags: addFetchFlags,
 }
