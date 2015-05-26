@@ -39,7 +39,7 @@ var FetchCmd = &cmd.Command{
 
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
-			return fmt.Errorf("could not load manifest: %T %v", err, err)
+			return fmt.Errorf("could not load manifest: %v", err)
 		}
 
 		repo, err := vendor.RepositoryFromPath(path)

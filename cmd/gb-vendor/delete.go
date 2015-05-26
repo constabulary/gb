@@ -36,7 +36,7 @@ var DeleteCmd = &cmd.Command{
 
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
-			return fmt.Errorf("could not load manifest: %T %v", err, err)
+			return fmt.Errorf("could not load manifest: %v", err)
 		}
 
 		var dependencies []vendor.Dependency
@@ -47,7 +47,7 @@ var DeleteCmd = &cmd.Command{
 			p := args[0]
 			dependency, err := m.GetDependencyForImportpath(p)
 			if err != nil {
-				return fmt.Errorf("could not get dependency: %T %v", err, err)
+				return fmt.Errorf("could not get dependency: %v", err)
 			}
 			dependencies = append(dependencies, dependency)
 		}
@@ -56,15 +56,14 @@ var DeleteCmd = &cmd.Command{
 			path := d.Importpath
 
 			if err := m.RemoveDependency(d); err != nil {
-				return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
+				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
 			localClone := vendor.GitClone{
 				Path: filepath.Join(ctx.Projectdir(), "vendor", "src", path),
 			}
-
 			if err := localClone.Destroy(); err != nil {
-				return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
+				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 		}
 		return vendor.WriteManifest(manifestFile(ctx), m)
