@@ -73,11 +73,8 @@ func main() {
 	if err != nil {
 		gb.Fatalf("could not parse flags: %v", err)
 	}
-
 	args = fs.Args() // reset args to the leftovers from fs.Parse
-	if err != nil {
-		gb.Fatalf("could not make project root absolute: %v", err)
-	}
+	gb.Debugf("args: %v", args)
 
 	ctx, err := project.NewContext(
 		gb.GcToolchain(),
@@ -86,7 +83,6 @@ func main() {
 		gb.Fatalf("unable to construct context: %v", err)
 	}
 
-	gb.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
 	}
