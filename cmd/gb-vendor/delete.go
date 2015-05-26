@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"path/filepath"
 
@@ -9,41 +10,69 @@ import (
 	"github.com/constabulary/gb/cmd/gb-vendor/vendor"
 )
 
+var (
+	// gb vendor delete flags
+
+	// delete all dependencies
+	deleteAll bool
+)
+
 func init() {
 	registerCommand("delete", DeleteCmd)
+}
+
+func addDeleteFlags(fs *flag.FlagSet) {
+	fs.BoolVar(&deleteAll, "all", false, "update all dependencies")
 }
 
 var DeleteCmd = &cmd.Command{
 	ShortDesc: "deletes a local dependency",
 	Run: func(ctx *gb.Context, args []string) error {
-		if len(args) != 1 {
-			return fmt.Errorf("delete: import path missing")
+		if len(args) != 1 && !deleteAll {
+			return fmt.Errorf("delete: import path or --all flag is missing")
+		} else if len(args) == 1 && deleteAll {
+			return fmt.Errorf("delete: you cannot specify path and --all flag at once")
 		}
-		path := args[0]
 
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
 			return fmt.Errorf("could not load manifest: %T %v", err, err)
 		}
 
-		d, err := m.GetDependencyForImportpath(path)
-		if err != nil {
-			return fmt.Errorf("could not get dependency: %T %v", err, err)
+		var dependencies []vendor.Dependency
+		if deleteAll {
+			dependencies = make([]vendor.Dependency, len(m.Dependencies))
+			copy(dependencies, m.Dependencies)
+		} else {
+			p := args[0]
+			dependency, err := m.GetDependencyForImportpath(p)
+			if err != nil {
+				return fmt.Errorf("could not get dependency: %T %v", err, err)
+			}
+			dependencies = append(dependencies, dependency)
 		}
 
-		err = m.RemoveDependency(d)
-		if err != nil {
-			return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
-		}
+		for _, d := range dependencies {
+			path := d.Importpath
 
-		localClone := vendor.GitClone{
-			Path: filepath.Join(ctx.Projectdir(), "vendor", "src", path),
-		}
-		err = localClone.Destroy()
-		if err != nil {
-			return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
-		}
+			if err != nil {
+				return fmt.Errorf("could not get dependency: %T %v", err, err)
+			}
 
+			err = m.RemoveDependency(d)
+			if err != nil {
+				return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
+			}
+
+			localClone := vendor.GitClone{
+				Path: filepath.Join(ctx.Projectdir(), "vendor", "src", path),
+			}
+			err = localClone.Destroy()
+			if err != nil {
+				return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
+			}
+		}
 		return vendor.WriteManifest(manifestFile(ctx), m)
 	},
+	AddFlags: addDeleteFlags,
 }
