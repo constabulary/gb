@@ -1,6 +1,7 @@
 package vendor
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +11,7 @@ import (
 
 // gb-vendor manifest support
 
-// Manfest describes the layout of $PROJECT/vendor/vendorfile.
+// Manifest describes the layout of $PROJECT/vendor/manifest.
 type Manifest struct {
 	// Manifest version. Current manifest version is 0.
 	Version int `json:"version"`
@@ -103,8 +104,12 @@ func WriteManifest(path string, m *Manifest) error {
 }
 
 func writeManifest(w io.Writer, m *Manifest) error {
-	e := json.NewEncoder(w)
-	return e.Encode(m)
+	buf, err := json.MarshalIndent(m, "", "\t")
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(w, bytes.NewReader(buf))
+	return err
 }
 
 // ReadManifest reads a Manifest from path. If the Manifest is not

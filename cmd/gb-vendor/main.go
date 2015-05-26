@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -73,11 +74,8 @@ func main() {
 	if err != nil {
 		gb.Fatalf("could not parse flags: %v", err)
 	}
-
 	args = fs.Args() // reset args to the leftovers from fs.Parse
-	if err != nil {
-		gb.Fatalf("could not make project root absolute: %v", err)
-	}
+	gb.Debugf("args: %v", args)
 
 	ctx, err := project.NewContext(
 		gb.GcToolchain(),
@@ -86,28 +84,30 @@ func main() {
 		gb.Fatalf("unable to construct context: %v", err)
 	}
 
-	gb.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
 	}
 }
 
-const vendorfile = "vendorfile"
+const manifestfile = "manifest"
 
-// manifestFile returns $PROJECT/vendor/$vendorfile
 func manifestFile(ctx *gb.Context) string {
-	return filepath.Join(ctx.Projectdir(), "vendor", vendorfile)
+	return filepath.Join(ctx.Projectdir(), "vendor", manifestfile)
 }
 
-// copypath copies the contents of src to dst, excluding any path that
-// matches the exclude list.
-func copypath(dst string, src string, exclude ...string) error {
+// copypath copies the contents of src to dst, excluding any file or
+// directory that starts with a period.
+func copypath(dst string, src string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if contains(exclude, filepath.Base(path)) {
-			return filepath.SkipDir
+
+		if strings.HasPrefix(filepath.Base(path), ".") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
 		}
 
 		if info.IsDir() {
@@ -117,15 +117,6 @@ func copypath(dst string, src string, exclude ...string) error {
 		dst := filepath.Join(dst, path[len(src):])
 		return copyfile(dst, path)
 	})
-}
-
-func contains(list []string, arg string) bool {
-	for _, v := range list {
-		if v == arg {
-			return true
-		}
-	}
-	return false
 }
 
 func copyfile(dst, src string) error {
