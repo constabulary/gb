@@ -55,20 +55,15 @@ var DeleteCmd = &cmd.Command{
 		for _, d := range dependencies {
 			path := d.Importpath
 
-			if err != nil {
-				return fmt.Errorf("could not get dependency: %T %v", err, err)
-			}
-
-			err = m.RemoveDependency(d)
-			if err != nil {
+			if err := m.RemoveDependency(d); err != nil {
 				return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
 			}
 
 			localClone := vendor.GitClone{
 				Path: filepath.Join(ctx.Projectdir(), "vendor", "src", path),
 			}
-			err = localClone.Destroy()
-			if err != nil {
+
+			if err := localClone.Destroy(); err != nil {
 				return fmt.Errorf("dependency could not be deleted: %T %v", err, err)
 			}
 		}
