@@ -88,11 +88,11 @@ func main() {
 	}
 }
 
-const vendorfile = "vendorfile"
+const manifestfile = "manifest"
 
 // manifestFile returns $PROJECT/vendor/$vendorfile
 func manifestFile(ctx *gb.Context) string {
-	return filepath.Join(ctx.Projectdir(), "vendor", vendorfile)
+	return filepath.Join(ctx.Projectdir(), "vendor", manifestfile)
 }
 
 // copypath copies the contents of src to dst, excluding any path that
