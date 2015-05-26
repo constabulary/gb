@@ -61,7 +61,7 @@ var FetchCmd = &cmd.Command{
 		dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
 		src := filepath.Join(wc.Dir(), dep.Path)
 
-		if err := copypath(dst, src, ".git"); err != nil {
+		if err := copypath(dst, src); err != nil {
 			return err
 		}
 
