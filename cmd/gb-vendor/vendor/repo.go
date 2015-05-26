@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -37,7 +38,7 @@ type WorkingCopy interface {
 	// Branch returns the branch to which this working copy belongs.
 	Branch() (string, error)
 
-	// Destroy removes the working copy.
+	// Destroy removes the working copy and cleans path to the working copy.
 	Destroy() error
 }
 
@@ -92,7 +93,11 @@ func (g *GitClone) Branch() (string, error) {
 }
 
 func (g *GitClone) Destroy() error {
-	return os.RemoveAll(g.Path)
+	parent := filepath.Dir(g.Path)
+	if err := os.RemoveAll(g.Path); err != nil {
+		return err
+	}
+	return cleanPath(parent)
 }
 
 func (g *GitRepo) Clone() (WorkingCopy, error) {
@@ -108,6 +113,19 @@ func (g *GitRepo) Clone() (WorkingCopy, error) {
 	return &GitClone{
 		Path: dir,
 	}, nil
+}
+
+func cleanPath(path string) error {
+	if files, _ := ioutil.ReadDir(path); len(files) > 0 || filepath.Base(path) == "src" {
+		return nil
+	} else {
+		parent := filepath.Dir(path)
+		if err := os.RemoveAll(path); err != nil {
+			return err
+		}
+		return cleanPath(parent)
+	}
+
 }
 
 func mkdir(path string) error {
