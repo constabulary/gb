@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -35,19 +36,26 @@ type WorkingCopy interface {
 	Destroy() error
 }
 
+var (
+	ghregex = regexp.MustCompile(`^github.com/(\w+)/(\w+)(/.+)?`)
+)
+
 // RepositoryFromPath attempts to deduce a Repository from an import path.
-func RepositoryFromPath(path string) (Repository, error) {
+// If there are additional path items remaining then they will be returned.
+func RepositoryFromPath(path string) (Repository, string, error) {
 	if strings.Contains(path, "//:") {
-		return nil, fmt.Errorf("path must not be a url")
+		return nil, path, fmt.Errorf("path must not be a url")
 	}
 
 	switch {
-	case strings.HasPrefix(path, "github.com/"):
+	case ghregex.MatchString(path):
+		v := ghregex.FindStringSubmatch(path)
+		v = append(v, "")
 		return &GitRepo{
-			URL: fmt.Sprintf("https://%s/", strings.TrimSuffix(path, "/")),
-		}, nil
+			URL: fmt.Sprintf("https://github.com/%s/%s", v[1], v[2]),
+		}, v[3], nil
 	default:
-		return nil, fmt.Errorf("unknown repository type")
+		return nil, path, fmt.Errorf("unknown repository type")
 	}
 }
 
