@@ -30,8 +30,8 @@ func (m *Manifest) AddDependency(dep Dependency) error {
 	return nil
 }
 
-// RemoveDependency removes a Dependency from the current Manifest
-// If the dependency does not exist then it returns an error
+// RemoveDependency removes a Dependency from the current Manifest.
+// If the dependency does not exist then it returns an error.
 func (m *Manifest) RemoveDependency(dep Dependency) error {
 	for i, d := range m.Dependencies {
 		if reflect.DeepEqual(d, dep) {
