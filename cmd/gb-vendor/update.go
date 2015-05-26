@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"path/filepath"
-	"flag"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -21,14 +21,14 @@ func init() {
 	registerCommand("update", UpdateCmd)
 }
 
-func addUpdateFlags(fs *flag.FlagSet){
+func addUpdateFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&updateAll, "all", false, "update all dependencies")
 }
 
 var UpdateCmd = &cmd.Command{
 	ShortDesc: "updates a local dependency",
 	Run: func(ctx *gb.Context, args []string) error {
-		if len(args) != 1 && !updateAll{
+		if len(args) != 1 && !updateAll {
 			return fmt.Errorf("update: import path or --all flag is missing")
 		} else if len(args) == 1 && updateAll {
 			return fmt.Errorf("update: you cannot specify path and --all flag at once")
