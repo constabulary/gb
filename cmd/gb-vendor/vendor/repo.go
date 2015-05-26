@@ -37,7 +37,7 @@ type WorkingCopy interface {
 }
 
 var (
-	ghregex = regexp.MustCompile(`^github.com/(\w+)/(\w+)(/.+)?`)
+	ghregex = regexp.MustCompile(`^github.com/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
 )
 
 // RepositoryFromPath attempts to deduce a Repository from an import path.

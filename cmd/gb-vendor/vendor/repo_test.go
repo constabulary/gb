@@ -22,6 +22,11 @@ func TestRepositoryFromPath(t *testing.T) {
 			URL: "https://github.com/pkg/sftp",
 		},
 		extra: "/examples/gsftp",
+	}, {
+		path: "github.com/coreos/go-etcd",
+		want: &GitRepo{
+			URL: "https://github.com/coreos/go-etcd",
+		},
 	}}
 
 	for _, tt := range tests {
