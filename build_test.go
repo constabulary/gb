@@ -2,6 +2,9 @@ package gb
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -32,6 +35,9 @@ func TestBuild(t *testing.T) {
 	}, {
 		pkg: "cgotest",
 		err: nil,
+	}, {
+		pkg: "h", // imports "blank", which is blank, see issue #131
+		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "blank")),
 	}}
 
 	for _, tt := range tests {
@@ -56,4 +62,12 @@ func sameErr(e1, e2 error) bool {
 		return e1.Error() == e2.Error()
 	}
 	return e1 == e2
+}
+
+func getwd(t *testing.T) string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cwd
 }
