@@ -31,10 +31,6 @@ func ResolvePackages(r Resolver, paths ...string) ([]*gb.Package, error) {
 		path = relImportPath(r.Srcdirs()[0], path)
 		pkg, err := r.ResolvePackage(path)
 		if err != nil {
-			if _, ok := err.(*build.NoGoError); ok {
-				gb.Debugf("skipping %q because of error %q", path, err)
-				continue
-			}
 			return pkgs, fmt.Errorf("failed to resolve import path %q: %v", path, err)
 		}
 		pkgs = append(pkgs, pkg)

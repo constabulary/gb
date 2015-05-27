@@ -11,6 +11,9 @@ import (
 // FindProjectroot works upwards from path seaching for the
 // src/ directory which identifies the project root.
 func FindProjectroot(path string) (string, error) {
+	if path == "" {
+		return "", fmt.Errorf("project root is blank")
+	}
 	start := path
 	for path != "/" {
 		root := filepath.Join(path, "src")
