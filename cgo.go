@@ -33,9 +33,12 @@ func rungcc1(ctx *Context, dir, ofile, cfile string) Target {
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
 func rungcc2(pkg *Package, dir string, ofile string, ofiles []string) error {
 	args := []string{
-		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
-		"-o", ofile,
+		"-fPIC", "-m64", "-fmessage-length=0",
 	}
+	if !isClang() {
+		args = append(args, "-pthread")
+	}
+	args = append(args, "-o", ofile)
 	args = append(args, ofiles...)
 	_, _, _, cgoLDFLAGS := cflags(pkg, true)
 	args = append(args, cgoLDFLAGS...) // this has to go at the end, because reasons!
@@ -44,25 +47,29 @@ func rungcc2(pkg *Package, dir string, ofile string, ofiles []string) error {
 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.
 func rungcc3(ctx *Context, dir string, ofiles []string) (string, error) {
-	libgcc, err := libgcc(ctx)
-	if err != nil {
-		return "", nil
-	}
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_all.o")
 	args := []string{
-		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
-		"-g", "-O2",
-		"-o", ofile,
+		"-fPIC", "-m64", "-fmessage-length=0",
 	}
+	if !isClang() {
+		args = append(args, "-pthread")
+	}
+	args = append(args, "-g", "-O2", "-o", ofile)
 	args = append(args, ofiles...)
-	args = append(args, "-Wl,-r", "-nostdlib", libgcc, "-Wl,--build-id=none")
+	args = append(args, "-Wl,-r", "-nostdlib")
+	if !isClang() {
+		libgcc, err := libgcc(ctx)
+		if err != nil {
+			return "", nil
+		}
+		args = append(args, libgcc, "-Wl,--build-id=none")
+	}
 	return ofile, ctx.run(dir, nil, gcc(), args...)
 }
 
 // libgcc returns the value of gcc -print-libgcc-file-name.
 func libgcc(ctx *Context) (string, error) {
 	args := []string{
-		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
 		"-print-libgcc-file-name",
 	}
 	var buf bytes.Buffer
@@ -76,6 +83,10 @@ func cgotool(ctx *Context) string {
 
 func gcc() string {
 	return gccBaseCmd()[0] // TODO(dfc) handle gcc wrappers properly
+}
+
+func isClang() bool {
+	return strings.HasPrefix(gcc(), "clang")
 }
 
 // gccBaseCmd returns the start of the compiler command line.
