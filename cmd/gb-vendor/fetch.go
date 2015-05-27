@@ -42,7 +42,7 @@ var FetchCmd = &cmd.Command{
 			return fmt.Errorf("could not load manifest: %v", err)
 		}
 
-		repo, err := vendor.RepositoryFromPath(path)
+		repo, extra, err := vendor.RepositoryFromPath(path)
 		if err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ var FetchCmd = &cmd.Command{
 			Repository: repo.(*vendor.GitRepo).URL,
 			Revision:   rev,
 			Branch:     branch,
-			Path:       "",
+			Path:       extra,
 		}
 
 		if err := m.AddDependency(dep); err != nil {
