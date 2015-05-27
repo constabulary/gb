@@ -94,13 +94,11 @@ type Dependency struct {
 // destroying a working vendorfile.
 func WriteManifest(path string, m *Manifest) error {
 	if len(m.Dependencies) == 0 {
-		// Check if files exists.
-		_, err := os.Stat(path)
-		if err != nil {
-			// Return nil because it is OK if the file does not exist yet.
-			return nil
+		err := os.Remove(path)
+		if !os.IsNotExist(err) {
+			return err
 		}
-		return os.RemoveAll(path)
+		return nil
 	}
 
 	f, err := os.Create(path)
