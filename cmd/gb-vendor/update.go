@@ -110,7 +110,6 @@ var UpdateCmd = &cmd.Command{
 			if err := wc.Destroy(); err != nil {
 				return err
 			}
-			fmt.Println(dependencies)
 		}
 
 		return vendor.WriteManifest(manifestFile(ctx), m)
