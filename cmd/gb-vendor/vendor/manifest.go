@@ -89,9 +89,18 @@ type Dependency struct {
 
 // WriteManifest writes a Manifest to the path. If the manifest does
 // not exist, it is created. If it does exist, it will be overwritten.
+// If the manifest file is empty (0 dependencies) it will be deleted.
 // TODO(dfc) write to temporary file and move atomically to avoid
 // destroying a working vendorfile.
 func WriteManifest(path string, m *Manifest) error {
+	if len(m.Dependencies) == 0 {
+		err := os.Remove(path)
+		if !os.IsNotExist(err) {
+			return err
+		}
+		return nil
+	}
+
 	f, err := os.Create(path)
 	if err != nil {
 		return err
