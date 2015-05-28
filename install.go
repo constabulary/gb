@@ -100,6 +100,7 @@ func isStale(pkg *Package) bool {
 	if fi, err := os.Stat(pkgfile(pkg)); err == nil {
 		built = fi.ModTime()
 	}
+
 	if built.IsZero() {
 		return true
 	}
@@ -107,6 +108,19 @@ func isStale(pkg *Package) bool {
 	olderThan := func(file string) bool {
 		fi, err := os.Stat(file)
 		return err != nil || fi.ModTime().After(built)
+	}
+
+	// As a courtesy to developers installing new versions of the compiler
+	// frequently, define that packages are stale if they are
+	// older than the compiler, and commands if they are older than
+	// the linker.  This heuristic will not work if the binaries are
+	// back-dated, as some binary distributions may do, but it does handle
+	// a very common case.
+	if olderThan(pkg.tc.compiler()) {
+		return true
+	}
+	if pkg.IsCommand() && olderThan(pkg.tc.linker()) {
+		return true
 	}
 
 	// Package is stale if a dependency is newer.

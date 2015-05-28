@@ -19,3 +19,6 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 	dir := filepath.Dir(afiles[0])
 	return pkg.run(dir, nil, t.pack, args...)
 }
+
+func (t *gcToolchain) compiler() string { return t.gc }
+func (t *gcToolchain) linker() string   { return t.ld }

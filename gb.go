@@ -21,6 +21,12 @@ type Toolchain interface {
 	Pack(pkg *Package, afiles ...string) error
 	Ld(*Package, []string, []string, string, string) error
 	Cc(pkg *Package, ofile string, cfile string) error
+
+	// compiler returns the location of the compiler for .go source code
+	compiler() string
+
+	// linker returns the location of the linker for this toolchain
+	linker() string
 }
 
 func mktmpdir() string {
