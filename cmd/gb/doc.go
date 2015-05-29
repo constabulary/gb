@@ -11,6 +11,7 @@ import (
 )
 
 func init() {
+<<<<<<< HEAD
 	registerCommand(&cmd.Command{
 		Name: "doc",
 		ShortDesc: "show documentation for a package or symbol",
