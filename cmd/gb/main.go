@@ -50,7 +50,6 @@ func main() {
 	}
 
 	name := args[1]
-	parseargs := name != "plugin"
 	command, ok := commands[name]
 	if !ok {
 		if _, err := lookupPlugin(name); err != nil {
@@ -60,7 +59,6 @@ func main() {
 		}
 		command = commands["plugin"]
 		args = append([]string{"plugin"}, args...)
-		parseargs = false // don't parse args as import paths
 	}
 
 	// add extra flags if necessary
@@ -100,9 +98,12 @@ func main() {
 		gb.Fatalf("unable to construct context: %v", err)
 	}
 
-	if parseargs {
+	if command.ParseArgs != nil {
+		args = command.ParseArgs(ctx, cwd, args)
+	} else {
 		args = cmd.ImportPaths(ctx, cwd, args)
 	}
+
 	gb.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
