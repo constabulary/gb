@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	registerCommand("test", TestCmd)
+	registerCommand(TestCmd)
 }
 
 var (
@@ -30,6 +30,7 @@ func addTestFlags(fs *flag.FlagSet) {
 }
 
 var TestCmd = &cmd.Command{
+	Name:      "test",
 	ShortDesc: "test a package",
 	Run: func(ctx *gb.Context, args []string) error {
 		t0 := time.Now()
