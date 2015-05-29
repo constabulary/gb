@@ -12,12 +12,13 @@ import (
 )
 
 func init() {
-	registerCommand("list", List)
+	registerCommand(List)
 }
 
 var format string
 
 var List = &cmd.Command{
+	Name:      "list",
 	ShortDesc: "lists the packages named by the import paths, one per line.",
 	Run: func(ctx *gb.Context, args []string) error {
 		m, err := vendor.ReadManifest(manifestFile(ctx))
