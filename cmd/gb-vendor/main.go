@@ -10,6 +10,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"sort"
 )
 
 var (
@@ -22,10 +23,17 @@ func init() {
 	// TODO some flags are specific to a specific commands
 	fs.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage:")
-		for name, cmd := range commands {
-			fmt.Fprintf(os.Stderr, "  gb vendor %s [flags] [package] - %s\n",
-				name, cmd.ShortDesc)
+
+		var sortedKeys []string
+		for k, _ := range commands {
+			sortedKeys = append(sortedKeys, k)
 		}
+		sort.Strings(sortedKeys)
+
+		for _, v := range sortedKeys {
+			fmt.Fprintf(os.Stderr, "  gb vendor %s [flags] [package] - %s\n", commands[v].Name, commands[v].ShortDesc)
+		}
+
 		fmt.Fprintln(os.Stderr)
 		fmt.Fprintln(os.Stderr, "Flags:")
 		fs.PrintDefaults()
@@ -36,8 +44,8 @@ var commands = make(map[string]*cmd.Command)
 
 // registerCommand registers a command for main.
 // registerCommand should only be called from init().
-func registerCommand(name string, command *cmd.Command) {
-	commands[name] = command
+func registerCommand(command *cmd.Command) {
+	commands[command.Name] = command
 }
 
 func main() {

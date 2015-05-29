@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	registerCommand("delete", DeleteCmd)
+	registerCommand(DeleteCmd)
 }
 
 func addDeleteFlags(fs *flag.FlagSet) {
@@ -26,6 +26,7 @@ func addDeleteFlags(fs *flag.FlagSet) {
 }
 
 var DeleteCmd = &cmd.Command{
+	Name:      "delete",
 	ShortDesc: "deletes a local dependency",
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 && !deleteAll {

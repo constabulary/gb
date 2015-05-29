@@ -8,10 +8,11 @@ import (
 )
 
 func init() {
-	registerCommand("env", EnvCmd)
+	registerCommand(EnvCmd)
 }
 
 var EnvCmd = &cmd.Command{
+	Name:      "env",
 	ShortDesc: "env prints the project environment variables",
 	Run:       env,
 }

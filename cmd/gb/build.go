@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	registerCommand("build", BuildCmd)
+	registerCommand(BuildCmd)
 }
 
 var (
@@ -42,6 +42,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 }
 
 var BuildCmd = &cmd.Command{
+	Name:      "build",
 	ShortDesc: "build a package",
 	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project

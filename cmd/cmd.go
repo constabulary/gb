@@ -12,6 +12,9 @@ import (
 // Command represents a subcommand, or plugin that is executed within
 // a gb project.
 type Command struct {
+	// Name of the command
+	Name string
+
 	// Single line description of the purpose of the command
 	ShortDesc string
 

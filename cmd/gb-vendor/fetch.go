@@ -21,7 +21,7 @@ var (
 )
 
 func init() {
-	registerCommand("fetch", FetchCmd)
+	registerCommand(FetchCmd)
 }
 
 func addFetchFlags(fs *flag.FlagSet) {
@@ -30,6 +30,7 @@ func addFetchFlags(fs *flag.FlagSet) {
 }
 
 var FetchCmd = &cmd.Command{
+	Name:      "fetch",
 	ShortDesc: "fetch a remote dependency",
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 {
