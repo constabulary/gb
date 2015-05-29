@@ -43,6 +43,8 @@ var PluginCmd = &cmd.Command{
 
 		return cmd.Run()
 	},
+	// plugin should not interpret arguments
+	ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
 }
 
 func lookupPlugin(arg string) (string, error) {
