@@ -77,7 +77,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths, ldflags []string, outfile, a
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}
-	args = append(args, "-extld=gcc") // TODO(dfc) go 1.5+, "-buildmode=exe")
+	args = append(args, "-extld="+gcc()) // TODO(dfc) go 1.5+, "-buildmode=exe")
 	args = append(args, afile)
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:ld: %v", err)
