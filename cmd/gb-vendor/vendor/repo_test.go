@@ -14,19 +14,36 @@ func TestRepositoryFromPath(t *testing.T) {
 	}{{
 		path: "github.com/pkg/sftp",
 		want: &GitRepo{
-			URL: "https://github.com/pkg/sftp",
+			url: "https://github.com/pkg/sftp",
 		},
 	}, {
 		path: "github.com/pkg/sftp/examples/gsftp",
 		want: &GitRepo{
-			URL: "https://github.com/pkg/sftp",
+			url: "https://github.com/pkg/sftp",
 		},
 		extra: "/examples/gsftp",
 	}, {
 		path: "github.com/coreos/go-etcd",
 		want: &GitRepo{
-			URL: "https://github.com/coreos/go-etcd",
+			url: "https://github.com/coreos/go-etcd",
 		},
+	}, {
+		path: "bitbucket.org/StephaneBunel/xxhash-go",
+		want: &MultiRepo{
+			remotes: []Repository{
+				&HgRepo{url: "https://bitbucket.org/StephaneBunel/xxhash-go"},
+				&GitRepo{url: "https://bitbucket.org/StephaneBunel/xxhash-go"},
+			},
+		},
+	}, {
+		path: "bitbucket.org/user/project/sub/directory",
+		want: &MultiRepo{
+			remotes: []Repository{
+				&HgRepo{url: "https://bitbucket.org/user/project"},
+				&GitRepo{url: "https://bitbucket.org/user/project"},
+			},
+		},
+		extra: "/sub/directory",
 	}}
 
 	for _, tt := range tests {

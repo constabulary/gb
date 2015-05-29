@@ -86,7 +86,7 @@ Flags:
 
 		dep := vendor.Dependency{
 			Importpath: path,
-			Repository: repo.(*vendor.GitRepo).URL,
+			Repository: repo.URL(),
 			Revision:   rev,
 			Branch:     branch,
 			Path:       extra,

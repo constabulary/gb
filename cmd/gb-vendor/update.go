@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"path"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
@@ -59,7 +60,7 @@ Flags:
 
 		for _, d := range dependencies {
 			url := d.Repository
-			path := d.Importpath
+			p := d.Importpath
 
 			err = m.RemoveDependency(d)
 			if err != nil {
@@ -67,15 +68,16 @@ Flags:
 			}
 
 			localClone := vendor.GitClone{
-				Path: filepath.Join(ctx.Projectdir(), "vendor", "src", path),
+				Path: filepath.Join(ctx.Projectdir(), "vendor", "src", p),
 			}
 			err = localClone.Destroy()
 			if err != nil {
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			repo := vendor.GitRepo{
-				URL: url,
+			repo, extra, err := vendor.RepositoryFromPath(path.Join(url, p))
+			if err != nil {
+				return fmt.Errorf("could not determine repository for import %q", path.Join(url, p))
 			}
 
 			wc, err := repo.Clone()
@@ -94,11 +96,11 @@ Flags:
 			}
 
 			dep := vendor.Dependency{
-				Importpath: path,
+				Importpath: p,
 				Repository: url,
 				Revision:   rev,
 				Branch:     branch,
-				Path:       "",
+				Path:       extra,
 			}
 
 			if err := m.AddDependency(dep); err != nil {
