@@ -27,6 +27,11 @@ type Command struct {
 
 	// Allow plugins to modify arguments
 	FlagParse func(fs *flag.FlagSet, args []string) error
+
+	// ParseArgs provides an alterntive method to parse arguments.
+	// By default, arguments will be parsed as import paths with
+	// ImportPaths
+	ParseArgs func(ctx *gb.Context, cwd string, args []string) []string
 }
 
 // RunCommand detects the project root, parses flags and runs the Command.
