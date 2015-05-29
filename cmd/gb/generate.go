@@ -11,26 +11,29 @@ import (
 )
 
 func init() {
-	registerCommand("generate", &cmd.Command{
-		ShortDesc: "generate Go files by processing source",
-		Run: func(ctx *gb.Context, args []string) error {
-			env := cmd.MergeEnv(os.Environ(), map[string]string{
-				"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),
-			})
+	registerCommand(GenerateCmd)
+}
 
-			args = []string{filepath.Join(ctx.GOROOT, "bin", "go"), "generate"}
+var GenerateCmd = &cmd.Command{
+	Name:      "generate",
+	ShortDesc: "generate Go files by processing source",
+	Run: func(ctx *gb.Context, args []string) error {
+		env := cmd.MergeEnv(os.Environ(), map[string]string{
+			"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),
+		})
 
-			cmd := exec.Cmd{
-				Path: args[0],
-				Args: args,
-				Env:  env,
+		args = []string{filepath.Join(ctx.GOROOT, "bin", "go"), "generate"}
 
-				Stdin:  os.Stdin,
-				Stdout: os.Stdout,
-				Stderr: os.Stderr,
-			}
+		cmd := exec.Cmd{
+			Path: args[0],
+			Args: args,
+			Env:  env,
 
-			return cmd.Run()
-		},
-	})
+			Stdin:  os.Stdin,
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
+		}
+
+		return cmd.Run()
+	},
 }

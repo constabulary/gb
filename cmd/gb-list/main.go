@@ -47,6 +47,7 @@ func main() {
 	fs.BoolVar(&jsonOutput, "json", false, "outputs json. WARNING: gb.Package structure is not stable and will change in future")
 
 	err := cmd.RunCommand(fs, &cmd.Command{
+		Name:      "list",
 		ShortDesc: "lists the packages named by the import paths, one per line.",
 		Run:       list,
 	}, os.Getenv("GB_PROJECT_DIR"), "", os.Args[1:])

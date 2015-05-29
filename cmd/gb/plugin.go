@@ -10,10 +10,11 @@ import (
 )
 
 func init() {
-	registerCommand("plugin", PluginCmd)
+	registerCommand(PluginCmd)
 }
 
 var PluginCmd = &cmd.Command{
+	Name:      "plugin",
 	ShortDesc: "run a plugin",
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) < 1 {
