@@ -12,7 +12,12 @@ var join = filepath.Join
 
 // makeTestData constructs
 func makeTestdata(t *testing.T) string {
-	root, err := ioutil.TempDir("", "path-test")
+	tempdir, err := filepath.EvalSymlinks(os.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	root, err := ioutil.TempDir(tempdir, "path-test")
 	if err != nil {
 		t.Fatal(err)
 	}

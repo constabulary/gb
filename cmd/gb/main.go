@@ -107,9 +107,9 @@ func main() {
 	}
 
 	if command.ParseArgs != nil {
-		args = command.ParseArgs(ctx, cwd, args)
+		args = command.ParseArgs(ctx, root, args)
 	} else {
-		args = cmd.ImportPaths(ctx, cwd, args)
+		args = cmd.ImportPaths(ctx, root, args)
 	}
 
 	gb.Debugf("args: %v", args)
