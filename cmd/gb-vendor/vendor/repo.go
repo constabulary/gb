@@ -44,7 +44,8 @@ type WorkingCopy interface {
 }
 
 var (
-	ghregex = regexp.MustCompile(`^github.com/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
+	ghregex     = regexp.MustCompile(`^github.com/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
+	golangregex = regexp.MustCompile(`^golang.org/x/([A-Za-z0-9-._]+)(/.+)?`)
 )
 
 // RepositoryFromPath attempts to deduce a Repository from an import path.
@@ -61,6 +62,12 @@ func RepositoryFromPath(path string) (Repository, string, error) {
 		return &GitRepo{
 			URL: fmt.Sprintf("https://github.com/%s/%s", v[1], v[2]),
 		}, v[3], nil
+	case golangregex.MatchString(path):
+		v := golangregex.FindStringSubmatch(path)
+		v = append(v, "")
+		return &GitRepo{
+			URL: fmt.Sprintf("https://go.googlesource.com/%s", v[1]),
+		}, v[2], nil
 	default:
 		return nil, path, fmt.Errorf("unknown repository type")
 	}
