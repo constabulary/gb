@@ -24,6 +24,10 @@ func FindProjectroot(path string) (string, error) {
 			}
 			return "", err
 		}
+		path, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			return "", err
+		}
 		return path, nil
 	}
 	return "", fmt.Errorf("could not find project root in %q or its parents", start)
