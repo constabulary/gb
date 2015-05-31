@@ -153,7 +153,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
-		if stdlib[i] {
+		if Stdlib[i] {
 			continue
 		}
 		if onStack(i) {
