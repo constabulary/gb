@@ -17,9 +17,8 @@ func init() {
 	registerCommand(PurgeCmd)
 }
 
-func parseImports(root string) (map[string]struct{}, error) {
-	var found = struct{}{}            // Does not take any space
-	pkgs := make(map[string]struct{}) // Set
+func parseImports(root string) (map[string]bool, error) {
+	pkgs := make(map[string]bool) // Set
 
 	var walkFn = func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
@@ -36,18 +35,15 @@ func parseImports(root string) (map[string]struct{}, error) {
 		}
 
 		for _, s := range f.Imports {
-			if _, ok := gb.Stdlib[s.Path.Value]; !ok {
-				pkgs[strings.Replace(s.Path.Value, "\"", "", -1)] = found
+			if !gb.Stdlib[s.Path.Value] {
+				pkgs[strings.Replace(s.Path.Value, "\"", "", -1)] = true
 			}
 		}
 		return nil
 	}
-
-	if err := filepath.Walk(root, walkFn); err != nil {
-		return pkgs, err
-	}
-
-	return pkgs, nil
+	
+	err := filepath.Walk(root, walkFn)
+	return pkgs, err
 }
 
 var PurgeCmd = &cmd.Command{
@@ -68,7 +64,7 @@ var PurgeCmd = &cmd.Command{
 		copy(dependencies, m.Dependencies)
 
 		for _, d := range dependencies {
-			if _, ok := imports[d.Importpath]; !ok {
+			if !imports[d.Importpath] {
 				dep, err := m.GetDependencyForImportpath(d.Importpath)
 				if err != nil {
 					return fmt.Errorf("could not get get dependency: %v", err)
