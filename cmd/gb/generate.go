@@ -28,7 +28,7 @@ See 'go help generate'`,
 			"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),
 		})
 
-		args = []string{filepath.Join(ctx.GOROOT, "bin", "go"), "generate"}
+		args = append([]string{filepath.Join(ctx.GOROOT, "bin", "go"), "generate"}, args...)
 
 		cmd := exec.Cmd{
 			Path: args[0],
