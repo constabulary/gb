@@ -43,7 +43,7 @@ func main() {
 		return
 	}
 	command, ok := commands[name]
-	if !ok {
+	if (command != nil && !command.Runnable()) || !ok {
 		if _, err := lookupPlugin(name); err != nil {
 			gb.Errorf("unknown command %q", name)
 			fs.Usage()
