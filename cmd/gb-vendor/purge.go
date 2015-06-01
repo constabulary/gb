@@ -47,7 +47,7 @@ func parseImports(root string) (map[string]bool, error) {
 }
 
 var PurgeCmd = &cmd.Command{
-	Name:      "purge",
+	Name:  "purge",
 	Short: "purges all unreferenced dependencies",
 	Run: func(ctx *gb.Context, args []string) error {
 		m, err := vendor.ReadManifest(manifestFile(ctx))
