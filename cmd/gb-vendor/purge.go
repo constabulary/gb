@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	registerCommand(PurgeCmd)
+	registerCommand(cmdPurge)
 }
 
 func parseImports(root string) (map[string]bool, error) {
@@ -46,9 +46,13 @@ func parseImports(root string) (map[string]bool, error) {
 	return pkgs, err
 }
 
-var PurgeCmd = &cmd.Command{
-	Name:  "purge",
-	Short: "purges all unreferenced dependencies",
+var cmdPurge = &cmd.Command{
+	Name:      "purge",
+	UsageLine: "purge",
+	Short:     "purges all unreferenced dependencies",
+ 	Long:      `gb vendor purge will remove all unreferenced dependencies
+
+`,
 	Run: func(ctx *gb.Context, args []string) error {
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
