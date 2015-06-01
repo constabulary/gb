@@ -15,7 +15,7 @@ func init() {
 }
 
 var GenerateCmd = &cmd.Command{
-	Name:      "generate",
+	Name:  "generate",
 	Short: "generate Go files by processing source",
 	Run: func(ctx *gb.Context, args []string) error {
 		env := cmd.MergeEnv(os.Environ(), map[string]string{

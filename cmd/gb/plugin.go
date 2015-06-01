@@ -14,7 +14,7 @@ func init() {
 }
 
 var PluginCmd = &cmd.Command{
-	Name:      "plugin",
+	Name:  "plugin",
 	Short: "run a plugin",
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) < 1 {

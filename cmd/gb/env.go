@@ -13,7 +13,10 @@ func init() {
 
 var EnvCmd = &cmd.Command{
 	Name:      "env",
-	Short: "env prints the project environment variables",
+	UsageLine: `env`,
+	Short:     "print project environment variables",
+	Long:      "Env prints project environment variables",
+	Runnable:  true,
 	Run:       env,
 }
 

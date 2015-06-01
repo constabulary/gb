@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"os"
 	"path/filepath"
@@ -39,13 +38,8 @@ func main() {
 		os.Exit(1)
 	}
 	name := args[1]
-	if name == "alldocs" {
-		var buf bytes.Buffer
-		printUsage(&buf)
-		usage := &cmd.Command{Long: buf.String()}
-		f, _ := os.Create("./alldocs.go")
-		tmpl(f, documentationTemplate, append([]*cmd.Command{usage}, sortedCommands()...))
-		f.Close()
+	if name == "help" {
+		help(args[2:])
 		return
 	}
 	command, ok := commands[name]

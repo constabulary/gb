@@ -30,7 +30,7 @@ func addTestFlags(fs *flag.FlagSet) {
 }
 
 var TestCmd = &cmd.Command{
-	Name:      "test",
+	Name:  "test",
 	Short: "test a package",
 	Run: func(ctx *gb.Context, args []string) error {
 		t0 := time.Now()
