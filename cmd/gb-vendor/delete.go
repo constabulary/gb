@@ -17,17 +17,21 @@ var (
 	deleteAll bool
 )
 
-func init() {
-	registerCommand(DeleteCmd)
-}
-
 func addDeleteFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&deleteAll, "all", false, "delete all dependencies")
 }
 
-var DeleteCmd = &cmd.Command{
-	Name:      "delete",
+var cmdDelete = &cmd.Command{
+	Name:  "delete",
+	UsageLine: "delete [-all] importpath",
 	Short: "deletes a local dependency",
+	Long: `delete removes a dependency from $PROJECT/vendor/src and the vendor manifest
+
+Flags:
+	-all
+		remove all dependencies
+
+`,
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 && !deleteAll {
 			return fmt.Errorf("delete: import path or --all flag is missing")

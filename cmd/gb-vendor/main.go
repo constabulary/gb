@@ -10,7 +10,6 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
-	"sort"
 )
 
 var (
@@ -20,32 +19,17 @@ var (
 )
 
 func init() {
-	// TODO some flags are specific to a specific commands
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage:")
-
-		var sortedKeys []string
-		for k, _ := range commands {
-			sortedKeys = append(sortedKeys, k)
-		}
-		sort.Strings(sortedKeys)
-
-		for _, v := range sortedKeys {
-			fmt.Fprintf(os.Stderr, "  gb vendor %s [flags] [package] - %s\n", commands[v].Name, commands[v].Short)
-		}
-
-		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "Flags:")
-		fs.PrintDefaults()
+		printUsage(os.Stderr)
+		os.Exit(2)
 	}
 }
 
-var commands = make(map[string]*cmd.Command)
-
-// registerCommand registers a command for main.
-// registerCommand should only be called from init().
-func registerCommand(command *cmd.Command) {
-	commands[command.Name] = command
+var commands = []*cmd.Command{
+	cmdFetch,
+	cmdUpdate,
+	cmdList,
+	cmdDelete,
 }
 
 func main() {
@@ -56,45 +40,50 @@ func main() {
 	project := gb.NewProject(root)
 	gb.Debugf("project root %q", project.Projectdir())
 
-	args := os.Args
-	if len(args) < 2 || args[1] == "-h" {
+	args := os.Args[1:]
+	if len(args) < 1 || args[0] == "-h" {
 		fs.Usage()
 		os.Exit(1)
 	}
 
-	name := args[1]
-	command, ok := commands[name]
-	if !ok {
-		fs.Usage()
-		os.Exit(1)
+	if args[0] == "help" {
+		help(args[1:])
+		return
 	}
 
-	// add extra flags if necessary
-	if command.AddFlags != nil {
-		command.AddFlags(fs)
-	}
+	for _, command := range commands {
+		if command.Name == args[0] && command.Runnable() {
 
-	if command.FlagParse != nil {
-		err = command.FlagParse(fs, args)
-	} else {
-		err = fs.Parse(args[2:])
-	}
-	if err != nil {
-		gb.Fatalf("could not parse flags: %v", err)
-	}
-	args = fs.Args() // reset args to the leftovers from fs.Parse
-	gb.Debugf("args: %v", args)
+			// add extra flags if necessary
+			if command.AddFlags != nil {
+				command.AddFlags(fs)
+			}
 
-	ctx, err := project.NewContext(
-		gb.GcToolchain(),
-	)
-	if err != nil {
-		gb.Fatalf("unable to construct context: %v", err)
-	}
+			if command.FlagParse != nil {
+				err = command.FlagParse(fs, args)
+			} else {
+				err = fs.Parse(args[1:])
+			}
+			if err != nil {
+				gb.Fatalf("could not parse flags: %v", err)
+			}
+			args = fs.Args() // reset args to the leftovers from fs.Parse
+			gb.Debugf("args: %v", args)
 
-	if err := command.Run(ctx, args); err != nil {
-		gb.Fatalf("command %q failed: %v", name, err)
+			ctx, err := project.NewContext(
+				gb.GcToolchain(),
+			)
+			if err != nil {
+				gb.Fatalf("unable to construct context: %v", err)
+			}
+
+			if err := command.Run(ctx, args); err != nil {
+				gb.Fatalf("command %q failed: %v", args[0], err)
+			}
+			return
+		}
 	}
+	gb.Fatalf("unknown command %q ", args[0])
 }
 
 const manifestfile = "manifest"
