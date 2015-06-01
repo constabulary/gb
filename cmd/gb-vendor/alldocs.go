@@ -14,6 +14,7 @@ The commands are:
         update      update a local dependency
         list        lists dependencies, one per line
         delete      deletes a local dependency
+        purge 		purges unreferenced dependencies
 
 Use "gb vendor help [command]" for more information about a command.
 
@@ -81,6 +82,13 @@ Flags:
 	-all
 		remove all dependencies
 
+Purges unreferenced dependencies
+
+Usage:
+
+		gb vendor purge
+
+gb vendor purge removes all unreferenced dependencies
 
 */
 package main
