@@ -11,15 +11,22 @@ import (
 	"github.com/constabulary/gb/cmd/gb-vendor/vendor"
 )
 
-func init() {
-	registerCommand(List)
-}
-
 var format string
 
-var List = &cmd.Command{
+var cmdList = &cmd.Command{
 	Name:      "list",
-	Short: "lists the packages named by the import paths, one per line.",
+	UsageLine: "list [-f format]",
+	Short:     "lists dependencies, one per line",
+	Long: `gb vendor list formats lists the contents of the manifest file.
+
+The output
+
+Flags:
+	-f
+		controls the template used for printing each manifest entry. If not supplied
+		the default value is "{{.Importpath}}\t{{.Repository}}{{.Path}}\t{{.Branch}}\t{{.Revision}}"
+
+`,
 	Run: func(ctx *gb.Context, args []string) error {
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {

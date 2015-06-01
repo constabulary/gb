@@ -20,18 +20,26 @@ var (
 	revision string
 )
 
-func init() {
-	registerCommand(FetchCmd)
-}
-
 func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&branch, "branch", "master", "branch of the package")
 	fs.StringVar(&revision, "revision", "", "revision of the package")
 }
 
-var FetchCmd = &cmd.Command{
+var cmdFetch = &cmd.Command{
 	Name:      "fetch",
-	Short: "fetch a remote dependency",
+	UsageLine: "fetch [-branch branch] [-revision rev] importpath",
+	Short:     "fetch a remote dependency",
+	Long: `fetch vendors the upstream import path.
+
+Flags:
+	-branch branch
+		fetch from the name branch. If not supplied the default upstream
+		branch will be used
+	-revision rev
+		fetch the specific revision from the branch (if supplied). If no
+		revision supplied, the latest available will be supplied.
+
+`,
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 {
 			return fmt.Errorf("fetch: import path missing")

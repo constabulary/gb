@@ -17,17 +17,21 @@ var (
 	updateAll bool
 )
 
-func init() {
-	registerCommand(UpdateCmd)
-}
-
 func addUpdateFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&updateAll, "all", false, "update all dependencies")
 }
 
-var UpdateCmd = &cmd.Command{
+var cmdUpdate = &cmd.Command{
 	Name:      "update",
-	Short: "updates a local dependency",
+	UsageLine: "update [-all] import",
+	Short:     "update a local dependency",
+	Long: `gb vendor update will replaces the source with the latest available from the head of the master branch.
+
+Flags:
+	-all
+		will update all depdendencies in the manifest, otherwise only the dependency supplied.
+
+`,
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 && !updateAll {
 			return fmt.Errorf("update: import path or --all flag is missing")
