@@ -44,6 +44,16 @@ func TestRepositoryFromPath(t *testing.T) {
 			},
 		},
 		extra: "/sub/directory",
+	}, {
+		path: "gopkg.in/pg.v3",
+		want: &GitRepo{
+			url: "https://gopkg.in/pg.v3",
+		},
+	}, {
+		path: "gopkg.in/user/pkg.v1",
+		want: &GitRepo{
+			url: "https://gopkg.in/user/pkg.v1",
+		},
 	}}
 
 	for _, tt := range tests {
