@@ -48,7 +48,7 @@ func main() {
 
 	err := cmd.RunCommand(fs, &cmd.Command{
 		Name:      "list",
-		ShortDesc: "lists the packages named by the import paths, one per line.",
+		Short: "lists the packages named by the import paths, one per line.",
 		Run:       list,
 	}, os.Getenv("GB_PROJECT_DIR"), "", os.Args[1:])
 	if err != nil {

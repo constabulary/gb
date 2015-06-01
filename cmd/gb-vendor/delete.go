@@ -27,7 +27,7 @@ func addDeleteFlags(fs *flag.FlagSet) {
 
 var DeleteCmd = &cmd.Command{
 	Name:      "delete",
-	ShortDesc: "deletes a local dependency",
+	Short: "deletes a local dependency",
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 && !deleteAll {
 			return fmt.Errorf("delete: import path or --all flag is missing")

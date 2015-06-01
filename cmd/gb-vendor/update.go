@@ -27,7 +27,7 @@ func addUpdateFlags(fs *flag.FlagSet) {
 
 var UpdateCmd = &cmd.Command{
 	Name:      "update",
-	ShortDesc: "updates a local dependency",
+	Short: "updates a local dependency",
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 && !updateAll {
 			return fmt.Errorf("update: import path or --all flag is missing")

@@ -13,8 +13,12 @@ func init() {
 
 var EnvCmd = &cmd.Command{
 	Name:      "env",
-	ShortDesc: "env prints the project environment variables",
-	Run:       env,
+	UsageLine: `env`,
+	Short:     "print project environment variables",
+	Long: `Env prints project environment variables.
+
+`,
+	Run: env,
 }
 
 func env(ctx *gb.Context, args []string) error {
