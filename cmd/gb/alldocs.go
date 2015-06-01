@@ -14,6 +14,7 @@ The commands are:
         doc         show documentation for a package or symbol
         env         print project environment variables
         generate    generate Go files by processing source
+        list        list the packages named by the importpaths
         plugin      run a plugin
         test        test packages
 
@@ -87,6 +88,32 @@ Those commands can run any process but the intent is to create or update Go
 source files, for instance by running yacc.
 
 See 'go help generate'
+
+
+List the packages named by the importpaths
+
+Usage:
+
+        gb list [-s] [-f format] [-json] [packages]
+
+list lists packages.
+
+The default output shows the package import path:
+
+	% gb list github.com/constabulary/...
+	github.com/constabulary/gb
+	github.com/constabulary/gb/cmd
+	github.com/constabulary/gb/cmd/gb
+	github.com/constabulary/gb/cmd/gb-env
+	github.com/constabulary/gb/cmd/gb-list
+
+Flags:
+	-f
+		alternate format for the list, using the syntax of package template.
+		The default output is equivalent to -f '{{.ImportPath}}'. The struct
+		being passed to the template is currently an instance of gb.Package.
+		This structure is under active development and it'As contents are not
+		guarenteed to be stable.
 
 
 Run a plugin

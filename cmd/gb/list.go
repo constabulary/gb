@@ -1,21 +1,3 @@
-// gb-list lists the packages named by the import paths, one per line.
-//
-//     usage: gb list [-s] [-f format] [-json] [packages]
-//
-// The default output shows the package import path:
-//
-//     % gb list github.com/constabulary/...
-//     github.com/constabulary/gb
-//     github.com/constabulary/gb/cmd
-//     github.com/constabulary/gb/cmd/gb
-//     github.com/constabulary/gb/cmd/gb-env
-//     github.com/constabulary/gb/cmd/gb-list
-//
-// The -f flag specifies an alternate format for the list, using the
-// syntax of package template.  The default output is equivalent to -f
-// '{{.ImportPath}}'. The struct being passed to the template is currently
-// an instance of gb.Package. This structure is under active development
-// and it's contents are not guarenteed to be stable.
 package main
 
 import (
@@ -38,22 +20,37 @@ var (
 	jsonOutput  bool
 )
 
-func main() {
-	fs := flag.NewFlagSet("gb-list", flag.ExitOnError)
-	fs.StringVar(&projectroot, "R", os.Getenv("GB_PROJECT_DIR"), "set the project root")
-	fs.StringVar(&format, "f", "{{.ImportPath}}", "format template")
-	fs.BoolVar(&formatStdin, "s", false, "read format from stdin")
-	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
-	fs.BoolVar(&jsonOutput, "json", false, "outputs json. WARNING: gb.Package structure is not stable and will change in future")
+func init() {
+	registerCommand(&cmd.Command{
+		Name:      "list",
+		UsageLine: `list [-s] [-f format] [-json] [packages]`,
+		Short:     "list the packages named by the importpaths",
+		Long: `list lists packages.
 
-	err := cmd.RunCommand(fs, &cmd.Command{
-		Name:  "list",
-		Short: "lists the packages named by the import paths, one per line.",
-		Run:   list,
-	}, os.Getenv("GB_PROJECT_DIR"), "", os.Args[1:])
-	if err != nil {
-		gb.Fatalf("gb-list failed: %v", err)
-	}
+The default output shows the package import path:
+
+	% gb list github.com/constabulary/...
+	github.com/constabulary/gb
+	github.com/constabulary/gb/cmd
+	github.com/constabulary/gb/cmd/gb
+	github.com/constabulary/gb/cmd/gb-env
+	github.com/constabulary/gb/cmd/gb-list
+
+Flags:
+	-f
+		alternate format for the list, using the syntax of package template.
+		The default output is equivalent to -f '{{.ImportPath}}'. The struct
+		being passed to the template is currently an instance of gb.Package.
+		This structure is under active development and it'As contents are not
+		guarenteed to be stable.
+`,
+		Run: list,
+		AddFlags: func(fs *flag.FlagSet) {
+			fs.StringVar(&format, "f", "{{.ImportPath}}", "format template")
+			fs.BoolVar(&formatStdin, "s", false, "read format from stdin")
+			fs.BoolVar(&jsonOutput, "json", false, "outputs json. WARNING: gb.Package structure is not stable and will change in future")
+		},
+	})
 }
 
 func list(ctx *gb.Context, args []string) error {
