@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"os"
 	"path/filepath"
@@ -37,8 +38,16 @@ func main() {
 		fs.Usage()
 		os.Exit(1)
 	}
-
 	name := args[1]
+	if name == "alldocs" {
+		var buf bytes.Buffer
+		printUsage(&buf)
+		usage := &cmd.Command{Long: buf.String()}
+		f, _ := os.Create("./alldocs.go")
+		tmpl(f, documentationTemplate, append([]*cmd.Command{usage}, sortedCommands()...))
+		f.Close()
+		return
+	}
 	command, ok := commands[name]
 	if !ok {
 		if _, err := lookupPlugin(name); err != nil {

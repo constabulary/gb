@@ -15,8 +15,18 @@ type Command struct {
 	// Name of the command
 	Name string
 
+	// Runnable indicates this is a command that can be involved.
+	// Non runnable commands are only informational.
+	Runnable bool
+
+	// UsageLine demonstrates how to use this command
+	UsageLine string
+
 	// Single line description of the purpose of the command
 	ShortDesc string
+
+	// Description of this command
+	Long string
 
 	// Run is invoked with a Context derived from the Project and arguments
 	// left over after flag parsing.
