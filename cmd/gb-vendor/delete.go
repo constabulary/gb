@@ -22,9 +22,9 @@ func addDeleteFlags(fs *flag.FlagSet) {
 }
 
 var cmdDelete = &cmd.Command{
-	Name:  "delete",
+	Name:      "delete",
 	UsageLine: "delete [-all] importpath",
-	Short: "deletes a local dependency",
+	Short:     "deletes a local dependency",
 	Long: `delete removes a dependency from $PROJECT/vendor/src and the vendor manifest
 
 Flags:
