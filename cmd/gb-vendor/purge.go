@@ -46,7 +46,7 @@ var cmdPurge = &cmd.Command{
 	Name:      "purge",
 	UsageLine: "purge",
 	Short:     "purges all unreferenced dependencies",
- 	Long:      `gb vendor purge will remove all unreferenced dependencies
+	Long: `gb vendor purge will remove all unreferenced dependencies
 
 `,
 	Run: func(ctx *gb.Context, args []string) error {
