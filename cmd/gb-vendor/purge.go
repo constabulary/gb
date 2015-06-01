@@ -13,10 +13,6 @@ import (
 	"github.com/constabulary/gb/cmd/gb-vendor/vendor"
 )
 
-func init() {
-	registerCommand(cmdPurge)
-}
-
 func parseImports(root string) (map[string]bool, error) {
 	pkgs := make(map[string]bool) // Set
 
