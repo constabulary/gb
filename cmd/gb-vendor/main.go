@@ -31,7 +31,7 @@ func init() {
 		sort.Strings(sortedKeys)
 
 		for _, v := range sortedKeys {
-			fmt.Fprintf(os.Stderr, "  gb vendor %s [flags] [package] - %s\n", commands[v].Name, commands[v].ShortDesc)
+			fmt.Fprintf(os.Stderr, "  gb vendor %s [flags] [package] - %s\n", commands[v].Name, commands[v].Short)
 		}
 
 		fmt.Fprintln(os.Stderr)

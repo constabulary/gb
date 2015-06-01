@@ -19,7 +19,7 @@ var format string
 
 var List = &cmd.Command{
 	Name:      "list",
-	ShortDesc: "lists the packages named by the import paths, one per line.",
+	Short: "lists the packages named by the import paths, one per line.",
 	Run: func(ctx *gb.Context, args []string) error {
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
