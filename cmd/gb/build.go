@@ -45,7 +45,6 @@ var BuildCmd = &cmd.Command{
 	Name:      "build",
 	Short:     "build a package",
 	UsageLine: "build [build flags] [packages]",
-	Runnable:  true,
 	Long: `Build compiles the packages named by the import paths, along with their dependencies.
 
 The build flags are 

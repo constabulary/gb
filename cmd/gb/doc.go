@@ -15,7 +15,6 @@ func init() {
 		Name:      "doc",
 		UsageLine: `doc <pkg> <sym>[.<method>]`,
 		Short:     "show documentation for a package or symbol",
-		Runnable:  true,
 		Run: func(ctx *gb.Context, args []string) error {
 			env := cmd.MergeEnv(os.Environ(), map[string]string{
 				"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),

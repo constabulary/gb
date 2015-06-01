@@ -15,10 +15,6 @@ type Command struct {
 	// Name of the command
 	Name string
 
-	// Runnable indicates this is a command that can be involved.
-	// Non runnable commands are only informational.
-	Runnable bool
-
 	// UsageLine demonstrates how to use this command
 	UsageLine string
 
@@ -43,6 +39,10 @@ type Command struct {
 	// ImportPaths
 	ParseArgs func(ctx *gb.Context, cwd string, args []string) []string
 }
+
+// Runnable indicates this is a command that can be involved.
+// Non runnable commands are only informational.
+func (c *Command) Runnable() bool { return c.Run != nil }
 
 // RunCommand detects the project root, parses flags and runs the Command.
 func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args []string) error {
