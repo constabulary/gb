@@ -79,7 +79,7 @@ func main() {
 			}
 
 			if err := command.Run(ctx, args); err != nil {
-				gb.Fatalf("command %q failed: %v", args[0], err)
+				gb.Fatalf("command %q failed: %v", command.Name, err)
 			}
 			return
 		}
