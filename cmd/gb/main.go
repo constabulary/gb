@@ -2,13 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
-	"sort"
 )
 
 var (
@@ -22,24 +20,7 @@ func init() {
 	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
 	fs.StringVar(&cwd, "R", cmd.MustGetwd(), "set the project root") // actually the working directory to start the project root search
 
-	// TODO some flags are specific to a specific commands
-	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage:")
-
-		var sortedKeys []string
-		for k := range commands {
-			sortedKeys = append(sortedKeys, k)
-		}
-		sort.Strings(sortedKeys)
-
-		for _, v := range sortedKeys {
-			fmt.Fprintf(os.Stderr, "  gb %s [flags] [package] - %s\n", commands[v].Name, commands[v].ShortDesc)
-		}
-
-		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "Flags:")
-		fs.PrintDefaults()
-	}
+	fs.Usage = usage
 }
 
 var commands = make(map[string]*cmd.Command)
