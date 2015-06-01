@@ -60,9 +60,9 @@ var PurgeCmd = &cmd.Command{
 			return fmt.Errorf("import could not be parsed: %v", err)
 		}
 
-		var hasImportWithPrefix = func (d string) bool {
+		var hasImportWithPrefix = func(d string) bool {
 			for i := range imports {
-				if strings.HasPrefix(i, d){
+				if strings.HasPrefix(i, d) {
 					return true
 				}
 			}
@@ -73,8 +73,8 @@ var PurgeCmd = &cmd.Command{
 		copy(dependencies, m.Dependencies)
 
 		for _, d := range dependencies {
-			if !hasImportWithPrefix(d.Importpath){
-			dep, err := m.GetDependencyForImportpath(d.Importpath)
+			if !hasImportWithPrefix(d.Importpath) {
+				dep, err := m.GetDependencyForImportpath(d.Importpath)
 				if err != nil {
 					return fmt.Errorf("could not get get dependency: %v", err)
 				}
