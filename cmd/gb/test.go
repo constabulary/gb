@@ -30,8 +30,18 @@ func addTestFlags(fs *flag.FlagSet) {
 }
 
 var TestCmd = &cmd.Command{
-	Name:  "test",
-	Short: "test a package",
+	Name:      "test",
+	UsageLine: "test [build flags] [packages] [flags for test binary]",
+	Short:     "test packages",
+	Long: `
+'gb test' automates testing the packages named by the import paths.
+
+'gb test' recompiles each package along with any files with names matching
+the file pattern "*_test.go".
+
+See 'go help test'
+
+`,
 	Run: func(ctx *gb.Context, args []string) error {
 		t0 := time.Now()
 		ctx.Force = F

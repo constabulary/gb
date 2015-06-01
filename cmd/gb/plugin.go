@@ -14,8 +14,14 @@ func init() {
 }
 
 var PluginCmd = &cmd.Command{
-	Name:  "plugin",
-	Short: "run a plugin",
+	Name:      "plugin",
+	UsageLine: `plugin command`,
+	Short:     "run a plugin",
+	Long: `gb supports git style plugins
+
+See gb help plugins.
+
+`,
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) < 1 {
 			return fmt.Errorf("plugin: no command supplied")

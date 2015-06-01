@@ -30,7 +30,7 @@ In the event you wish to override this auto detection mechanism, the -R flag can
 See http://getgb.io/docs/project for details`,
 }
 
-var helpTemplate = `{{if .Runnable}}usage: go {{.UsageLine}}
+var helpTemplate = `{{if .Runnable}}usage: gb {{.UsageLine}}
 
 {{end}}{{.Long | trim}}
 `
