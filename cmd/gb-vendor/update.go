@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"path"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
@@ -75,9 +74,9 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			repo, extra, err := vendor.RepositoryFromPath(path.Join(url, p))
+			repo, extra, err := vendor.RepositoryFromPath(p)
 			if err != nil {
-				return fmt.Errorf("could not determine repository for import %q", path.Join(url, p))
+				return fmt.Errorf("could not determine repository for import %q", p)
 			}
 
 			wc, err := repo.Clone()
