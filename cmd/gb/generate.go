@@ -16,7 +16,7 @@ func init() {
 
 var GenerateCmd = &cmd.Command{
 	Name:      "generate",
-	ShortDesc: "generate Go files by processing source",
+	Short: "generate Go files by processing source",
 	Run: func(ctx *gb.Context, args []string) error {
 		env := cmd.MergeEnv(os.Environ(), map[string]string{
 			"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),

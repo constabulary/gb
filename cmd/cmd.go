@@ -23,7 +23,7 @@ type Command struct {
 	UsageLine string
 
 	// Single line description of the purpose of the command
-	ShortDesc string
+	Short string
 
 	// Description of this command
 	Long string

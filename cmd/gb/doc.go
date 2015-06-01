@@ -13,7 +13,7 @@ import (
 func init() {
 	registerCommand(&cmd.Command{
 		Name:      "doc",
-		ShortDesc: "show documentation for a package or symbol",
+		Short: "show documentation for a package or symbol",
 		Run: func(ctx *gb.Context, args []string) error {
 			env := cmd.MergeEnv(os.Environ(), map[string]string{
 				"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),

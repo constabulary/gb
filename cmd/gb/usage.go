@@ -21,7 +21,7 @@ Usage:
 
 The commands are:
 {{range .}}{{if .Runnable}}
-        {{.Name | printf "%-11s"}} {{.ShortDesc}}{{end}}{{end}}
+        {{.Name | printf "%-11s"}} {{.Short}}{{end}}{{end}}
 `
 
 var documentationTemplate = `
@@ -29,7 +29,7 @@ var documentationTemplate = `
 //go:generate gb alldocs >alldocs.go
 
 /*
-{{range .}}{{if .ShortDesc}}{{.ShortDesc | capitalize}}
+{{range .}}{{if .Short}}{{.Short | capitalize}}
 
 {{end}}{{if .Runnable}}Usage:
 

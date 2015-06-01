@@ -43,7 +43,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 
 var BuildCmd = &cmd.Command{
 	Name:      "build",
-	ShortDesc: "build a package",
+	Short: "build a package",
 	UsageLine: "gb build [build flags] [packages]",
 	Runnable:  true,
 	Long: `Build compiles the packages named by the import paths, along with their dependencies.
