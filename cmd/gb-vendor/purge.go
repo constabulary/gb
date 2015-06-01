@@ -41,7 +41,7 @@ func parseImports(root string) (map[string]bool, error) {
 		}
 		return nil
 	}
-	
+
 	err := filepath.Walk(root, walkFn)
 	return pkgs, err
 }
@@ -60,12 +60,21 @@ var PurgeCmd = &cmd.Command{
 			return fmt.Errorf("import could not be parsed: %v", err)
 		}
 
+		var hasImportWithPrefix = func (d string) bool {
+			for i := range imports {
+				if strings.HasPrefix(i, d){
+					return true
+				}
+			}
+			return false
+		}
+
 		dependencies := make([]vendor.Dependency, len(m.Dependencies))
 		copy(dependencies, m.Dependencies)
 
 		for _, d := range dependencies {
-			if !imports[d.Importpath] {
-				dep, err := m.GetDependencyForImportpath(d.Importpath)
+			if !hasImportWithPrefix(d.Importpath){
+			dep, err := m.GetDependencyForImportpath(d.Importpath)
 				if err != nil {
 					return fmt.Errorf("could not get get dependency: %v", err)
 				}
