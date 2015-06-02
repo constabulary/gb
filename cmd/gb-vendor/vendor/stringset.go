@@ -43,7 +43,10 @@ func difference(a, b map[string]bool) map[string]bool {
 func contains(a map[string]bool, s ...string) bool {
 	var r bool
 	for _, e := range s {
-		r = a[e]
+		if !a[e] {
+			return false
+		}
+		r = true
 	}
 	return r
 }
