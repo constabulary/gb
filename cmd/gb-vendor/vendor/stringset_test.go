@@ -103,3 +103,36 @@ func TestDifference(t *testing.T) {
 		}
 	}
 }
+
+func TestContains(t *testing.T) {
+	tests := []struct {
+		a    map[string]bool
+		s    []string
+		want bool
+	}{{
+		a: nil, s: nil,
+		want: false,
+	}, {
+		a: set("a"), s: nil,
+		want: false,
+	}, {
+		a: set("a"), s: []string{"a"},
+		want: true,
+	}, {
+		a: set("a"), s: []string{"b"},
+		want: false,
+	}, {
+		a: set("a", "b"), s: []string{"b"},
+		want: true,
+	}, {
+		a: set("a"), s: []string{"a", "b"},
+		want: false,
+	}}
+
+	for _, tt := range tests {
+		got := contains(tt.a, tt.s...)
+		if !reflect.DeepEqual(tt.want, got) {
+			t.Errorf("contains(%v, %v) want: %v, got %v", tt.a, tt.s, tt.want, got)
+		}
+	}
+}

@@ -23,7 +23,7 @@ func intersection(a, b map[string]bool) map[string]bool {
 	return r
 }
 
-// difference returns the difference of a and b.
+// difference returns the symetric difference of a and b.
 func difference(a, b map[string]bool) map[string]bool {
 	r := make(map[string]bool)
 	for k := range a {
@@ -35,6 +35,15 @@ func difference(a, b map[string]bool) map[string]bool {
 		if !a[k] {
 			r[k] = true
 		}
+	}
+	return r
+}
+
+// contains returns true if a contains all the elements in s.
+func contains(a map[string]bool, s ...string) bool {
+	var r bool
+	for _, e := range s {
+		r = a[e]
 	}
 	return r
 }
