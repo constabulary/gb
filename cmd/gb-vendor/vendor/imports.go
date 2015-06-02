@@ -29,8 +29,9 @@ func ParseImports(root string) (map[string]bool, error) {
 		}
 
 		for _, s := range f.Imports {
-			if !contains(gb.Stdlib, s.Path.Value) {
-				pkgs[strings.Replace(s.Path.Value, "\"", "", -1)] = true
+			p := strings.Replace(s.Path.Value, "\"", "", -1)
+			if !contains(gb.Stdlib, p) {
+				pkgs[p] = true
 			}
 		}
 		return nil
