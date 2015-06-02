@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"go/parser"
-	"go/token"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -12,35 +9,6 @@ import (
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/cmd/gb-vendor/vendor"
 )
-
-func parseImports(root string) (map[string]bool, error) {
-	pkgs := make(map[string]bool) // Set
-
-	var walkFn = func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-		if filepath.Ext(path) != ".go" { // Parse only go source files
-			return nil
-		}
-
-		fs := token.NewFileSet()
-		f, err := parser.ParseFile(fs, path, nil, parser.ImportsOnly)
-		if err != nil {
-			return err
-		}
-
-		for _, s := range f.Imports {
-			if !gb.Stdlib[s.Path.Value] {
-				pkgs[strings.Replace(s.Path.Value, "\"", "", -1)] = true
-			}
-		}
-		return nil
-	}
-
-	err := filepath.Walk(root, walkFn)
-	return pkgs, err
-}
 
 var cmdPurge = &cmd.Command{
 	Name:      "purge",
@@ -55,7 +23,7 @@ var cmdPurge = &cmd.Command{
 			return fmt.Errorf("could not load manifest: %v", err)
 		}
 
-		imports, err := parseImports(ctx.Projectdir())
+		imports, err := vendor.ParseImports(ctx.Projectdir())
 		if err != nil {
 			return fmt.Errorf("import could not be parsed: %v", err)
 		}
