@@ -127,6 +127,15 @@ func TestContains(t *testing.T) {
 	}, {
 		a: set("a"), s: []string{"a", "b"},
 		want: false,
+	}, {
+		a: set("a", "b", "c"), s: []string{"a", "b"},
+		want: true,
+	}, {
+		a: set("a", "b", "c"), s: []string{"x", "b"},
+		want: false,
+	}, {
+		a: set("a", "b", "c"), s: []string{"b", "c", "d"},
+		want: false,
 	}}
 
 	for _, tt := range tests {
