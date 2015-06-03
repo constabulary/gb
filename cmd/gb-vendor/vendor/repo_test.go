@@ -13,43 +13,50 @@ func TestRepositoryFromPath(t *testing.T) {
 		err   error
 	}{{
 		path: "github.com/pkg/sftp",
-		want: &GitRepo{
+		want: &gitrepo{
 			url: "https://github.com/pkg/sftp",
 		},
 	}, {
 		path: "github.com/pkg/sftp/examples/gsftp",
-		want: &GitRepo{
+		want: &gitrepo{
 			url: "https://github.com/pkg/sftp",
 		},
 		extra: "/examples/gsftp",
 	}, {
 		path: "github.com/coreos/go-etcd",
-		want: &GitRepo{
+		want: &gitrepo{
 			url: "https://github.com/coreos/go-etcd",
 		},
 	}, {
-		path: "bitbucket.org/StephaneBunel/xxhash-go",
-		want: &MultiRepo{
-			remotes: []Repository{
-				&HgRepo{url: "https://bitbucket.org/StephaneBunel/xxhash-go"},
-				&GitRepo{url: "https://bitbucket.org/StephaneBunel/xxhash-go"},
-			},
+		path: "bitbucket.org/davecheney/gitrepo/cmd/main",
+		want: &gitrepo{
+			url: "https://bitbucket.org/davecheney/gitrepo",
 		},
+		extra: "/cmd/main",
 	}, {
-		path: "bitbucket.org/user/project/sub/directory",
-		want: &MultiRepo{
-			remotes: []Repository{
-				&HgRepo{url: "https://bitbucket.org/user/project"},
-				&GitRepo{url: "https://bitbucket.org/user/project"},
-			},
+		path: "bitbucket.org/davecheney/hgrepo/cmd/main",
+		want: &hgrepo{
+			url: "https://bitbucket.org/davecheney/hgrepo",
 		},
-		extra: "/sub/directory",
+		extra: "/cmd/main",
+	}, {
+		path: "gopkg.in/check.v1",
+		want: &gitrepo{
+			url: "https://gopkg.in/check.v1",
+		},
+		extra: "",
+	}, {
+		path: "golang.org/x/tools/go/vcs",
+		want: &gitrepo{
+			url: "https://go.googlesource.com/tools",
+		},
+		extra: "/go/vcs",
 	}}
 
 	for _, tt := range tests {
 		got, extra, err := RepositoryFromPath(tt.path)
 		if !reflect.DeepEqual(got, tt.want) || extra != tt.extra || err != tt.err {
-			t.Errorf("RepositoryFromPath(%q): want %v, %v, %v, got %v, %v, %v", tt.path, tt.want, tt.extra, tt.err, got, extra, err)
+			t.Errorf("RepositoryFromPath(%q): want %#v, %v, %v, got %#v, %v, %v", tt.path, tt.want, tt.extra, tt.err, got, extra, err)
 		}
 	}
 }

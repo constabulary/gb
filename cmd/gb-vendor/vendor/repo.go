@@ -63,56 +63,66 @@ func RepositoryFromPath(path string) (Repository, string, error) {
 	case ghregex.MatchString(path):
 		v := ghregex.FindStringSubmatch(path)
 		v = append(v, "")
-		return &GitRepo{url: fmt.Sprintf("https://github.com/%s/%s", v[1], v[2])}, v[3], nil
+		repo, err := Gitrepo(fmt.Sprintf("https://github.com/%s/%s", v[1], v[2]))
+		return repo, v[3], err
 	case bbregex.MatchString(path):
 		v := bbregex.FindStringSubmatch(path)
 		v = append(v, "")
-		return &MultiRepo{
-			remotes: []Repository{
-				&HgRepo{url: fmt.Sprintf("https://bitbucket.org/%s/%s", v[1], v[2])},
-				&GitRepo{url: fmt.Sprintf("https://bitbucket.org/%s/%s", v[1], v[2])},
-			},
-		}, v[3], nil
-	default:
-		return nil, path, fmt.Errorf("unknown repository type")
-	}
-}
-
-// MultiRepo is a collection of repositories, the first that
-// successfully clones will be returned.
-type MultiRepo struct {
-	remotes []Repository
-
-	url string
-}
-
-func (r *MultiRepo) URL() string { return r.url }
-
-// Clone returns the first successful clone from a remote.
-func (r *MultiRepo) Clone() (WorkingCopy, error) {
-	for _, remote := range r.remotes {
-		wc, err := remote.Clone()
-		if err != nil {
-			continue
+		repo, err := Gitrepo(fmt.Sprintf("https://bitbucket.org/%s/%s", v[1], v[2]))
+		if err == nil {
+			return repo, v[3], nil
 		}
-		r.url = remote.URL()
-		return wc, nil
+		repo, err = Hgrepo(fmt.Sprintf("https://bitbucket.org/%s/%s", v[1], v[2]))
+		if err == nil {
+			return repo, v[3], nil
+		}
+		return nil, "", fmt.Errorf("unknown repository type")
+	default:
+		// no idea, try to resolve as a vanity import
+		importpath, vcs, reporoot, err := ParseMetadata(path)
+		if err != nil {
+			return nil, "", fmt.Errorf("unknown repository type: %v", err)
+		}
+		extra := path[len(importpath):]
+		switch vcs {
+		case "git":
+			repo, err := Gitrepo(reporoot)
+			return repo, extra, err
+		case "hg":
+			repo, err := Hgrepo(reporoot)
+			return repo, extra, err
+		}
+		return nil, "", fmt.Errorf("unknown repository type")
 	}
-	return nil, fmt.Errorf("no remotes available")
 }
 
-// GitRepo is git Repository.
-type GitRepo struct {
+// Gitrepo returns a Repository representing a remote git repository.
+func Gitrepo(url string) (Repository, error) {
+	if err := probeGitUrl(url); err != nil {
+		return nil, err
+	}
+	return &gitrepo{
+		url: url,
+	}, nil
+}
+
+func probeGitUrl(url string) error {
+	_, err := run("git", "ls-remote", "--exit-code", url, "HEAD")
+	return err
+}
+
+// gitrepo is git Repository.
+type gitrepo struct {
 
 	// remote repository url, see man 1 git-clone
 	url string
 }
 
-func (g *GitRepo) URL() string {
+func (g *gitrepo) URL() string {
 	return g.url
 }
 
-func (g *GitRepo) Clone() (WorkingCopy, error) {
+func (g *gitrepo) Clone() (WorkingCopy, error) {
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
@@ -163,16 +173,31 @@ func (g *GitClone) Destroy() error {
 	return cleanPath(parent)
 }
 
-// HgRepo is a Mercurial repo.
-type HgRepo struct {
+// Hgrepo returns a Repository representing a remote git repository.
+func Hgrepo(url string) (Repository, error) {
+	if err := probeHgUrl(url); err != nil {
+		return nil, err
+	}
+	return &hgrepo{
+		url: url,
+	}, nil
+}
+
+func probeHgUrl(url string) error {
+	_, err := run("hg", "identify", url)
+	return err
+}
+
+// hgrepo is a Mercurial repo.
+type hgrepo struct {
 
 	// remote repository url, see man 1 hg
 	url string
 }
 
-func (h *HgRepo) URL() string { return h.url }
+func (h *hgrepo) URL() string { return h.url }
 
-func (h *HgRepo) Clone() (WorkingCopy, error) {
+func (h *hgrepo) Clone() (WorkingCopy, error) {
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
