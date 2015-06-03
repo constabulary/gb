@@ -91,8 +91,9 @@ func RepositoryFromPath(path string) (Repository, string, error) {
 		case "hg":
 			repo, err := Hgrepo(reporoot)
 			return repo, extra, err
+		default:
+			return nil, "", fmt.Errorf("unknown repository type: %q", vcs)
 		}
-		return nil, "", fmt.Errorf("unknown repository type")
 	}
 }
 
