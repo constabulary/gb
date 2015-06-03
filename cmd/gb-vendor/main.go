@@ -96,7 +96,7 @@ func manifestFile(ctx *gb.Context) string {
 // copypath copies the contents of src to dst, excluding any file or
 // directory that starts with a period.
 func copypath(dst string, src string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -115,6 +115,11 @@ func copypath(dst string, src string) error {
 		dst := filepath.Join(dst, path[len(src):])
 		return copyfile(dst, path)
 	})
+	if err != nil {
+		// if there was an error during copying, remove the partial copy.
+		os.RemoveAll(dst)
+	}
+	return err
 }
 
 func copyfile(dst, src string) error {
