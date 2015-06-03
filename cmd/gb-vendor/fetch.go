@@ -99,7 +99,7 @@ Flags:
 		dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
 		src := filepath.Join(wc.Dir(), dep.Path)
 
-		if err := copypath(dst, src); err != nil {
+		if err := vendor.Copypath(dst, src); err != nil {
 			return err
 		}
 
