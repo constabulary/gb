@@ -1,8 +1,11 @@
 package vendor
 
 import (
+	"fmt"
 	"go/parser"
 	"go/token"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,4 +42,29 @@ func ParseImports(root string) (map[string]bool, error) {
 
 	err := filepath.Walk(root, walkFn)
 	return pkgs, err
+}
+
+// FetchMetadata fetchs the remote metadata for path.
+func FetchMetadata(path string) (io.ReadCloser, error) {
+	url := fmt.Sprintf("https://%s?go-get=1", path)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body, nil
+}
+
+// ParseMetadata fetchs and decodes remote metadata for path.
+func ParseMetadata(path string) (string, string, string, error) {
+	rc, err := FetchMetadata(path)
+	if err != nil {
+		return "", "", "", err
+	}
+	defer rc.Close()
+
+	meta, err := parseMetaGoImports(rc)
+	if err != nil || len(meta) < 1 {
+		return "", "", "", err
+	}
+	return meta[0].Prefix, meta[0].VCS, meta[0].RepoRoot, nil
 }
