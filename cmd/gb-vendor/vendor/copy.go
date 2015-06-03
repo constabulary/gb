@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+const debugCopypath = true
+const debugCopyfile = false
+
 // Copypath copies the contents of src to dst, excluding any file or
 // directory that starts with a period.
 func Copypath(dst string, src string) error {
@@ -24,6 +27,13 @@ func Copypath(dst string, src string) error {
 		}
 
 		if info.IsDir() {
+			return nil
+		}
+
+		if info.Mode()&os.ModeSymlink != 0 {
+			if debugCopypath {
+				fmt.Printf("skiping symlink: %v\n", path)
+			}
 			return nil
 		}
 
@@ -51,7 +61,9 @@ func copyfile(dst, src string) error {
 	if err != nil {
 		return fmt.Errorf("copyfile: create(%q): %v", dst, err)
 	}
-	fmt.Printf("copyfile(dst: %v, src: %v)\n", dst, src)
+	if debugCopyfile {
+		fmt.Printf("copyfile(dst: %v, src: %v)\n", dst, src)
+	}
 	_, err = io.Copy(w, r)
 	return err
 }
