@@ -15,6 +15,6 @@ func TestCopypathSkipsSymlinks(t *testing.T) {
 	defer os.RemoveAll(dst)
 	src := filepath.Join("_testdata", "copyfile", "a")
 	if err := Copypath(dst, src); err != nil {
-		t.Fatal("copypath(%s, %s): %v", dst, src, err)
+		t.Fatalf("copypath(%s, %s): %v", dst, src, err)
 	}
 }
