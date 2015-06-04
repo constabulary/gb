@@ -95,7 +95,7 @@ func TestParseMetadata(t *testing.T) {
 		reporoot:   "https://gopkg.in/check.v1",
 	}, {
 		path:       "gopkg.in/mgo.v2/bson",
-		importpath: "gopkg.in/mgo.v2/bson",
+		importpath: "gopkg.in/mgo.v2",
 		vcs:        "git",
 		reporoot:   "https://gopkg.in/mgo.v2",
 	}}

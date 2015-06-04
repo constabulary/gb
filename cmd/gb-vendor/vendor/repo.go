@@ -83,7 +83,6 @@ func RepositoryFromPath(path string) (Repository, string, error) {
 		if err != nil {
 			return nil, "", err
 		}
-		fmt.Println(importpath, vcs, reporoot)
 		extra := path[len(importpath):]
 		switch vcs {
 		case "git":
