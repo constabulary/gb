@@ -81,8 +81,9 @@ func RepositoryFromPath(path string) (Repository, string, error) {
 		// no idea, try to resolve as a vanity import
 		importpath, vcs, reporoot, err := ParseMetadata(path)
 		if err != nil {
-			return nil, "", fmt.Errorf("unknown repository type: %v", err)
+			return nil, "", err
 		}
+		fmt.Println(importpath, vcs, reporoot)
 		extra := path[len(importpath):]
 		switch vcs {
 		case "git":

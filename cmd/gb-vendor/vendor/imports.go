@@ -63,7 +63,10 @@ func ParseMetadata(path string) (string, string, string, error) {
 	defer rc.Close()
 
 	meta, err := parseMetaGoImports(rc)
-	if err != nil || len(meta) < 1 {
+	if len(meta) < 1 {
+		return "", "", "", fmt.Errorf("go-import metadata not found")
+	}
+	if err != nil {
 		return "", "", "", err
 	}
 	return meta[0].Prefix, meta[0].VCS, meta[0].RepoRoot, nil
