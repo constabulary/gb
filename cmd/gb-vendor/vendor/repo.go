@@ -112,7 +112,7 @@ func probeGitUrl(url string) error {
 	return err
 }
 
-// gitrepo is git Repository.
+// gitrepo is a git Repository.
 type gitrepo struct {
 
 	// remote repository url, see man 1 git-clone
@@ -243,6 +243,83 @@ func (h *HgClone) Branch() (string, error) {
 func (h *HgClone) Destroy() error {
 	parent := filepath.Dir(h.Path)
 	if err := os.RemoveAll(h.Path); err != nil {
+		return err
+	}
+	return cleanPath(parent)
+}
+
+// Bzrrepo returns a Repository representing a remote bzr repository.
+func Bzrrepo(url string) (Repository, error) {
+        if err := probeBzrUrl(url); err != nil {
+                return nil, err
+        }
+        return &bzrrepo{
+                url: url,
+        }, nil
+}
+
+func probeBzrUrl(url string) error {
+        _, err := run("bzr", "info", url)
+        return err
+}
+
+// bzrrepo is a bzr Repository.
+type bzrrepo struct {
+
+	// remote repository url
+	url string
+}
+
+func (b *bzrrepo) URL() string {
+	return b.url
+}
+
+func (b *bzrrepo) Clone() (WorkingCopy, error) {
+	dir, err := mktmp()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := runOut(os.Stderr, "bzr", "checkout", b.url, dir); err != nil {
+		os.RemoveAll(dir)
+		return nil, err
+	}
+
+	return &BzrClone{
+		Path: dir,
+	}, nil
+}
+
+// BzrClone is a bazaar WorkingCopy.
+type BzrClone struct {
+	Path string
+}
+
+func (b *BzrClone) Dir() string { return b.Path }
+
+func (b *BzrClone) CheckoutBranch(branch string) error {
+	_, err := run("hg", "--cwd", b.Path, "update", "-r", branch)
+	return err
+}
+
+func (b *BzrClone) CheckoutRevision(revision string) error {
+	_, err := run("hg", "--cwd", b.Path, "update", "-r", revision)
+	return err
+}
+
+func (b *BzrClone) Revision() (string, error) {
+	rev, err := run("hg", "--cwd", b.Path, "id", "-i")
+	return strings.TrimSpace(string(rev)), err
+}
+
+func (b *BzrClone) Branch() (string, error) {
+	rev, err := run("hg", "--cwd", b.Path, "branch")
+	return strings.TrimSpace(string(rev)), err
+}
+
+func (b *BzrClone) Destroy() error {
+	parent := filepath.Dir(b.Path)
+	if err := os.RemoveAll(b.Path); err != nil {
 		return err
 	}
 	return cleanPath(parent)
