@@ -144,6 +144,7 @@ func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 		"clone",
 		g.url,
 		dir,
+		"--single-branch",
 	}
 	if branch != "" {
 		args = append(args, "--branch", branch)
@@ -152,6 +153,13 @@ func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	if err := runOut(os.Stderr, "git", args...); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
+	}
+
+	if revision != "" {
+		if err := runOut(os.Stderr, "git", "-C", dir, "checkout", revision); err != nil {
+			os.RemoveAll(dir)
+			return nil, err
+		}
 	}
 
 	return &GitClone{
@@ -223,7 +231,14 @@ func (h *hgrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 		args = append(args, "--branch", branch)
 	}
 	if err := runOut(os.Stderr, "hg", args...); err != nil {
+		os.RemoveAll(dir)
 		return nil, err
+	}
+	if revision != "" {
+		if err := runOut(os.Stderr, "hg", "--cwd", dir, "update", "-r", revision); err != nil {
+			os.RemoveAll(dir)
+			return nil, err
+		}
 	}
 
 	return &HgClone{
@@ -287,14 +302,14 @@ func (b *bzrrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	if err != nil {
 		return nil, err
 	}
-	dir = filepath.Join(dir, "wc")
-	if err := runOut(os.Stderr, "bzr", "branch", b.url, dir); err != nil {
+	wc := filepath.Join(dir, "wc")
+	if err := runOut(os.Stderr, "bzr", "branch", b.url, wc); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
 	}
 
 	return &BzrClone{
-		Path: dir,
+		Path: wc,
 	}, nil
 }
 
