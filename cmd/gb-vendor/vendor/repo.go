@@ -50,6 +50,7 @@ type WorkingCopy interface {
 var (
 	ghregex = regexp.MustCompile(`^github.com/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
 	bbregex = regexp.MustCompile(`^bitbucket.org/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
+	lpregex = regexp.MustCompile(`^launchpad.net/([A-Za-z0-9-._]+)(/[A-Za-z0-9-._]+)?(/.+)?`)
 )
 
 // RepositoryFromPath attempts to deduce a Repository from an import path.
@@ -77,6 +78,17 @@ func RepositoryFromPath(path string) (Repository, string, error) {
 			return repo, v[3], nil
 		}
 		return nil, "", fmt.Errorf("unknown repository type")
+	case lpregex.MatchString(path):
+		v := lpregex.FindStringSubmatch(path)
+		v = append(v, "", "")
+		if v[2] == "" {
+			// launchpad.net/project"
+			repo, err := Bzrrepo(fmt.Sprintf("https://launchpad.net/%v", v[1]))
+			return repo, "", err
+		}
+		// launchpad.net/project/series"
+		repo, err := Bzrrepo(fmt.Sprintf("https://launchpad.net/%s/%s", v[1], v[2]))
+		return repo, v[3], err
 	default:
 		// no idea, try to resolve as a vanity import
 		importpath, vcs, reporoot, err := ParseMetadata(path)
@@ -90,6 +102,9 @@ func RepositoryFromPath(path string) (Repository, string, error) {
 			return repo, extra, err
 		case "hg":
 			repo, err := Hgrepo(reporoot)
+			return repo, extra, err
+		case "bzr":
+			repo, err := Bzrrepo(reporoot)
 			return repo, extra, err
 		default:
 			return nil, "", fmt.Errorf("unknown repository type: %q", vcs)
@@ -112,7 +127,7 @@ func probeGitUrl(url string) error {
 	return err
 }
 
-// gitrepo is git Repository.
+// gitrepo is a git Repository.
 type gitrepo struct {
 
 	// remote repository url, see man 1 git-clone
@@ -248,17 +263,90 @@ func (h *HgClone) Destroy() error {
 	return cleanPath(parent)
 }
 
+// Bzrrepo returns a Repository representing a remote bzr repository.
+func Bzrrepo(url string) (Repository, error) {
+	if err := probeBzrUrl(url); err != nil {
+		return nil, err
+	}
+	return &bzrrepo{
+		url: url,
+	}, nil
+}
+
+func probeBzrUrl(url string) error {
+	_, err := run("bzr", "info", url)
+	return err
+}
+
+// bzrrepo is a bzr Repository.
+type bzrrepo struct {
+
+	// remote repository url
+	url string
+}
+
+func (b *bzrrepo) URL() string {
+	return b.url
+}
+
+func (b *bzrrepo) Clone() (WorkingCopy, error) {
+	dir, err := mktmp()
+	if err != nil {
+		return nil, err
+	}
+	dir = filepath.Join(dir, "wc")
+	if err := runOut(os.Stderr, "bzr", "branch", b.url, dir); err != nil {
+		os.RemoveAll(dir)
+		return nil, err
+	}
+
+	return &BzrClone{
+		Path: dir,
+	}, nil
+}
+
+// BzrClone is a bazaar WorkingCopy.
+type BzrClone struct {
+	Path string
+}
+
+func (b *BzrClone) Dir() string { return b.Path }
+
+func (b *BzrClone) CheckoutBranch(branch string) error {
+	// checkout branch is a noop for bzr
+	return nil
+}
+
+func (b *BzrClone) CheckoutRevision(revision string) error {
+	// checkout branch is a noop for bzr
+	return nil
+}
+
+func (b *BzrClone) Revision() (string, error) {
+	return "1", nil
+}
+
+func (b *BzrClone) Branch() (string, error) {
+	return "master", nil
+}
+
+func (b *BzrClone) Destroy() error {
+	parent := filepath.Dir(b.Path)
+	if err := os.RemoveAll(b.Path); err != nil {
+		return err
+	}
+	return cleanPath(parent)
+}
+
 func cleanPath(path string) error {
 	if files, _ := ioutil.ReadDir(path); len(files) > 0 || filepath.Base(path) == "src" {
 		return nil
-	} else {
-		parent := filepath.Dir(path)
-		if err := os.RemoveAll(path); err != nil {
-			return err
-		}
-		return cleanPath(parent)
 	}
-
+	parent := filepath.Dir(path)
+	if err := os.RemoveAll(path); err != nil {
+		return err
+	}
+	return cleanPath(parent)
 }
 
 func mkdir(path string) error {
