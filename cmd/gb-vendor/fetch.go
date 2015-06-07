@@ -60,20 +60,7 @@ Flags:
 			return fmt.Errorf("specified repository is already downloaded")
 		}
 
-		wc, err := repo.Clone()
-		if err != nil {
-			return err
-		}
-
-		if branch != "master" && revision != "" {
-			return fmt.Errorf("you cannot specify branch and revision at once")
-		}
-
-		if branch != "master" {
-			err = wc.CheckoutBranch(branch)
-		} else {
-			err = wc.CheckoutRevision(revision)
-		}
+		wc, err := repo.Checkout("", "")
 		if err != nil {
 			return err
 		}
