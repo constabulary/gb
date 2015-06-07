@@ -1,6 +1,7 @@
 package vendor
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -69,4 +70,35 @@ func TestManifest(t *testing.T) {
 
 	// check that no manifest file was removed
 	assertNotExists(t, mf)
+}
+
+func TestEmptyPathIsNotWritten(t *testing.T) {
+	m := Manifest{
+		Version: 0,
+		Dependencies: []Dependency{{
+			Importpath: "github.com/foo/bar",
+			Repository: "https://github.com/foo/bar",
+			Revision:   "abcdef",
+			Branch:     "master",
+		}},
+	}
+	var buf bytes.Buffer
+	if err := writeManifest(&buf, &m); err != nil {
+		t.Fatal(err)
+	}
+	want := `{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/foo/bar",
+			"repository": "https://github.com/foo/bar",
+			"revision": "abcdef",
+			"branch": "master"
+		}
+	]
+}`
+	got := buf.String()
+	if want != got {
+		t.Fatalf("want: %s, got %s", want, got)
+	}
 }

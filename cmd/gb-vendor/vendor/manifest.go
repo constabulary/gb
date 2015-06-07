@@ -84,7 +84,7 @@ type Dependency struct {
 
 	// Path is the path inside the Repository where the
 	// dependency was fetched from.
-	Path string `json:"path"`
+	Path string `json:"path,omitempty"`
 }
 
 // WriteManifest writes a Manifest to the path. If the manifest does
