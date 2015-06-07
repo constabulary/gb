@@ -15,8 +15,11 @@ import (
 // RemoteRepo describes a remote dvcs repository.
 type RemoteRepo interface {
 
-	// Clone fetches the source of the remote repository.
-	Clone() (WorkingCopy, error)
+	// Checkout checks out the specific branch and revision
+	// If branch is empty, the default branch for the underlying
+	// VCS will be used. If revision is empty, the latest available
+	// revision, taking into account branch, will be fetched.
+	Checkout(branch, revision string) (WorkingCopy, error)
 
 	// URL returns the URL the clone was taken from. It should
 	// only be called after Clone.
@@ -28,12 +31,6 @@ type WorkingCopy interface {
 
 	// Dir is the root of this working copy.
 	Dir() string
-
-	// Checks out specific branch of this working copy.
-	CheckoutBranch(string) error
-
-	// Checks out specific revision of this working copy.
-	CheckoutRevision(string) error
 
 	// Revision returns the revision of this working copy.
 	Revision() (string, error)
@@ -137,13 +134,22 @@ func (g *gitrepo) URL() string {
 	return g.url
 }
 
-func (g *gitrepo) Clone() (WorkingCopy, error) {
+func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := runOut(os.Stderr, "git", "clone", g.url, dir); err != nil {
+	args := []string{
+		"clone",
+		g.url,
+		dir,
+	}
+	if branch != "" {
+		args = append(args, "--branch", branch)
+	}
+
+	if err := runOut(os.Stderr, "git", args...); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
 	}
@@ -159,16 +165,6 @@ type GitClone struct {
 }
 
 func (g *GitClone) Dir() string { return g.Path }
-
-func (g *GitClone) CheckoutBranch(branch string) error {
-	_, err := run("git", "-C", g.Path, "checkout", "-b", branch, "origin/"+branch)
-	return err
-}
-
-func (g *GitClone) CheckoutRevision(revision string) error {
-	_, err := run("git", "-C", g.Path, "checkout", revision)
-	return err
-}
 
 func (g *GitClone) Revision() (string, error) {
 	rev, err := run("git", "-C", g.Path, "rev-parse", "HEAD")
@@ -212,13 +208,21 @@ type hgrepo struct {
 
 func (h *hgrepo) URL() string { return h.url }
 
-func (h *hgrepo) Clone() (WorkingCopy, error) {
+func (h *hgrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
 	}
+	args := []string{
+		"clone",
+		h.url,
+		dir,
+	}
 
-	if err := runOut(os.Stderr, "hg", "clone", h.url, dir); err != nil {
+	if branch != "" {
+		args = append(args, "--branch", branch)
+	}
+	if err := runOut(os.Stderr, "hg", args...); err != nil {
 		return nil, err
 	}
 
@@ -233,16 +237,6 @@ type HgClone struct {
 }
 
 func (h *HgClone) Dir() string { return h.Path }
-
-func (h *HgClone) CheckoutBranch(branch string) error {
-	_, err := run("hg", "--cwd", h.Path, "update", "-r", branch)
-	return err
-}
-
-func (h *HgClone) CheckoutRevision(revision string) error {
-	_, err := run("hg", "--cwd", h.Path, "update", "-r", revision)
-	return err
-}
 
 func (h *HgClone) Revision() (string, error) {
 	rev, err := run("hg", "--cwd", h.Path, "id", "-i")
@@ -288,7 +282,7 @@ func (b *bzrrepo) URL() string {
 	return b.url
 }
 
-func (b *bzrrepo) Clone() (WorkingCopy, error) {
+func (b *bzrrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
@@ -310,16 +304,6 @@ type BzrClone struct {
 }
 
 func (b *BzrClone) Dir() string { return b.Path }
-
-func (b *BzrClone) CheckoutBranch(branch string) error {
-	// checkout branch is a noop for bzr
-	return nil
-}
-
-func (b *BzrClone) CheckoutRevision(revision string) error {
-	// checkout branch is a noop for bzr
-	return nil
-}
 
 func (b *BzrClone) Revision() (string, error) {
 	return "1", nil

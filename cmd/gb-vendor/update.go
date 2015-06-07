@@ -79,7 +79,7 @@ Flags:
 				return fmt.Errorf("could not determine repository for import %q", p)
 			}
 
-			wc, err := repo.Clone()
+			wc, err := repo.Checkout("", "")
 			if err != nil {
 				return err
 			}
