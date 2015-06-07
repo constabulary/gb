@@ -74,7 +74,7 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			repo, extra, err := vendor.RepositoryFromPath(p)
+			repo, extra, err := vendor.DeduceRemoteRepo(p)
 			if err != nil {
 				return fmt.Errorf("could not determine repository for import %q", p)
 			}

@@ -51,7 +51,7 @@ Flags:
 			return fmt.Errorf("could not load manifest: %v", err)
 		}
 
-		repo, extra, err := vendor.RepositoryFromPath(path)
+		repo, extra, err := vendor.DeduceRemoteRepo(path)
 		if err != nil {
 			return err
 		}
