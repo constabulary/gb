@@ -56,20 +56,7 @@ Flags:
 			return err
 		}
 
-		wc, err := repo.Clone()
-		if err != nil {
-			return err
-		}
-
-		if branch != "master" && revision != "" {
-			return fmt.Errorf("you cannot specify branch and revision at once")
-		}
-
-		if branch != "master" {
-			err = wc.CheckoutBranch(branch)
-		} else {
-			err = wc.CheckoutRevision(revision)
-		}
+		wc, err := repo.Checkout(branch, revision)
 		if err != nil {
 			return err
 		}

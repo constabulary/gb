@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
@@ -66,11 +67,8 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted from manifest: %v", err)
 			}
 
-			localClone := vendor.GitClone{
-				Path: filepath.Join(ctx.Projectdir(), "vendor", "src", p),
-			}
-			err = localClone.Destroy()
-			if err != nil {
+			if err := os.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(p))); err != nil {
+				// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
@@ -79,7 +77,7 @@ Flags:
 				return fmt.Errorf("could not determine repository for import %q", p)
 			}
 
-			wc, err := repo.Clone()
+			wc, err := repo.Checkout("", "")
 			if err != nil {
 				return err
 			}

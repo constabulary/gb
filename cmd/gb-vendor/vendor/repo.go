@@ -15,8 +15,11 @@ import (
 // RemoteRepo describes a remote dvcs repository.
 type RemoteRepo interface {
 
-	// Clone fetches the source of the remote repository.
-	Clone() (WorkingCopy, error)
+	// Checkout checks out the specific branch and revision
+	// If branch is empty, the default branch for the underlying
+	// VCS will be used. If revision is empty, the latest available
+	// revision, taking into account branch, will be fetched.
+	Checkout(branch, revision string) (WorkingCopy, error)
 
 	// URL returns the URL the clone was taken from. It should
 	// only be called after Clone.
@@ -28,12 +31,6 @@ type WorkingCopy interface {
 
 	// Dir is the root of this working copy.
 	Dir() string
-
-	// Checks out specific branch of this working copy.
-	CheckoutBranch(string) error
-
-	// Checks out specific revision of this working copy.
-	CheckoutRevision(string) error
 
 	// Revision returns the revision of this working copy.
 	Revision() (string, error)
@@ -137,55 +134,68 @@ func (g *gitrepo) URL() string {
 	return g.url
 }
 
-func (g *gitrepo) Clone() (WorkingCopy, error) {
+func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := runOut(os.Stderr, "git", "clone", g.url, dir); err != nil {
+	args := []string{
+		"clone",
+		g.url,
+		dir,
+		"--single-branch",
+	}
+	if branch != "" {
+		args = append(args, "--branch", branch)
+	}
+
+	if err := runOut(os.Stderr, "git", args...); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
 	}
 
+	if revision != "" {
+		if err := runOut(os.Stderr, "git", "-C", dir, "checkout", revision); err != nil {
+			os.RemoveAll(dir)
+			return nil, err
+		}
+	}
+
 	return &GitClone{
-		Path: dir,
+		workingcopy{
+			path: dir,
+		},
 	}, nil
+}
+
+type workingcopy struct {
+	path string
+}
+
+func (w workingcopy) Dir() string { return w.path }
+
+func (w workingcopy) Destroy() error {
+	if err := os.RemoveAll(w.path); err != nil {
+		return err
+	}
+	parent := filepath.Dir(w.path)
+	return cleanPath(parent)
 }
 
 // GitClone is a git WorkingCopy.
 type GitClone struct {
-	Path string
-}
-
-func (g *GitClone) Dir() string { return g.Path }
-
-func (g *GitClone) CheckoutBranch(branch string) error {
-	_, err := run("git", "-C", g.Path, "checkout", "-b", branch, "origin/"+branch)
-	return err
-}
-
-func (g *GitClone) CheckoutRevision(revision string) error {
-	_, err := run("git", "-C", g.Path, "checkout", revision)
-	return err
+	workingcopy
 }
 
 func (g *GitClone) Revision() (string, error) {
-	rev, err := run("git", "-C", g.Path, "rev-parse", "HEAD")
+	rev, err := run("git", "-C", g.path, "rev-parse", "HEAD")
 	return strings.TrimSpace(string(rev)), err
 }
 
 func (g *GitClone) Branch() (string, error) {
-	rev, err := run("git", "-C", g.Path, "rev-parse", "--abbrev-ref", "HEAD")
+	rev, err := run("git", "-C", g.path, "rev-parse", "--abbrev-ref", "HEAD")
 	return strings.TrimSpace(string(rev)), err
-}
-
-func (g *GitClone) Destroy() error {
-	parent := filepath.Dir(g.Path)
-	if err := os.RemoveAll(g.Path); err != nil {
-		return err
-	}
-	return cleanPath(parent)
 }
 
 // Hgrepo returns a RemoteRepo representing a remote git repository.
@@ -212,54 +222,51 @@ type hgrepo struct {
 
 func (h *hgrepo) URL() string { return h.url }
 
-func (h *hgrepo) Clone() (WorkingCopy, error) {
+func (h *hgrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
 	}
+	args := []string{
+		"clone",
+		h.url,
+		dir,
+	}
 
-	if err := runOut(os.Stderr, "hg", "clone", h.url, dir); err != nil {
+	if branch != "" {
+		args = append(args, "--branch", branch)
+	}
+	if err := runOut(os.Stderr, "hg", args...); err != nil {
+		os.RemoveAll(dir)
 		return nil, err
+	}
+	if revision != "" {
+		if err := runOut(os.Stderr, "hg", "--cwd", dir, "update", "-r", revision); err != nil {
+			os.RemoveAll(dir)
+			return nil, err
+		}
 	}
 
 	return &HgClone{
-		Path: dir,
+		workingcopy{
+			path: dir,
+		},
 	}, nil
 }
 
 // HgClone is a mercurial WorkingCopy.
 type HgClone struct {
-	Path string
-}
-
-func (h *HgClone) Dir() string { return h.Path }
-
-func (h *HgClone) CheckoutBranch(branch string) error {
-	_, err := run("hg", "--cwd", h.Path, "update", "-r", branch)
-	return err
-}
-
-func (h *HgClone) CheckoutRevision(revision string) error {
-	_, err := run("hg", "--cwd", h.Path, "update", "-r", revision)
-	return err
+	workingcopy
 }
 
 func (h *HgClone) Revision() (string, error) {
-	rev, err := run("hg", "--cwd", h.Path, "id", "-i")
+	rev, err := run("hg", "--cwd", h.path, "id", "-i")
 	return strings.TrimSpace(string(rev)), err
 }
 
 func (h *HgClone) Branch() (string, error) {
-	rev, err := run("hg", "--cwd", h.Path, "branch")
+	rev, err := run("hg", "--cwd", h.path, "branch")
 	return strings.TrimSpace(string(rev)), err
-}
-
-func (h *HgClone) Destroy() error {
-	parent := filepath.Dir(h.Path)
-	if err := os.RemoveAll(h.Path); err != nil {
-		return err
-	}
-	return cleanPath(parent)
 }
 
 // Bzrrepo returns a RemoteRepo representing a remote bzr repository.
@@ -288,37 +295,27 @@ func (b *bzrrepo) URL() string {
 	return b.url
 }
 
-func (b *bzrrepo) Clone() (WorkingCopy, error) {
+func (b *bzrrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
 	}
-	dir = filepath.Join(dir, "wc")
-	if err := runOut(os.Stderr, "bzr", "branch", b.url, dir); err != nil {
+	wc := filepath.Join(dir, "wc")
+	if err := runOut(os.Stderr, "bzr", "branch", b.url, wc); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
 	}
 
 	return &BzrClone{
-		Path: dir,
+		workingcopy{
+			path: dir,
+		},
 	}, nil
 }
 
 // BzrClone is a bazaar WorkingCopy.
 type BzrClone struct {
-	Path string
-}
-
-func (b *BzrClone) Dir() string { return b.Path }
-
-func (b *BzrClone) CheckoutBranch(branch string) error {
-	// checkout branch is a noop for bzr
-	return nil
-}
-
-func (b *BzrClone) CheckoutRevision(revision string) error {
-	// checkout branch is a noop for bzr
-	return nil
+	workingcopy
 }
 
 func (b *BzrClone) Revision() (string, error) {
@@ -327,14 +324,6 @@ func (b *BzrClone) Revision() (string, error) {
 
 func (b *BzrClone) Branch() (string, error) {
 	return "master", nil
-}
-
-func (b *BzrClone) Destroy() error {
-	parent := filepath.Dir(b.Path)
-	if err := os.RemoveAll(b.Path); err != nil {
-		return err
-	}
-	return cleanPath(parent)
 }
 
 func cleanPath(path string) error {
