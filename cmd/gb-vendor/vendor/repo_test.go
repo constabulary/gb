@@ -51,6 +51,16 @@ func TestRepositoryFromPath(t *testing.T) {
 			url: "https://go.googlesource.com/tools",
 		},
 		extra: "/go/vcs",
+	}, {
+		path: "labix.org/v2/mgo",
+		want: &bzrrepo{
+			url: "https://launchpad.net/mgo/v2",
+		},
+	}, {
+		path: "launchpad.net/gnuflag",
+		want: &bzrrepo{
+			url: "https://launchpad.net/gnuflag",
+		},
 	}}
 
 	for _, tt := range tests {
