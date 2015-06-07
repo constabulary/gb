@@ -59,6 +59,18 @@ func (m *Manifest) GetDependencyForImportpath(path string) (Dependency, error) {
 	return Dependency{}, fmt.Errorf("dependency for %s does not exist", path)
 }
 
+// HasDependencyWithUrl return true if the Manifest file contains
+// dependency with the url.
+// If it does not have the dependency it returns false.
+func (m *Manifest) HasDependencyWithUrl(url string) bool {
+	for _, d := range m.Dependencies {
+		if d.Repository == url {
+			return true
+		}
+	}
+	return false
+}
+
 // Dependency describes one vendored import path of code
 // A Dependency is an Importpath sources from a Respository
 // at Revision from Path.
