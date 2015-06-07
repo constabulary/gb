@@ -56,6 +56,10 @@ Flags:
 			return err
 		}
 
+		if m.HasDependencyWithUrl(repo.URL()) {
+			return fmt.Errorf("specified repository is already downloaded")
+		}
+
 		wc, err := repo.Clone()
 		if err != nil {
 			return err
