@@ -60,7 +60,7 @@ Flags:
 			return fmt.Errorf("specified repository is already downloaded")
 		}
 
-		wc, err := repo.Checkout("", "")
+		wc, err := repo.Checkout(branch, revision)
 		if err != nil {
 			return err
 		}
