@@ -1,17 +1,24 @@
 package vendor
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
 
-func TestRepositoryFromPath(t *testing.T) {
+func TestDeduceRemoteRepo(t *testing.T) {
 	tests := []struct {
 		path  string
-		want  Repository
+		want  RemoteRepo
 		extra string
 		err   error
 	}{{
+		path: "",
+		err:  fmt.Errorf(`"" is not a valid import path`),
+	}, {
+		path: "corporate",
+		err:  fmt.Errorf(`"corporate" is not a valid import path`),
+	}, {
 		path: "github.com/pkg/sftp",
 		want: &gitrepo{
 			url: "https://github.com/pkg/sftp",
@@ -64,9 +71,13 @@ func TestRepositoryFromPath(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		got, extra, err := RepositoryFromPath(tt.path)
-		if !reflect.DeepEqual(got, tt.want) || extra != tt.extra || err != tt.err {
-			t.Errorf("RepositoryFromPath(%q): want %#v, %v, %v, got %#v, %v, %v", tt.path, tt.want, tt.extra, tt.err, got, extra, err)
+		got, extra, err := DeduceRemoteRepo(tt.path)
+		if !reflect.DeepEqual(err, tt.err) {
+			t.Errorf("DeduceRemoteRepo(%q): want err: %v, got err: %v", tt.path, tt.err, err)
+			continue
+		}
+		if !reflect.DeepEqual(got, tt.want) || extra != tt.extra {
+			t.Errorf("RemoteRepoFromPath(%q): want %#v, %v, got %#v, %v", tt.path, tt.want, tt.extra, got, extra)
 		}
 	}
 }

@@ -12,10 +12,8 @@ import (
 	"strings"
 )
 
-// gb-vendor repo support
-
-// Repository describes a remote dvcs repository.
-type Repository interface {
+// RemoteRepo describes a remote dvcs repository.
+type RemoteRepo interface {
 
 	// Clone fetches the source of the remote repository.
 	Clone() (WorkingCopy, error)
@@ -53,11 +51,12 @@ var (
 	lpregex = regexp.MustCompile(`^launchpad.net/([A-Za-z0-9-._]+)(/[A-Za-z0-9-._]+)?(/.+)?`)
 )
 
-// RepositoryFromPath attempts to deduce a Repository from an import path.
-// If there are additional path items remaining then they will be returned.
-func RepositoryFromPath(path string) (Repository, string, error) {
-	if strings.Contains(path, "//:") {
-		return nil, path, fmt.Errorf("path must not be a url")
+// DeduceRemoteRepo takes a potential import path and returns a RemoteRepo
+// representing the remote location of the source of an import path.
+func DeduceRemoteRepo(path string) (RemoteRepo, string, error) {
+	validimport := regexp.MustCompile(`^([A-Za-z0-9-]+)(.[A-Za-z0-9-]+)+(/.[A-Za-z0-9-_.]+)+$`)
+	if !validimport.MatchString(path) {
+		return nil, "", fmt.Errorf("%q is not a valid import path", path)
 	}
 
 	switch {
@@ -112,8 +111,8 @@ func RepositoryFromPath(path string) (Repository, string, error) {
 	}
 }
 
-// Gitrepo returns a Repository representing a remote git repository.
-func Gitrepo(url string) (Repository, error) {
+// Gitrepo returns a RemoteRepo representing a remote git repository.
+func Gitrepo(url string) (RemoteRepo, error) {
 	if err := probeGitUrl(url); err != nil {
 		return nil, err
 	}
@@ -127,7 +126,7 @@ func probeGitUrl(url string) error {
 	return err
 }
 
-// gitrepo is a git Repository.
+// gitrepo is a git RemoteRepo.
 type gitrepo struct {
 
 	// remote repository url, see man 1 git-clone
@@ -189,8 +188,8 @@ func (g *GitClone) Destroy() error {
 	return cleanPath(parent)
 }
 
-// Hgrepo returns a Repository representing a remote git repository.
-func Hgrepo(url string) (Repository, error) {
+// Hgrepo returns a RemoteRepo representing a remote git repository.
+func Hgrepo(url string) (RemoteRepo, error) {
 	if err := probeHgUrl(url); err != nil {
 		return nil, err
 	}
@@ -263,8 +262,8 @@ func (h *HgClone) Destroy() error {
 	return cleanPath(parent)
 }
 
-// Bzrrepo returns a Repository representing a remote bzr repository.
-func Bzrrepo(url string) (Repository, error) {
+// Bzrrepo returns a RemoteRepo representing a remote bzr repository.
+func Bzrrepo(url string) (RemoteRepo, error) {
 	if err := probeBzrUrl(url); err != nil {
 		return nil, err
 	}
@@ -278,7 +277,7 @@ func probeBzrUrl(url string) error {
 	return err
 }
 
-// bzrrepo is a bzr Repository.
+// bzrrepo is a bzr RemoteRepo.
 type bzrrepo struct {
 
 	// remote repository url
