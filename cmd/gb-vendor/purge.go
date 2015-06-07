@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -50,11 +51,8 @@ var cmdPurge = &cmd.Command{
 				if err := m.RemoveDependency(dep); err != nil {
 					return fmt.Errorf("dependency could not be removed: %v", err)
 				}
-
-				localClone := vendor.GitClone{
-					Path: filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath),
-				}
-				if err := localClone.Destroy(); err != nil {
+				if err := os.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath))); err != nil {
+					// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
 					return fmt.Errorf("dependency could not be deleted: %v", err)
 				}
 			}
