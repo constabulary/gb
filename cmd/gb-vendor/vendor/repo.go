@@ -156,7 +156,7 @@ func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 	}
 
 	if revision != "" {
-		if err := runOut(os.Stderr, "git", "-C", dir, "checkout", revision); err != nil {
+		if err := runOutPath(os.Stderr, dir, "git", "checkout", revision); err != nil {
 			os.RemoveAll(dir)
 			return nil, err
 		}
@@ -189,12 +189,12 @@ type GitClone struct {
 }
 
 func (g *GitClone) Revision() (string, error) {
-	rev, err := run("git", "-C", g.path, "rev-parse", "HEAD")
+	rev, err := runPath(g.path, "git", "rev-parse", "HEAD")
 	return strings.TrimSpace(string(rev)), err
 }
 
 func (g *GitClone) Branch() (string, error) {
-	rev, err := run("git", "-C", g.path, "rev-parse", "--abbrev-ref", "HEAD")
+	rev, err := runPath(g.path, "git", "rev-parse", "--abbrev-ref", "HEAD")
 	return strings.TrimSpace(string(rev)), err
 }
 
@@ -353,6 +353,20 @@ func run(c string, args ...string) ([]byte, error) {
 
 func runOut(w io.Writer, c string, args ...string) error {
 	cmd := exec.Command(c, args...)
+	cmd.Stdout = w
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func runPath(path string, c string, args ...string) ([]byte, error) {
+	var buf bytes.Buffer
+	err := runOutPath(&buf, path, c, args...)
+	return buf.Bytes(), err
+}
+
+func runOutPath(w io.Writer, path string, c string, args ...string) error {
+	cmd := exec.Command(c, args...)
+	cmd.Dir = path
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
