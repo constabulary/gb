@@ -80,9 +80,11 @@ For more about specifying packages, see 'gb help packages'. For more about where
 
 		pkgs, err := cmd.ResolvePackages(ctx, args...)
 		if err != nil {
+			ctx.Destroy()
 			return err
 		}
 		if err := gb.Build(pkgs...); err != nil {
+			ctx.Destroy()
 			return err
 		}
 		return ctx.Destroy()
