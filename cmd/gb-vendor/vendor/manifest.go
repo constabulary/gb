@@ -44,12 +44,8 @@ func (m *Manifest) RemoveDependency(dep Dependency) error {
 
 // HasImportpath reports whether the Manifest contains the import path.
 func (m *Manifest) HasImportpath(path string) bool {
-	for _, d := range m.Dependencies {
-		if d.Importpath == path {
-			return true
-		}
-	}
-	return false
+	_, err := m.GetDependencyForImportpath(path)
+	return err == nil
 }
 
 // GetDependencyForRepository return a dependency for specified URL

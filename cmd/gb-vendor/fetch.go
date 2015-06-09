@@ -56,6 +56,10 @@ Flags:
 			return err
 		}
 
+		if m.HasImportpath(path) {
+			return fmt.Errorf("%s is already vendored", path)
+		}
+
 		wc, err := repo.Checkout(branch, revision)
 		if err != nil {
 			return err
