@@ -56,8 +56,8 @@ Flags:
 			return err
 		}
 
-		if m.HasDependencyWithUrl(repo.URL()) {
-			return fmt.Errorf("specified repository is already downloaded")
+		if m.HasImportpath(path) {
+			return fmt.Errorf("%s is already vendored", path)
 		}
 
 		wc, err := repo.Checkout(branch, revision)
