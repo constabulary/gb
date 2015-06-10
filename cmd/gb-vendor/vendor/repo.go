@@ -46,6 +46,7 @@ var (
 	ghregex = regexp.MustCompile(`^github.com/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
 	bbregex = regexp.MustCompile(`^bitbucket.org/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
 	lpregex = regexp.MustCompile(`^launchpad.net/([A-Za-z0-9-._]+)(/[A-Za-z0-9-._]+)?(/.+)?`)
+	genre   = regexp.MustCompile(`^(?P<root>(?P<repo>([a-z0-9.\-]+\.)+[a-z0-9.\-]+(:[0-9]+)?/[A-Za-z0-9_.\-/]*?)\.(?P<vcs>bzr|git|hg|svn))(/[A-Za-z0-9_.\-]+)*$`)
 )
 
 // DeduceRemoteRepo takes a potential import path and returns a RemoteRepo
@@ -85,26 +86,45 @@ func DeduceRemoteRepo(path string) (RemoteRepo, string, error) {
 		// launchpad.net/project/series"
 		repo, err := Bzrrepo(fmt.Sprintf("https://launchpad.net/%s/%s", v[1], v[2]))
 		return repo, v[3], err
-	default:
-		// no idea, try to resolve as a vanity import
-		importpath, vcs, reporoot, err := ParseMetadata(path)
-		if err != nil {
-			return nil, "", err
-		}
-		extra := path[len(importpath):]
-		switch vcs {
+	}
+
+	// try the general syntax
+	if genre.MatchString(path) {
+		v := genre.FindStringSubmatch(path)
+		switch v[5] {
 		case "git":
-			repo, err := Gitrepo(reporoot)
-			return repo, extra, err
+			repo, err := Gitrepo("git://" + v[1])
+			return repo, v[6], err
 		case "hg":
-			repo, err := Hgrepo(reporoot)
-			return repo, extra, err
+			repo, err := Hgrepo("https://" + v[1])
+			return repo, v[6], err
 		case "bzr":
-			repo, err := Bzrrepo(reporoot)
-			return repo, extra, err
+			repo, err := Bzrrepo("https://" + v[1])
+			return repo, v[6], err
 		default:
-			return nil, "", fmt.Errorf("unknown repository type: %q", vcs)
+			return nil, "", fmt.Errorf("unknown repository type: %q", v[5])
+
 		}
+	}
+
+	// no idea, try to resolve as a vanity import
+	importpath, vcs, reporoot, err := ParseMetadata(path)
+	if err != nil {
+		return nil, "", err
+	}
+	extra := path[len(importpath):]
+	switch vcs {
+	case "git":
+		repo, err := Gitrepo(reporoot)
+		return repo, extra, err
+	case "hg":
+		repo, err := Hgrepo(reporoot)
+		return repo, extra, err
+	case "bzr":
+		repo, err := Bzrrepo(reporoot)
+		return repo, extra, err
+	default:
+		return nil, "", fmt.Errorf("unknown repository type: %q", vcs)
 	}
 }
 
