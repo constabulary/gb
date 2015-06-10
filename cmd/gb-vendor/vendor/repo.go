@@ -142,6 +142,7 @@ func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 
 	args := []string{
 		"clone",
+		"-q", // silence progress report to stderr
 		g.url,
 		dir,
 		"--single-branch",
@@ -150,7 +151,7 @@ func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 		args = append(args, "--branch", branch)
 	}
 
-	if err := runOut(os.Stderr, "git", args...); err != nil {
+	if _, err := run("git", args...); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
 	}
