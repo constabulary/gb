@@ -202,7 +202,7 @@ func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
 
 func (c *Context) run(dir string, env []string, command string, args ...string) error {
 	var buf bytes.Buffer
-	err := c.runOut(&buf, dir, nil, command, args...)
+	err := c.runOut(&buf, dir, env, command, args...)
 	if err != nil {
 		return fmt.Errorf("# %s %s: %v\n%s", command, strings.Join(args, " "), err, buf.String())
 	}
