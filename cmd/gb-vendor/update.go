@@ -20,17 +20,22 @@ var (
 
 func addUpdateFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&updateAll, "all", false, "update all dependencies")
+	fs.StringVar(&branch, "branch", "master", "branch of the package")
 }
 
 var cmdUpdate = &cmd.Command{
 	Name:      "update",
-	UsageLine: "update [-all] import",
+	UsageLine: "update [-branch branch] [-all] import",
 	Short:     "update a local dependency",
-	Long: `gb vendor update will replaces the source with the latest available from the head of the master branch.
+	Long: `gb vendor update will replace the source with the latest available from the head of the default upsteam branch, or the branch specified with -branch.
 
 Flags:
 	-all
 		will update all depdendencies in the manifest, otherwise only the dependency supplied.
+
+	-branch branch
+		update the dependency from the named branch. If not supplied the default upstream
+		branch will be used. This flag cannot be used with the -all flag.
 
 `,
 	Run: func(ctx *gb.Context, args []string) error {
@@ -38,6 +43,8 @@ Flags:
 			return fmt.Errorf("update: import path or --all flag is missing")
 		} else if len(args) == 1 && updateAll {
 			return fmt.Errorf("update: you cannot specify path and --all flag at once")
+		} else if branch != "master" && updateAll {
+			return fmt.Errorf("update: the --branch flag requires an import path to be specified (and cannot be used with the --all flag")
 		}
 
 		m, err := vendor.ReadManifest(manifestFile(ctx))
@@ -77,7 +84,7 @@ Flags:
 				return fmt.Errorf("could not determine repository for import %q", p)
 			}
 
-			wc, err := repo.Checkout("", "")
+			wc, err := repo.Checkout(branch, "")
 			if err != nil {
 				return err
 			}
