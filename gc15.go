@@ -42,8 +42,6 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 }
 
 func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
-	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
-
 	args := []string{"-p", importpath, "-pack"}
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {
