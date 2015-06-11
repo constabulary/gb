@@ -29,7 +29,7 @@ func addFetchFlags(fs *flag.FlagSet) {
 
 var cmdFetch = &cmd.Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch] [-revision rev|-tag tag] importpath",
+	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors the upstream import path.
 
@@ -39,7 +39,7 @@ Flags:
 		branch will be used.
 	-tag tag
 		fetch the specified tag. If not supplie the default upstream 
-		banch will be used.
+		branch will be used.
 	-revision rev
 		fetch the specific revision from the branch (if supplied). If no
 		revision supplied, the latest available will be supplied.

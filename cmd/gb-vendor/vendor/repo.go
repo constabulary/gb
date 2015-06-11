@@ -159,7 +159,7 @@ func (g *gitrepo) URL() string {
 // "HEAD", an error will be returned.
 func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if branch == "HEAD" {
-		return nil, fmt.Errorf("cannot checkout HEAD")
+		return nil, fmt.Errorf("cannot update %q as it has been previously fetched with -tag or -revision. Please use gb vendor delete then fetch again.", g.url)
 	}
 	if !atMostOne(tag, revision) {
 		return nil, fmt.Errorf("only one of tag or revision may be supplied")

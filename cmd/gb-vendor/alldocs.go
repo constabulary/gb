@@ -28,7 +28,7 @@ Fetch a remote dependency
 
 Usage:
 
-        gb vendor fetch [-branch branch] [-revision rev|-tag tag] importpath
+        gb vendor fetch [-branch branch | -revision rev | -tag tag] importpath
 
 fetch vendors the upstream import path.
 
@@ -38,7 +38,7 @@ Flags:
 		branch will be used.
 	-tag tag
 		fetch the specified tag. If not supplie the default upstream
-		banch will be used.
+		branch will be used.
 	-revision rev
 		fetch the specific revision from the branch (if supplied). If no
 		revision supplied, the latest available will be supplied.
