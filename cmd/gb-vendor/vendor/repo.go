@@ -154,9 +154,10 @@ func (g *gitrepo) URL() string {
 }
 
 // Checkout fetchs the remote branch, and optionaly updates to the supplied
-// tag or revision. If both are supplied, an error is returned. If the branch
-// is blank, then the default remote branch will be used. If the branch is
-// "HEAD", an error will be returned.
+// tag or revision. If both are supplied, an error is returned. If a branch
+// and a tag is supplied, then an error is return. If the branch is blank,
+// then the default remote branch will be used. If the branch is "HEAD", an
+// error will be returned.
 func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if branch == "HEAD" {
 		return nil, fmt.Errorf("cannot update %q as it has been previously fetched with -tag or -revision. Please use gb vendor delete then fetch again.", g.url)
