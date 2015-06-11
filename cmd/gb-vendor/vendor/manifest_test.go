@@ -18,14 +18,14 @@ func mktemp(t *testing.T) string {
 func assertNotExists(t *testing.T, path string) {
 	_, err := os.Stat(path)
 	if err == nil || !os.IsNotExist(err) {
-		t.Fatalf("expected %q to be not found, got %v", err)
+		t.Fatalf("expected %q to be not found, got %v", path, err)
 	}
 }
 
 func assertExists(t *testing.T, path string) {
 	_, err := os.Stat(path)
 	if err != nil {
-		t.Fatalf("expected %q to be found, got %v", err)
+		t.Fatalf("expected %q to be found, got %v", path, err)
 	}
 }
 

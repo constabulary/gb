@@ -145,3 +145,32 @@ func cflags(p *Package, def bool) (cppflags, cflags, cxxflags, ldflags []string)
 	ldflags = stringList(envList("CGO_LDFLAGS", defaults), p.CgoLDFLAGS)
 	return
 }
+
+// call pkg-config and return the cflags and ldflags.
+func pkgconfig(p *Package) ([]string, []string, error) {
+	if len(p.CgoPkgConfig) == 0 {
+		return nil, nil, nil // nothing to do
+	}
+	args := []string{
+		"--cflags",
+	}
+	args = append(args, p.CgoPkgConfig...)
+	var out bytes.Buffer
+	err := p.runOut(&out, p.Dir, nil, "pkg-config", args...)
+	if err != nil {
+		return nil, nil, err
+	}
+	cflags := strings.Fields(out.String())
+
+	args = []string{
+		"--libs",
+	}
+	args = append(args, p.CgoPkgConfig...)
+	out.Reset()
+	err = p.runOut(&out, p.Dir, nil, "pkg-config", args...)
+	if err != nil {
+		return nil, nil, err
+	}
+	ldflags := strings.Fields(out.String())
+	return cflags, ldflags, nil
+}
