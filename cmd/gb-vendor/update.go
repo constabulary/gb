@@ -69,7 +69,7 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			repo, _, err := vendor.DeduceRemoteRepo(d.Importpath)
+			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath)
 			if err != nil {
 				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
 			}
@@ -85,12 +85,17 @@ Flags:
 				return err
 			}
 
+			branch, err := wc.Branch()
+			if err != nil {
+				return err
+			}
+
 			dep := vendor.Dependency{
 				Importpath: d.Importpath,
-				Repository: d.Repository,
+				Repository: repo.URL(),
 				Revision:   rev,
-				Branch:     d.Branch,
-				Path:       d.Path,
+				Branch:     branch,
+				Path:       extra,
 			}
 
 			if err := m.AddDependency(dep); err != nil {
