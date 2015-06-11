@@ -164,6 +164,9 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if !atMostOne(tag, revision) {
 		return nil, fmt.Errorf("only one of tag or revision may be supplied")
 	}
+	if !atMostOne(branch, tag) {
+		return nil, fmt.Errorf("only one of tag or branch may be supplied")
+	}
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
