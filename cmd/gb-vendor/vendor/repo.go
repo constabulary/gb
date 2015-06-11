@@ -52,7 +52,7 @@ var (
 // DeduceRemoteRepo takes a potential import path and returns a RemoteRepo
 // representing the remote location of the source of an import path.
 func DeduceRemoteRepo(path string) (RemoteRepo, string, error) {
-	validimport := regexp.MustCompile(`^([A-Za-z0-9-]+)(.[A-Za-z0-9-]+)+(/.[A-Za-z0-9-_.]*)+$`)
+	validimport := regexp.MustCompile(`^([A-Za-z0-9-]+)(.[A-Za-z0-9-]+)+(/[A-Za-z0-9-_.]+)+$`)
 	if !validimport.MatchString(path) {
 		return nil, "", fmt.Errorf("%q is not a valid import path", path)
 	}
