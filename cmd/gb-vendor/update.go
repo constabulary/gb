@@ -59,25 +59,23 @@ Flags:
 		}
 
 		for _, d := range dependencies {
-			url := d.Repository
-			p := d.Importpath
-
 			err = m.RemoveDependency(d)
 			if err != nil {
 				return fmt.Errorf("dependency could not be deleted from manifest: %v", err)
 			}
 
-			if err := os.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(p))); err != nil {
+			if err := os.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			repo, extra, err := vendor.DeduceRemoteRepo(p)
+			repo, _, err := vendor.DeduceRemoteRepo(d.Importpath)
 			if err != nil {
-				return fmt.Errorf("could not determine repository for import %q", p)
+				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
 			}
 
-			wc, err := repo.Checkout("", "")
+
+			wc, err := repo.Checkout(d.Branch, "")
 			if err != nil {
 				return err
 			}
@@ -87,17 +85,12 @@ Flags:
 				return err
 			}
 
-			branch, err := wc.Branch()
-			if err != nil {
-				return err
-			}
-
 			dep := vendor.Dependency{
-				Importpath: p,
-				Repository: url,
+				Importpath: d.Importpath,
+				Repository: d.Repository,
 				Revision:   rev,
-				Branch:     branch,
-				Path:       extra,
+				Branch:     d.Branch,
+				Path:       d.Path,
 			}
 
 			if err := m.AddDependency(dep); err != nil {
