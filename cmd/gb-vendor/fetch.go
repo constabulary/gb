@@ -13,28 +13,33 @@ import (
 var (
 	// gb vendor fetch command flags
 
-	// branch
 	branch string
 
 	// revision (commit)
 	revision string
+
+	tag string
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&branch, "branch", "master", "branch of the package")
 	fs.StringVar(&revision, "revision", "", "revision of the package")
+	fs.StringVar(&tag, "tag", "", "tag of the package")
 }
 
 var cmdFetch = &cmd.Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch] [-revision rev] importpath",
+	UsageLine: "fetch [-branch branch] [-revision rev|-tag tag] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors the upstream import path.
 
 Flags:
 	-branch branch
 		fetch from the name branch. If not supplied the default upstream
-		branch will be used
+		branch will be used.
+	-tag tag
+		fetch the specified tag. If not supplie the default upstream 
+		banch will be used.
 	-revision rev
 		fetch the specific revision from the branch (if supplied). If no
 		revision supplied, the latest available will be supplied.
@@ -60,7 +65,7 @@ Flags:
 			return fmt.Errorf("%s is already vendored", path)
 		}
 
-		wc, err := repo.Checkout(branch, revision)
+		wc, err := repo.Checkout(branch, tag, revision)
 		if err != nil {
 			return err
 		}
