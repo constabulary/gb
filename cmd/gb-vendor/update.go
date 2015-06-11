@@ -74,8 +74,7 @@ Flags:
 				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
 			}
 
-
-			wc, err := repo.Checkout(d.Branch, "")
+			wc, err := repo.Checkout(d.Branch, "", "")
 			if err != nil {
 				return err
 			}

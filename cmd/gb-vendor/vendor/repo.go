@@ -15,11 +15,10 @@ import (
 // RemoteRepo describes a remote dvcs repository.
 type RemoteRepo interface {
 
-	// Checkout checks out the specific branch and revision
-	// If branch is empty, the default branch for the underlying
-	// VCS will be used. If revision is empty, the latest available
-	// revision, taking into account branch, will be fetched.
-	Checkout(branch, revision string) (WorkingCopy, error)
+	// Checkout checks out a specific branch, tag, or revision.
+	// The interpretation of these three values is impementation
+	// specific.
+	Checkout(branch, tag, revision string) (WorkingCopy, error)
 
 	// URL returns the URL the clone was taken from. It should
 	// only be called after Clone.
@@ -154,7 +153,17 @@ func (g *gitrepo) URL() string {
 	return g.url
 }
 
-func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
+// Checkout fetchs the remote branch, tag, or revision. If more than one is
+// supplied, an error is returned. If the branch is blank,
+// then the default remote branch will be used. If the branch is "HEAD", an
+// error will be returned.
+func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
+	if branch == "HEAD" {
+		return nil, fmt.Errorf("cannot update %q as it has been previously fetched with -tag or -revision. Please use gb vendor delete then fetch again.", g.url)
+	}
+	if !atMostOne(branch, tag, revision) {
+		return nil, fmt.Errorf("only one of branch, tag or revision may be supplied")
+	}
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
@@ -176,8 +185,8 @@ func (g *gitrepo) Checkout(branch, revision string) (WorkingCopy, error) {
 		return nil, err
 	}
 
-	if revision != "" {
-		if err := runOutPath(os.Stderr, dir, "git", "checkout", revision); err != nil {
+	if revision != "" || tag != "" {
+		if err := runOutPath(os.Stderr, dir, "git", "checkout", "-q", oneOf(revision, tag)); err != nil {
 			os.RemoveAll(dir)
 			return nil, err
 		}
@@ -243,7 +252,10 @@ type hgrepo struct {
 
 func (h *hgrepo) URL() string { return h.url }
 
-func (h *hgrepo) Checkout(branch, revision string) (WorkingCopy, error) {
+func (h *hgrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
+	if !atMostOne(tag, revision) {
+		return nil, fmt.Errorf("only one of tag or revision may be supplied")
+	}
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
@@ -316,7 +328,10 @@ func (b *bzrrepo) URL() string {
 	return b.url
 }
 
-func (b *bzrrepo) Checkout(branch, revision string) (WorkingCopy, error) {
+func (b *bzrrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
+	if !atMostOne(tag, revision) {
+		return nil, fmt.Errorf("only one of tag or revision may be supplied")
+	}
 	dir, err := mktmp()
 	if err != nil {
 		return nil, err
@@ -391,4 +406,25 @@ func runOutPath(w io.Writer, path string, c string, args ...string) error {
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
+}
+
+// atMostOne returns true if no more than one string supplied is not empty.
+func atMostOne(args ...string) bool {
+	var c int
+	for _, arg := range args {
+		if arg != "" {
+			c++
+		}
+	}
+	return c < 2
+}
+
+// oneof returns the first non empty string
+func oneOf(args ...string) string {
+	for _, arg := range args {
+		if arg != "" {
+			return arg
+		}
+	}
+	return ""
 }
