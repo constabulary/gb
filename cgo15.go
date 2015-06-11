@@ -17,7 +17,13 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	fn := func(t ...ObjTarget) ([]ObjTarget, []string) {
 		return t, nil
 	}
-	if err := runcgo1(pkg); err != nil {
+	_, _, _, cgoLDFLAGS := cflags(pkg, true)
+	_, pcLDFLAGS, err := pkgconfig(pkg)
+	if err != nil {
+		return fn(ErrTarget{err})
+	}
+	cgoLDFLAGS = append(cgoLDFLAGS, pcLDFLAGS...)
+	if err := runcgo1(pkg, nil, cgoLDFLAGS); err != nil {
 		return fn(ErrTarget{err})
 	}
 
@@ -69,7 +75,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 }
 
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.
-func runcgo1(pkg *Package) error {
+func runcgo1(pkg *Package, cflags, ldflags []string) error {
 	cgo := cgotool(pkg.Context)
 	objdir := pkg.Objdir()
 	if err := mkdir(objdir); err != nil {
@@ -85,18 +91,15 @@ func runcgo1(pkg *Package) error {
 	}
 	args = append(args, pkg.CgoFiles...)
 
-	_, _, _, cgoLDFLAGS := cflags(pkg, true)
-
 	// Update $CGO_LDFLAGS with p.CgoLDFLAGS.
 	var cgoenv []string
-	if len(cgoLDFLAGS) > 0 {
-		flags := make([]string, len(cgoLDFLAGS))
-		for i, f := range cgoLDFLAGS {
+	if len(ldflags) > 0 {
+		flags := make([]string, len(ldflags))
+		for i, f := range ldflags {
 			flags[i] = strconv.Quote(f)
 		}
 		cgoenv = []string{"CGO_LDFLAGS=" + strings.Join(flags, " ")}
 	}
-
 	return pkg.run(pkg.Dir, cgoenv, cgo, args...)
 }
 

@@ -19,6 +19,11 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		path: "corporate",
 		err:  fmt.Errorf(`"corporate" is not a valid import path`),
 	}, {
+		path: "github.com/cznic/b",
+		want: &gitrepo{
+			url: "https://github.com/cznic/b",
+		},
+	}, {
 		path: "github.com/pkg/sftp",
 		want: &gitrepo{
 			url: "https://github.com/pkg/sftp",
