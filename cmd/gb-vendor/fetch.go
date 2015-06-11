@@ -22,7 +22,7 @@ var (
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
-	fs.StringVar(&branch, "branch", "master", "branch of the package")
+	fs.StringVar(&branch, "branch", "", "branch of the package")
 	fs.StringVar(&revision, "revision", "", "revision of the package")
 	fs.StringVar(&tag, "tag", "", "tag of the package")
 }
