@@ -33,13 +33,9 @@ See gb help plugins.
 		}
 		args[0] = path
 
-		env := cmd.MergeEnv(os.Environ(), map[string]string{
-			"GB_PROJECT_DIR": ctx.Projectdir(),
-		})
-
 		cmd := exec.Command(args[0], args[1:]...)
-		cmd.Cmd.Env = env
 		return cmd.Run(
+			exec.Setenv("GB_PROJECT_DIR", ctx.Projectdir()),
 			exec.Stdin(os.Stdin),
 			exec.Stdout(os.Stdout),
 			exec.Stderr(os.Stderr),

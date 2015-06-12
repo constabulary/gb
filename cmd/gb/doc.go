@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -16,17 +15,14 @@ func init() {
 		UsageLine: `doc <pkg> <sym>[.<method>]`,
 		Short:     "show documentation for a package or symbol",
 		Run: func(ctx *gb.Context, args []string) error {
-			env := cmd.MergeEnv(os.Environ(), map[string]string{
-				"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),
-			})
 			if len(args) == 0 {
 				args = append(args, ".")
 			}
 			args = append([]string{filepath.Join(ctx.GOROOT, "bin", "godoc")}, args...)
 
 			cmd := exec.Command(args[0], args[1:]...)
-			cmd.Cmd.Env = env
 			return cmd.Run(
+				exec.Setenv("GOPATH", ctx.Projectdir()+":"+filepath.Join(ctx.Projectdir(), "vendor")),
 				exec.Stdin(os.Stdin),
 				exec.Stdout(os.Stdout),
 				exec.Stderr(os.Stderr),
