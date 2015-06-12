@@ -188,10 +188,17 @@ func (c *Context) Destroy() error {
 // Run returns a Target representing the result of executing a CmdTarget.
 func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
 	annotate := func() error {
-		<-c.permits
-		Debugf("run %v", cmd.Args)
-		err := cmd.Run()
-		c.permits <- true
+		err := cmd.Run(
+			exec.BeforeFunc(func(cmd *exec.Cmd) error {
+				<-c.permits
+				Debugf("run %v", cmd.Args)
+				return nil
+			}),
+			exec.AfterFunc(func(*exec.Cmd) error {
+				c.permits <- true
+				return nil
+			}),
+		)
 		if err != nil {
 			err = fmt.Errorf("run %v: %v", cmd.Args, err)
 		}
