@@ -6,13 +6,14 @@ import (
 	"go/build"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/pkg/exec"
 )
 
 // Context represents an execution of one or more Targets inside a Project.
@@ -187,10 +188,17 @@ func (c *Context) Destroy() error {
 // Run returns a Target representing the result of executing a CmdTarget.
 func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
 	annotate := func() error {
-		<-c.permits
-		Debugf("run %v", cmd.Args)
-		err := cmd.Run()
-		c.permits <- true
+		err := cmd.Run(
+			exec.BeforeFunc(func(cmd *exec.Cmd) error {
+				<-c.permits
+				Debugf("run %v", cmd.Args)
+				return nil
+			}),
+			exec.AfterFunc(func(*exec.Cmd) error {
+				c.permits <- true
+				return nil
+			}),
+		)
 		if err != nil {
 			err = fmt.Errorf("run %v: %v", cmd.Args, err)
 		}
@@ -211,14 +219,15 @@ func (c *Context) run(dir string, env []string, command string, args ...string) 
 
 func (c *Context) runOut(output io.Writer, dir string, env []string, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
-	cmd.Dir = dir
-	cmd.Stdout = output
-	cmd.Stderr = os.Stderr
 	cmd.Env = mergeEnvLists(env, envForDir(cmd.Dir))
 	<-c.permits
 	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	err := cmd.Run(
+		exec.Dir(dir),
+		exec.Stdout(output),
+		exec.Stderr(os.Stderr),
+	)
 	c.permits <- true
-	err := cmd.Run()
 	return err
 }
 

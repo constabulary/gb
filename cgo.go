@@ -3,9 +3,10 @@ package gb
 import (
 	"bytes"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/exec"
 )
 
 // cgo support functions

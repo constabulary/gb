@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/pkg/exec"
 )
 
 func init() {
@@ -33,21 +33,13 @@ See gb help plugins.
 		}
 		args[0] = path
 
-		env := cmd.MergeEnv(os.Environ(), map[string]string{
-			"GB_PROJECT_DIR": ctx.Projectdir(),
-		})
-
-		cmd := exec.Cmd{
-			Path: path,
-			Args: args,
-			Env:  env,
-
-			Stdin:  os.Stdin,
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-		}
-
-		return cmd.Run()
+		cmd := exec.Command(args[0], args[1:]...)
+		return cmd.Run(
+			exec.Setenv("GB_PROJECT_DIR", ctx.Projectdir()),
+			exec.Stdin(os.Stdin),
+			exec.Stdout(os.Stdout),
+			exec.Stderr(os.Stderr),
+		)
 	},
 	// plugin should not interpret arguments
 	ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
