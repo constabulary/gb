@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/pkg/exec"
 )
 
 func init() {
@@ -24,16 +24,13 @@ func init() {
 			}
 			args = append([]string{filepath.Join(ctx.GOROOT, "bin", "godoc")}, args...)
 
-			cmd := exec.Cmd{
-				Path: args[0],
-				Args: args,
-				Env:  env,
-
-				Stdin:  os.Stdin,
-				Stdout: os.Stdout,
-				Stderr: os.Stderr,
-			}
-			return cmd.Run()
+			cmd := exec.Command(args[0], args[1:]...)
+			cmd.Cmd.Env = env
+			return cmd.Run(
+				exec.Stdin(os.Stdin),
+				exec.Stdout(os.Stdout),
+				exec.Stderr(os.Stderr),
+			)
 		},
 		ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
 	})

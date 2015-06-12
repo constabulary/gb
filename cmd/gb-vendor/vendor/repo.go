@@ -1,15 +1,14 @@
 package vendor
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/exec"
 )
 
 // RemoteRepo describes a remote dvcs repository.
@@ -138,8 +137,7 @@ func Gitrepo(url string) (RemoteRepo, error) {
 }
 
 func probeGitUrl(url string) error {
-	_, err := run("git", "ls-remote", "--exit-code", url, "HEAD")
-	return err
+	return exec.Command("git", "ls-remote", "--exit-code", url, "HEAD").Run()
 }
 
 // gitrepo is a git RemoteRepo.
@@ -180,13 +178,14 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		args = append(args, "--branch", branch)
 	}
 
-	if _, err := run("git", args...); err != nil {
+	if err := exec.Command("git", args...).Run(); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
 	}
 
 	if revision != "" || tag != "" {
-		if err := runOutPath(os.Stderr, dir, "git", "checkout", "-q", oneOf(revision, tag)); err != nil {
+		err := exec.Command("git", "checkout", "-q", oneOf(revision, tag)).Run(exec.Dir(dir))
+		if err != nil {
 			os.RemoveAll(dir)
 			return nil, err
 		}
@@ -219,12 +218,12 @@ type GitClone struct {
 }
 
 func (g *GitClone) Revision() (string, error) {
-	rev, err := runPath(g.path, "git", "rev-parse", "HEAD")
+	rev, err := exec.Command("git", "rev-parse", "HEAD").Output(exec.Dir(g.path))
 	return strings.TrimSpace(string(rev)), err
 }
 
 func (g *GitClone) Branch() (string, error) {
-	rev, err := runPath(g.path, "git", "rev-parse", "--abbrev-ref", "HEAD")
+	rev, err := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").Output(exec.Dir(g.path))
 	return strings.TrimSpace(string(rev)), err
 }
 
@@ -239,8 +238,7 @@ func Hgrepo(url string) (RemoteRepo, error) {
 }
 
 func probeHgUrl(url string) error {
-	_, err := run("hg", "identify", url)
-	return err
+	return exec.Command("hg", "identify", url).Run()
 }
 
 // hgrepo is a Mercurial repo.
@@ -269,12 +267,12 @@ func (h *hgrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if branch != "" {
 		args = append(args, "--branch", branch)
 	}
-	if err := runOut(os.Stderr, "hg", args...); err != nil {
+	if err := exec.Command("hg", args...).Run(exec.Stdout(os.Stderr)); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
 	}
 	if revision != "" {
-		if err := runOut(os.Stderr, "hg", "--cwd", dir, "update", "-r", revision); err != nil {
+		if err := exec.Command("hg", "--cwd", dir, "update", "-r", revision).Run(exec.Stdout(os.Stderr)); err != nil {
 			os.RemoveAll(dir)
 			return nil, err
 		}
@@ -293,12 +291,12 @@ type HgClone struct {
 }
 
 func (h *HgClone) Revision() (string, error) {
-	rev, err := run("hg", "--cwd", h.path, "id", "-i")
+	rev, err := exec.Command("hg", "--cwd", h.path, "id", "-i").Output()
 	return strings.TrimSpace(string(rev)), err
 }
 
 func (h *HgClone) Branch() (string, error) {
-	rev, err := run("hg", "--cwd", h.path, "branch")
+	rev, err := exec.Command("hg", "--cwd", h.path, "branch").Output()
 	return strings.TrimSpace(string(rev)), err
 }
 
@@ -313,8 +311,7 @@ func Bzrrepo(url string) (RemoteRepo, error) {
 }
 
 func probeBzrUrl(url string) error {
-	_, err := run("bzr", "info", url)
-	return err
+	return exec.Command("bzr", "info", url).Run()
 }
 
 // bzrrepo is a bzr RemoteRepo.
@@ -337,7 +334,7 @@ func (b *bzrrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		return nil, err
 	}
 	wc := filepath.Join(dir, "wc")
-	if err := runOut(os.Stderr, "bzr", "branch", b.url, wc); err != nil {
+	if err := exec.Command("bzr", "branch", b.url, wc).Run(exec.Stdout(os.Stderr)); err != nil {
 		os.RemoveAll(dir)
 		return nil, err
 	}
@@ -379,33 +376,6 @@ func mkdir(path string) error {
 
 func mktmp() (string, error) {
 	return ioutil.TempDir("", "gb-vendor-")
-}
-
-func run(c string, args ...string) ([]byte, error) {
-	var buf bytes.Buffer
-	err := runOut(&buf, c, args...)
-	return buf.Bytes(), err
-}
-
-func runOut(w io.Writer, c string, args ...string) error {
-	cmd := exec.Command(c, args...)
-	cmd.Stdout = w
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
-
-func runPath(path string, c string, args ...string) ([]byte, error) {
-	var buf bytes.Buffer
-	err := runOutPath(&buf, path, c, args...)
-	return buf.Bytes(), err
-}
-
-func runOutPath(w io.Writer, path string, c string, args ...string) error {
-	cmd := exec.Command(c, args...)
-	cmd.Dir = path
-	cmd.Stdout = w
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 // atMostOne returns true if no more than one string supplied is not empty.

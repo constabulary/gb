@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"go/build"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
+	"github.com/pkg/exec"
 )
 
 // Test returns a Target representing the result of compiling the
@@ -102,9 +102,9 @@ func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package, flags []strin
 	buildmain := gb.Ld(testmain, gb.Compile(testmain, testobj))
 
 	cmd := exec.Command(testmain.Binfile()+".test", flags...)
-	cmd.Dir = pkg.Dir // tests run in the original source directory
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Cmd.Dir = pkg.Dir // tests run in the original source directory
+	cmd.Cmd.Stdout = os.Stdout
+	cmd.Cmd.Stderr = os.Stderr
 
 	gb.Debugf("scheduling run of %v", cmd.Args)
 	return pkg.Run(cmd, buildmain)

@@ -6,13 +6,14 @@ import (
 	"go/build"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/pkg/exec"
 )
 
 // Context represents an execution of one or more Targets inside a Project.
@@ -211,14 +212,15 @@ func (c *Context) run(dir string, env []string, command string, args ...string) 
 
 func (c *Context) runOut(output io.Writer, dir string, env []string, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
-	cmd.Dir = dir
-	cmd.Stdout = output
-	cmd.Stderr = os.Stderr
 	cmd.Env = mergeEnvLists(env, envForDir(cmd.Dir))
 	<-c.permits
 	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	err := cmd.Run(
+		exec.Dir(dir),
+		exec.Stdout(output),
+		exec.Stderr(os.Stderr),
+	)
 	c.permits <- true
-	err := cmd.Run()
 	return err
 }
 

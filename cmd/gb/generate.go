@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/pkg/exec"
 )
 
 func init() {
@@ -30,16 +30,12 @@ See 'go help generate'`,
 
 		args = append([]string{filepath.Join(ctx.GOROOT, "bin", "go"), "generate"}, args...)
 
-		cmd := exec.Cmd{
-			Path: args[0],
-			Args: args,
-			Env:  env,
-
-			Stdin:  os.Stdin,
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-		}
-
-		return cmd.Run()
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Cmd.Env = env
+		return cmd.Run(
+			exec.Stdin(os.Stdin),
+			exec.Stdout(os.Stdout),
+			exec.Stderr(os.Stderr),
+		)
 	},
 }
