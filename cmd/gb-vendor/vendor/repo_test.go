@@ -52,6 +52,12 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		},
 		extra: "/cmd/main",
 	}, {
+		path: "code.google.com/p/goauth2/oauth",
+		want: &hgrepo{
+			url: "https://code.google.com/p/goauth2",
+		},
+		extra: "/oauth",
+	}, {
 		path: "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
 		want: &gitrepo{
 			url: "git://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",

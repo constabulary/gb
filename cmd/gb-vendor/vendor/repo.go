@@ -45,6 +45,7 @@ var (
 	ghregex = regexp.MustCompile(`^github.com/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
 	bbregex = regexp.MustCompile(`^bitbucket.org/([A-Za-z0-9-._]+)/([A-Za-z0-9-._]+)(/.+)?`)
 	lpregex = regexp.MustCompile(`^launchpad.net/([A-Za-z0-9-._]+)(/[A-Za-z0-9-._]+)?(/.+)?`)
+	gcregex = regexp.MustCompile(`^(?P<root>code\.google\.com/[pr]/(?P<project>[a-z0-9\-]+)(\.(?P<subrepo>[a-z0-9\-]+))?)(/[A-Za-z0-9_.\-]+)*$`)
 	genre   = regexp.MustCompile(`^(?P<root>(?P<repo>([a-z0-9.\-]+\.)+[a-z0-9.\-]+(:[0-9]+)?/[A-Za-z0-9_.\-/]*?)\.(?P<vcs>bzr|git|hg|svn))(/[A-Za-z0-9_.\-]+)*$`)
 )
 
@@ -72,6 +73,13 @@ func DeduceRemoteRepo(path string) (RemoteRepo, string, error) {
 		repo, err = Hgrepo(fmt.Sprintf("https://bitbucket.org/%s/%s", v[1], v[2]))
 		if err == nil {
 			return repo, v[3], nil
+		}
+		return nil, "", fmt.Errorf("unknown repository type")
+	case gcregex.MatchString(path):
+		v := gcregex.FindStringSubmatch(path)
+		repo, err := Hgrepo(fmt.Sprintf("https://%s", v[1]))
+		if err == nil {
+			return repo, v[5], nil
 		}
 		return nil, "", fmt.Errorf("unknown repository type")
 	case lpregex.MatchString(path):
