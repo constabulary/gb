@@ -61,9 +61,8 @@ func TestDeduceRemoteRepo(t *testing.T) {
 	}, {
 		path: "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
 		want: &gitrepo{
-			url: "git://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
+			url: "https://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
 		},
-		insecure: true,
 	}, {
 		path: "gopkg.in/check.v1",
 		want: &gitrepo{

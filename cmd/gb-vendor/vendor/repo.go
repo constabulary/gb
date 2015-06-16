@@ -130,7 +130,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 	extra := path[len(importpath):]
 	switch vcs {
 	case "git":
-		repo, err := Gitrepo(u.Host, u.Path[1:], insecure)
+		repo, err := Gitrepo(u.Host, u.Path[1:], insecure, u.Scheme)
 		return repo, extra, err
 	case "hg":
 		repo, err := Hgrepo(reporoot)
@@ -144,8 +144,11 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 }
 
 // Gitrepo returns a RemoteRepo representing a remote git repository.
-func Gitrepo(host, path string, insecure bool) (RemoteRepo, error) {
-	url, err := probeGitUrl(host, path, insecure)
+func Gitrepo(host, path string, insecure bool, schemes ...string) (RemoteRepo, error) {
+	if schemes == nil {
+		schemes = []string{"https", "git", "http"}
+	}
+	url, err := probeGitUrl(schemes, host, path, insecure)
 	if err != nil {
 		return nil, err
 	}
@@ -154,8 +157,8 @@ func Gitrepo(host, path string, insecure bool) (RemoteRepo, error) {
 	}, nil
 }
 
-func probeGitUrl(host, path string, insecure bool) (string, error) {
-	for _, scheme := range []string{"git", "https", "http"} {
+func probeGitUrl(schemes []string, host, path string, insecure bool) (string, error) {
+	for _, scheme := range schemes {
 		switch scheme {
 		case "https":
 			url := scheme + "://" + host + "/" + path
