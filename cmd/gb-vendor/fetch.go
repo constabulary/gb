@@ -19,12 +19,15 @@ var (
 	revision string
 
 	tag string
+
+	insecure bool // Allow the use of insecure protocols
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&branch, "branch", "", "branch of the package")
 	fs.StringVar(&revision, "revision", "", "revision of the package")
 	fs.StringVar(&tag, "tag", "", "tag of the package")
+	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 }
 
 var cmdFetch = &cmd.Command{
@@ -43,6 +46,8 @@ Flags:
 	-revision rev
 		fetch the specific revision from the branch (if supplied). If no
 		revision supplied, the latest available will be supplied.
+	-precaire
+		allow the use of insecure protocols.
 
 `,
 	Run: func(ctx *gb.Context, args []string) error {
@@ -56,7 +61,7 @@ Flags:
 			return fmt.Errorf("could not load manifest: %v", err)
 		}
 
-		repo, extra, err := vendor.DeduceRemoteRepo(path)
+		repo, extra, err := vendor.DeduceRemoteRepo(path, insecure)
 		if err != nil {
 			return err
 		}

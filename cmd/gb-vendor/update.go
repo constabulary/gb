@@ -20,6 +20,7 @@ var (
 
 func addUpdateFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&updateAll, "all", false, "update all dependencies")
+	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 }
 
 var cmdUpdate = &cmd.Command{
@@ -39,6 +40,8 @@ gb vendor fetch [-tag | -revision | -branch] to replace it.
 Flags:
 	-all
 		will update all depdendencies in the manifest, otherwise only the dependency supplied.
+	-precaire
+		allow the use of insecure protocols.
 
 `,
 	Run: func(ctx *gb.Context, args []string) error {
@@ -77,7 +80,7 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath)
+			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath, insecure)
 			if err != nil {
 				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
 			}

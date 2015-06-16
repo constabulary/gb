@@ -8,10 +8,11 @@ import (
 
 func TestDeduceRemoteRepo(t *testing.T) {
 	tests := []struct {
-		path  string
-		want  RemoteRepo
-		extra string
-		err   error
+		path     string
+		want     RemoteRepo
+		extra    string
+		err      error
+		insecure bool
 	}{{
 		path: "",
 		err:  fmt.Errorf(`"" is not a valid import path`),
@@ -62,6 +63,7 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		want: &gitrepo{
 			url: "git://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
 		},
+		insecure: true,
 	}, {
 		path: "gopkg.in/check.v1",
 		want: &gitrepo{
@@ -87,7 +89,8 @@ func TestDeduceRemoteRepo(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		got, extra, err := DeduceRemoteRepo(tt.path)
+		t.Logf("DeduceRemoteRepo(%q, %v)", tt.path, tt.insecure)
+		got, extra, err := DeduceRemoteRepo(tt.path, tt.insecure)
 		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("DeduceRemoteRepo(%q): want err: %v, got err: %v", tt.path, tt.err, err)
 			continue
