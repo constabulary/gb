@@ -42,6 +42,8 @@ Flags:
 	-revision rev
 		fetch the specific revision from the branch (if supplied). If no
 		revision supplied, the latest available will be supplied.
+	-precaire
+		allow the use of insecure protocols.
 
 
 Update a local dependency
@@ -63,6 +65,8 @@ gb vendor fetch [-tag | -revision | -branch] to replace it.
 Flags:
 	-all
 		will update all depdendencies in the manifest, otherwise only the dependency supplied.
+	-precaire
+		allow the use of insecure protocols.
 
 
 Lists dependencies, one per line
