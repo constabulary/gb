@@ -73,14 +73,14 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 		if err == nil {
 			return repo, v[0][len(v[1]):], nil
 		}
-		repo, err = Hgrepo("https://" + v[1])
+		repo, err = Hgrepo("bitbucket.org", v[2], insecure)
 		if err == nil {
 			return repo, v[0][len(v[1]):], nil
 		}
 		return nil, "", fmt.Errorf("unknown repository type")
 	case gcregex.MatchString(path):
 		v := gcregex.FindStringSubmatch(path)
-		repo, err := Hgrepo(fmt.Sprintf("https://%s", v[1]))
+		repo, err := Hgrepo("code.google.com", "p/"+v[2], insecure)
 		if err == nil {
 			return repo, v[5], nil
 		}
@@ -107,7 +107,8 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 			repo, err := Gitrepo(x[0], x[1], insecure)
 			return repo, v[6], err
 		case "hg":
-			repo, err := Hgrepo("https://" + v[1])
+			x := strings.SplitN(v[1], "/", 2)
+			repo, err := Hgrepo(x[0], x[1], insecure)
 			return repo, v[6], err
 		case "bzr":
 			repo, err := Bzrrepo("https://" + v[1])
@@ -133,7 +134,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 		repo, err := Gitrepo(u.Host, u.Path[1:], insecure, u.Scheme)
 		return repo, extra, err
 	case "hg":
-		repo, err := Hgrepo(reporoot)
+		repo, err := Hgrepo(u.Host, u.Path[1:], insecure, u.Scheme)
 		return repo, extra, err
 	case "bzr":
 		repo, err := Bzrrepo(reporoot)
@@ -265,8 +266,12 @@ func (g *GitClone) Branch() (string, error) {
 }
 
 // Hgrepo returns a RemoteRepo representing a remote git repository.
-func Hgrepo(url string) (RemoteRepo, error) {
-	if err := probeHgUrl(url); err != nil {
+func Hgrepo(host, path string, insecure bool, schemes ...string) (RemoteRepo, error) {
+	if schemes == nil {
+		schemes = []string{"https", "http"}
+	}
+	url, err := probeHgUrl(schemes, host, path, insecure)
+	if err != nil {
 		return nil, err
 	}
 	return &hgrepo{
@@ -274,9 +279,26 @@ func Hgrepo(url string) (RemoteRepo, error) {
 	}, nil
 }
 
-func probeHgUrl(url string) error {
-	_, err := run("hg", "identify", url)
-	return err
+func probeHgUrl(schemes []string, host, path string, insecure bool) (string, error) {
+	for _, scheme := range schemes {
+		switch scheme {
+		case "https":
+			url := scheme + "://" + host + "/" + path
+			if _, err := run("hg", "identify", url); err == nil {
+				return url, nil
+			}
+		case "http", "git":
+			url := scheme + "://" + host + "/" + path
+			if !insecure {
+				gb.Infof("skipping insecure protocol: %v", url)
+			} else {
+				if _, err := run("hg", "identify", url); err == nil {
+					return url, nil
+				}
+			}
+		}
+	}
+	return "", fmt.Errorf("unable to determine remote protocol")
 }
 
 // hgrepo is a Mercurial repo.
