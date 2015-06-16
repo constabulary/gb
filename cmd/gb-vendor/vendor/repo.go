@@ -182,7 +182,6 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		"-q", // silence progress report to stderr
 		g.url,
 		dir,
-		"--single-branch",
 	}
 	if branch != "" {
 		args = append(args, "--branch", branch)
