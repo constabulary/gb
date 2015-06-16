@@ -12,9 +12,7 @@ func testProject(t *testing.T) *Project {
 		t.Fatal(err)
 	}
 	root := filepath.Join(cwd, "testdata")
-	return &Project{
-		rootdir: root,
-	}
+	return NewProject(root)
 }
 
 func testContext(t *testing.T) *Context {

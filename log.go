@@ -7,10 +7,10 @@ import (
 
 var (
 	// Quiet suppresses all logging output below ERROR
-	Quiet = false
+	Quiet bool
 
 	// Verbose enables logging output below INFO
-	Verbose = false
+	Verbose bool
 )
 
 func Fatalf(format string, args ...interface{}) {

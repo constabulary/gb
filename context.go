@@ -308,7 +308,7 @@ func (c *Context) AllPackages(pattern string) []string {
 }
 
 func matchPackages(c *Context, pattern string) []string {
-	Debugf("matchPackages: %v %v", c.srcdir(), pattern)
+	Debugf("matchPackages: %v %v", c.srcdirs[0].Root, pattern)
 	match := func(string) bool { return true }
 	treeCanMatch := func(string) bool { return true }
 	if pattern != "all" && pattern != "std" {
@@ -318,8 +318,8 @@ func matchPackages(c *Context, pattern string) []string {
 
 	var pkgs []string
 
-	for _, src := range c.srcdir() {
-		src = filepath.Clean(src) + string(filepath.Separator)
+	for _, dir := range c.srcdirs[:1] {
+		src := filepath.Clean(dir.Root) + string(filepath.Separator)
 		filepath.Walk(src, func(path string, fi os.FileInfo, err error) error {
 			if err != nil || !fi.IsDir() || path == src {
 				return nil
