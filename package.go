@@ -1,8 +1,9 @@
 package gb
 
-import "go/build"
-
-import "fmt"
+import (
+	"fmt"
+	"go/build"
+)
 
 // Package represents a resolved package from the Project with respect to the Context.
 type Package struct {

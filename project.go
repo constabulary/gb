@@ -15,6 +15,7 @@ import (
 //     $PROJECT/bin/                   - base directory for the compiled binaries
 type Project struct {
 	rootdir string
+	srcdirs []Srcdir
 }
 
 func togopath(srcdirs []string) string {
@@ -28,6 +29,10 @@ func togopath(srcdirs []string) string {
 func NewProject(root string) *Project {
 	return &Project{
 		rootdir: root,
+		srcdirs: []Srcdir{
+			{Root: filepath.Join(root, "src")},
+			{Root: filepath.Join(root, "vendor", "src")},
+		},
 	}
 }
 
@@ -46,12 +51,11 @@ func (p *Project) Projectdir() string {
 // filepath.Join(Projectdir(), "src")
 // but there may be additional directories.
 func (p *Project) Srcdirs() []string {
-	return append(p.srcdir(), filepath.Join(p.Projectdir(), "vendor", "src"))
-}
-
-// srcdir returns the source directory of the project.
-func (p *Project) srcdir() []string {
-	return []string{filepath.Join(p.Projectdir(), "src")}
+	var dirs []string
+	for _, s := range p.srcdirs {
+		dirs = append(dirs, s.Root)
+	}
+	return dirs
 }
 
 // Bindir returns the path for compiled programs.
