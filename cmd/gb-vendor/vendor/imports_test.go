@@ -25,8 +25,9 @@ func TestParseImports(t *testing.T) {
 
 func TestFetchMetadata(t *testing.T) {
 	tests := []struct {
-		path string
-		want string
+		path     string
+		want     string
+		insecure bool
 	}{{
 		path: "golang.org/x/tools/cmd/godoc",
 		want: `<!DOCTYPE html>
@@ -58,7 +59,7 @@ go get gopkg.in/check.v1
 	}}
 
 	for _, tt := range tests {
-		r, err := FetchMetadata(tt.path)
+		r, err := FetchMetadata(tt.path, tt.insecure)
 		if err != nil {
 			t.Error(err)
 			continue
@@ -83,6 +84,7 @@ func TestParseMetadata(t *testing.T) {
 		importpath string
 		vcs        string
 		reporoot   string
+		insecure   bool
 	}{{
 		path:       "golang.org/x/tools/cmd/godoc",
 		importpath: "golang.org/x/tools",
@@ -101,7 +103,7 @@ func TestParseMetadata(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		importpath, vcs, reporoot, err := ParseMetadata(tt.path)
+		importpath, vcs, reporoot, err := ParseMetadata(tt.path, tt.insecure)
 		if err != nil {
 			t.Error(err)
 			continue
