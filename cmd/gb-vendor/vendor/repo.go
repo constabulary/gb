@@ -120,7 +120,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 	}
 
 	// no idea, try to resolve as a vanity import
-	importpath, vcs, reporoot, err := ParseMetadata(path)
+	importpath, vcs, reporoot, err := ParseMetadata(path, insecure)
 	if err != nil {
 		return nil, "", err
 	}
