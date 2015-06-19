@@ -119,12 +119,16 @@ Flags:
 				return err
 			}
 
+			if err := vendor.WriteManifest(manifestFile(ctx), m); err != nil {
+				return err
+			}
+
 			if err := wc.Destroy(); err != nil {
 				return err
 			}
 		}
 
-		return vendor.WriteManifest(manifestFile(ctx), m)
+		return nil
 	},
 	AddFlags: addUpdateFlags,
 }
