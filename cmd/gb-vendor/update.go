@@ -70,6 +70,11 @@ Flags:
 		}
 
 		for _, d := range dependencies {
+			err = m.RemoveDependency(d)
+			if err != nil {
+				return fmt.Errorf("dependency could not be deleted from manifest: %v", err)
+			}
+
 			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath, insecure)
 			if err != nil {
 				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
@@ -88,11 +93,6 @@ Flags:
 			branch, err := wc.Branch()
 			if err != nil {
 				return err
-			}
-
-			err = m.RemoveDependency(d)
-			if err != nil {
-				return fmt.Errorf("dependency could not be deleted from manifest: %v", err)
 			}
 
 			dep := vendor.Dependency{
