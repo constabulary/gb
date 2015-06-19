@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/constabulary/gb"
@@ -206,6 +207,9 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if err != nil {
 		return nil, err
 	}
+	wc := workingcopy{
+		path: dir,
+	}
 
 	args := []string{
 		"clone",
@@ -218,22 +222,18 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	}
 
 	if _, err := run("git", args...); err != nil {
-		os.RemoveAll(dir)
+		wc.Destroy()
 		return nil, err
 	}
 
 	if revision != "" || tag != "" {
 		if err := runOutPath(os.Stderr, dir, "git", "checkout", "-q", oneOf(revision, tag)); err != nil {
-			os.RemoveAll(dir)
+			wc.Destroy()
 			return nil, err
 		}
 	}
 
-	return &GitClone{
-		workingcopy{
-			path: dir,
-		},
-	}, nil
+	return &GitClone{wc}, nil
 }
 
 type workingcopy struct {
@@ -243,6 +243,16 @@ type workingcopy struct {
 func (w workingcopy) Dir() string { return w.path }
 
 func (w workingcopy) Destroy() error {
+	if runtime.GOOS == "windows" {
+		// make sure all files are writable so we can delete them
+		filepath.Walk(w.path, func(path string, info os.FileInfo, err error) error {
+			mode := info.Mode()
+			if mode|0200 == mode {
+				return nil
+			}
+			return os.Chmod(path, mode|0200)
+		})
+	}
 	if err := os.RemoveAll(w.path); err != nil {
 		return err
 	}
