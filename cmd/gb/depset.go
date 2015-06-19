@@ -102,6 +102,9 @@ func findMissing(pkgs []*cmd.Pkg, dsm map[string]*cmd.Depset) map[string]bool {
 		delete(stk, v)
 	}
 
+	// checked records import paths who's dependencies are all present
+	checked := make(map[string]bool)
+
 	var fn func(string)
 	fn = func(importpath string) {
 		p, ok := imports[importpath]
@@ -109,12 +112,25 @@ func findMissing(pkgs []*cmd.Pkg, dsm map[string]*cmd.Depset) map[string]bool {
 			missing[importpath] = true
 			return
 		}
+
+		// have we already walked this arm, if so, skip it
+		if checked[importpath] {
+			return
+		}
+
+		sz := len(missing)
 		push(importpath)
 		for _, i := range p.Imports {
 			if i == importpath {
 				continue
 			}
 			fn(i)
+		}
+
+		// if the size of the missing map has not changed
+		// this entire subtree is complete, mark it as such
+		if len(missing) == sz {
+			checked[importpath] = true
 		}
 		pop(importpath)
 	}
