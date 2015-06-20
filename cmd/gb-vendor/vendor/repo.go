@@ -206,6 +206,9 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	if err != nil {
 		return nil, err
 	}
+	wc := workingcopy{
+		path: dir,
+	}
 
 	args := []string{
 		"clone",
@@ -218,22 +221,18 @@ func (g *gitrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	}
 
 	if _, err := run("git", args...); err != nil {
-		os.RemoveAll(dir)
+		wc.Destroy()
 		return nil, err
 	}
 
 	if revision != "" || tag != "" {
 		if err := runOutPath(os.Stderr, dir, "git", "checkout", "-q", oneOf(revision, tag)); err != nil {
-			os.RemoveAll(dir)
+			wc.Destroy()
 			return nil, err
 		}
 	}
 
-	return &GitClone{
-		workingcopy{
-			path: dir,
-		},
-	}, nil
+	return &GitClone{wc}, nil
 }
 
 type workingcopy struct {
@@ -243,7 +242,7 @@ type workingcopy struct {
 func (w workingcopy) Dir() string { return w.path }
 
 func (w workingcopy) Destroy() error {
-	if err := os.RemoveAll(w.path); err != nil {
+	if err := RemoveAll(w.path); err != nil {
 		return err
 	}
 	parent := filepath.Dir(w.path)
@@ -328,12 +327,12 @@ func (h *hgrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		args = append(args, "--branch", branch)
 	}
 	if err := runOut(os.Stderr, "hg", args...); err != nil {
-		os.RemoveAll(dir)
+		RemoveAll(dir)
 		return nil, err
 	}
 	if revision != "" {
 		if err := runOut(os.Stderr, "hg", "--cwd", dir, "update", "-r", revision); err != nil {
-			os.RemoveAll(dir)
+			RemoveAll(dir)
 			return nil, err
 		}
 	}
@@ -396,7 +395,7 @@ func (b *bzrrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	}
 	wc := filepath.Join(dir, "wc")
 	if err := runOut(os.Stderr, "bzr", "branch", b.url, wc); err != nil {
-		os.RemoveAll(dir)
+		RemoveAll(dir)
 		return nil, err
 	}
 
@@ -425,7 +424,7 @@ func cleanPath(path string) error {
 		return nil
 	}
 	parent := filepath.Dir(path)
-	if err := os.RemoveAll(path); err != nil {
+	if err := RemoveAll(path); err != nil {
 		return err
 	}
 	return cleanPath(parent)

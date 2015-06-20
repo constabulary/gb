@@ -42,7 +42,7 @@ func Copypath(dst string, src string) error {
 	})
 	if err != nil {
 		// if there was an error during copying, remove the partial copy.
-		os.RemoveAll(dst)
+		RemoveAll(dst)
 	}
 	return err
 }
