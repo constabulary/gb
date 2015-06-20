@@ -53,6 +53,11 @@ func depset(ctx *gb.Context, args []string) error {
 		fmt.Printf("\t%s\n", missing)
 	}
 
+	fmt.Println("orphaned:")
+	for orphan := range findOrphaned(pkgs(rs), dsm) {
+		fmt.Printf("\t%s\n", orphan)
+	}
+
 	return nil
 }
 
@@ -138,4 +143,80 @@ func findMissing(pkgs []*cmd.Pkg, dsm map[string]*cmd.Depset) map[string]bool {
 		fn(pkg.ImportPath)
 	}
 	return missing
+}
+
+func findOrphaned(pkgs []*cmd.Pkg, dsm map[string]*cmd.Depset) map[string]bool {
+	missing := make(map[string]bool)
+	imports := make(map[string]*cmd.Pkg)
+	for _, s := range dsm {
+		for _, p := range s.Pkgs {
+			imports[p.ImportPath] = p
+		}
+	}
+
+	orphans := make(map[string]bool)
+	for k := range dsm {
+		orphans[k] = true
+	}
+
+	// make fake C package for cgo
+	imports["C"] = &cmd.Pkg{
+		Depset: new(cmd.Depset),
+		Package: &build.Package{
+			Name: "C",
+		},
+	}
+	stk := make(map[string]bool)
+	push := func(v string) {
+		if stk[v] {
+			panic(fmt.Sprintln("import loop:", v, stk))
+		}
+		stk[v] = true
+	}
+	pop := func(v string) {
+		if !stk[v] {
+			panic(fmt.Sprintln("impossible pop:", v, stk))
+		}
+		delete(stk, v)
+	}
+
+	// checked records import paths who's dependencies are all present
+	checked := make(map[string]bool)
+
+	var fn func(string)
+	fn = func(importpath string) {
+		p, ok := imports[importpath]
+		if !ok {
+			missing[importpath] = true
+			return
+		}
+
+		// delete the pkg's depset, as it is referenced
+		delete(orphans, p.Depset.Root)
+
+		// have we already walked this arm, if so, skip it
+		if checked[importpath] {
+			return
+		}
+
+		sz := len(missing)
+		push(importpath)
+		for _, i := range p.Imports {
+			if i == importpath {
+				continue
+			}
+			fn(i)
+		}
+
+		// if the size of the missing map has not changed
+		// this entire subtree is complete, mark it as such
+		if len(missing) == sz {
+			checked[importpath] = true
+		}
+		pop(importpath)
+	}
+	for _, pkg := range pkgs {
+		fn(pkg.ImportPath)
+	}
+	return orphans
 }
