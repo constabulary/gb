@@ -2,6 +2,7 @@ package vendor
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"testing"
 )
