@@ -2,7 +2,6 @@ package vendor
 
 import (
 	"bytes"
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -31,7 +30,7 @@ func assertExists(t *testing.T, path string) {
 
 func TestManifest(t *testing.T) {
 	root := mktemp(t)
-	defer os.RemoveAll(root)
+	defer RemoveAll(root)
 
 	mf := filepath.Join(root, "vendor")
 
