@@ -103,19 +103,19 @@ Flags:
 				Path:       extra,
 			}
 
-			if err := m.AddDependency(dep); err != nil {
-				return err
-			}
-
 			if err := os.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
+			dst := filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(dep.Importpath))
 			src := filepath.Join(wc.Dir(), dep.Path)
 
 			if err := vendor.Copypath(dst, src); err != nil {
+				return err
+			}
+
+			if err := m.AddDependency(dep); err != nil {
 				return err
 			}
 
