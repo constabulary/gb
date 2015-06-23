@@ -28,7 +28,7 @@ Fetch a remote dependency
 
 Usage:
 
-        gb vendor fetch [-branch branch | -revision rev | -tag tag] importpath
+        gb vendor fetch [-branch branch | -revision rev | -tag tag | -precaire] importpath
 
 fetch vendors the upstream import path.
 
@@ -54,9 +54,9 @@ Usage:
 
 gb vendor update will replaces the source with the latest available from the head of the master branch.
 
-Updating from one copy of a depdendency to another comes with several restrictions.
+Updating from one copy of a dependency to another comes with several restrictions.
 The first is you can only update to the head of the branch your dependency was vendered from, switching branches is not supported.
-The second restriction is if you have used -tag or -revision while vendoring a dependency, your depdendency is "headless"
+The second restriction is if you have used -tag or -revision while vendoring a dependency, your dependency is "headless"
 (to borrow a term from git) and cannot be updated.
 
 To update across branches, or from one tag/revision to another, you must first use gb vendor delete to remove the dependency, then
@@ -64,7 +64,7 @@ gb vendor fetch [-tag | -revision | -branch] to replace it.
 
 Flags:
 	-all
-		will update all depdendencies in the manifest, otherwise only the dependency supplied.
+		will update all dependencies in the manifest, otherwise only the dependency supplied.
 	-precaire
 		allow the use of insecure protocols.
 
