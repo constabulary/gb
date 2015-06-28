@@ -145,7 +145,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 			paths = append(paths, struct{ Root, Prefix string }{filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath)), filepath.FromSlash(d.Importpath)})
 		}
 
-		dsm, err := cmd.LoadPaths(paths...)
+		dsm, err := vendor.LoadPaths(paths...)
 		if err != nil {
 			return err
 		}
@@ -184,17 +184,17 @@ func keys(m map[string]bool) []string {
 	return s
 }
 
-func pkgs(m map[string]*cmd.Pkg) []*cmd.Pkg {
-	var p []*cmd.Pkg
+func pkgs(m map[string]*vendor.Pkg) []*vendor.Pkg {
+	var p []*vendor.Pkg
 	for _, v := range m {
 		p = append(p, v)
 	}
 	return p
 }
 
-func findMissing(pkgs []*cmd.Pkg, dsm map[string]*cmd.Depset) map[string]bool {
+func findMissing(pkgs []*vendor.Pkg, dsm map[string]*vendor.Depset) map[string]bool {
 	missing := make(map[string]bool)
-	imports := make(map[string]*cmd.Pkg)
+	imports := make(map[string]*vendor.Pkg)
 	for _, s := range dsm {
 		for _, p := range s.Pkgs {
 			imports[p.ImportPath] = p
@@ -202,7 +202,7 @@ func findMissing(pkgs []*cmd.Pkg, dsm map[string]*cmd.Depset) map[string]bool {
 	}
 
 	// make fake C package for cgo
-	imports["C"] = &cmd.Pkg{
+	imports["C"] = &vendor.Pkg{
 		Depset: nil, // probably a bad idea
 		Package: &build.Package{
 			Name: "C",
