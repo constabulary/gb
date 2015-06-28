@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"sort"
 
 	"go/build"
 
@@ -149,18 +150,27 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 			return err
 		}
 
-		rs := dsm[path].Pkgs
+		is, ok := dsm[filepath.Join(ctx.Projectdir(), "vendor", "src", path)]
+		if !ok {
+			return fmt.Errorf("unable to locate depset for %q", path)
+		}
 
-		missing := findMissing(pkgs(rs), dsm)
-		done = len(missing) == 0
+		missing := findMissing(pkgs(is.Pkgs), dsm)
+		switch len(missing) {
+		case 0:
+			done = true
+		default:
 
-		for pkg := range missing {
-			fmt.Printf("\t%s\n", pkg)
+			// sort keys in ascending order, so the shortest missing import path
+			// with be fetched first.
+			keys := keys(missing)
+			sort.Strings(keys)
+			pkg := keys[0]
+			gb.Infof("fetching recursive dependency %s", pkg)
 			if err := fetch(ctx, pkg, false); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	return nil
