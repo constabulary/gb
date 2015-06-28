@@ -2,6 +2,7 @@ package vendor
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -85,6 +86,7 @@ func TestParseMetadata(t *testing.T) {
 		vcs        string
 		reporoot   string
 		insecure   bool
+		err        error
 	}{{
 		path:       "golang.org/x/tools/cmd/godoc",
 		importpath: "golang.org/x/tools",
@@ -100,11 +102,14 @@ func TestParseMetadata(t *testing.T) {
 		importpath: "gopkg.in/mgo.v2",
 		vcs:        "git",
 		reporoot:   "https://gopkg.in/mgo.v2",
+	}, {
+		path: "speter.net/go/exp",
+		err:  fmt.Errorf("go-import metadata not found"),
 	}}
 
 	for _, tt := range tests {
 		importpath, vcs, reporoot, err := ParseMetadata(tt.path, tt.insecure)
-		if err != nil {
+		if !reflect.DeepEqual(err, tt.err) {
 			t.Error(err)
 			continue
 		}
