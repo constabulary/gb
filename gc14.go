@@ -74,7 +74,7 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 }
 
 func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
-	args := append(pkg.Ldflags, "-o", outfile)
+	args := append(pkg.ldflags, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}
