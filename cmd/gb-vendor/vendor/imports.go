@@ -85,12 +85,22 @@ func ParseMetadata(path string, insecure bool) (string, string, string, error) {
 	}
 	defer rc.Close()
 
-	meta, err := parseMetaGoImports(rc)
-	if len(meta) < 1 {
-		return "", "", "", fmt.Errorf("go-import metadata not found")
-	}
+	imports, err := parseMetaGoImports(rc)
 	if err != nil {
 		return "", "", "", err
 	}
-	return meta[0].Prefix, meta[0].VCS, meta[0].RepoRoot, nil
+	match := -1
+	for i, im := range imports {
+		if !strings.HasPrefix(path, im.Prefix) {
+			continue
+		}
+		if match != -1 {
+			return "", "", "", fmt.Errorf("multiple meta tags match import path %q", path)
+		}
+		match = i
+	}
+	if match == -1 {
+		return "", "", "", fmt.Errorf("go-import metadata not found")
+	}
+	return imports[match].Prefix, imports[match].VCS, imports[match].RepoRoot, nil
 }
