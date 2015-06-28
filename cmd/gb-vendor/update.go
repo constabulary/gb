@@ -34,7 +34,7 @@ The second restriction is if you have used -tag or -revision while vendoring a d
 (to borrow a term from git) and cannot be updated.
 
 To update across branches, or from one tag/revision to another, you must first use gb vendor delete to remove the dependency, then
-gb vendor fetch [-tag | -revision | -branch | -precaire] to replace it.
+gb vendor fetch [-tag | -revision | -branch ] [-precaire] to replace it.
 
 Flags:
 	-all

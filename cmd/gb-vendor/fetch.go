@@ -32,7 +32,7 @@ func addFetchFlags(fs *flag.FlagSet) {
 
 var cmdFetch = &cmd.Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] importpath",
+	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors the upstream import path.
 
