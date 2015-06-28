@@ -4,6 +4,7 @@ package gb
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 )
@@ -42,7 +43,7 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 }
 
 func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
-	args := []string{"-p", importpath, "-pack"}
+	args := append(pkg.gcflags, "-p", importpath, "-pack")
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-I", d)
@@ -54,7 +55,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
 	}
-	return pkg.run(srcdir, nil, t.gc, args...)
+	return pkg.runOut(os.Stdout, srcdir, nil, t.gc, args...)
 }
 
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
@@ -66,8 +67,8 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	return pkg.run(srcdir, nil, t.as, args...)
 }
 
-func (t *gcToolchain) Ld(pkg *Package, searchpaths, ldflags []string, outfile, afile string) error {
-	args := append(ldflags, "-o", outfile)
+func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
+	args := append(pkg.ldflags, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}

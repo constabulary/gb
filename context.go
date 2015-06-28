@@ -32,6 +32,7 @@ type Context struct {
 
 	permits chan bool // used to limit concurrency of Run targets
 
+	gcflags []string // flags passed to the compiler
 	ldflags []string // flags passed to the linker
 }
 
@@ -52,6 +53,15 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		}
 	}
 	return ctx, nil
+}
+
+// Gcflags sets options passed to the compiler.
+func Gcflags(flags string) func(*Context) error {
+	return func(c *Context) error {
+		var err error
+		c.gcflags, err = splitQuotedFields(flags)
+		return err
+	}
 }
 
 // Ldflags sets options passed to the linker.

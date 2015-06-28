@@ -254,7 +254,7 @@ func (l *ld) link() error {
 		includes = append([]string{l.pkg.ExtraIncludes}, includes...)
 		target += ".test"
 	}
-	err := l.pkg.tc.Ld(l.pkg, includes, l.pkg.ldflags, target, l.afile.Pkgfile())
+	err := l.pkg.tc.Ld(l.pkg, includes, target, l.afile.Pkgfile())
 	l.pkg.Record("link", time.Since(t0))
 	return err
 }
