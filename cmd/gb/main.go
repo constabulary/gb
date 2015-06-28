@@ -84,6 +84,7 @@ func main() {
 
 	ctx, err := project.NewContext(
 		gb.GcToolchain(),
+		gb.Gcflags(gcflags),
 		gb.Ldflags(ldflags),
 	)
 	if err != nil {

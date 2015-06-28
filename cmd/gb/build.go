@@ -29,7 +29,7 @@ var (
 	// skip caching of packages
 	FF bool
 
-	ldflags string
+	ldflags, gcflags string
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
@@ -39,6 +39,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&F, "f", false, "rebuild up to date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
 	fs.StringVar(&ldflags, "ldflags", "", "flags passed to the linker")
+	fs.StringVar(&gcflags, "gcflags", "", "flags passed to the compiler")
 }
 
 var BuildCmd = &cmd.Command{
@@ -65,6 +66,8 @@ The build flags are
 		increases verbosity, effectively lowering the output level from INFO to DEBUG.
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
+	-gcflags 'arg list'
+		arguments to pass on each go tool compile invocation.
 
 The list flags accept a space-separated list of strings. To embed spaces in an element in the list, surround it with either single or double quotes.
 
