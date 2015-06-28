@@ -8,14 +8,6 @@ import (
 	"strings"
 )
 
-func keys(m map[string]bool) []string {
-	var v []string
-	for k := range m {
-		v = append(v, k)
-	}
-	return v
-}
-
 // Pkg describes a Go package.
 type Pkg struct {
 	*Depset
