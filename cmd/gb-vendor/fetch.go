@@ -24,7 +24,7 @@ var (
 
 	tag string
 	
-	noRecurse bool // Container variable to house the value of the noRecurse
+	noRecurse bool // Container variable to house the value of the no-recurse flag.
 
 	recurse  bool // should we fetch recursively
 	insecure bool // Allow the use of insecure protocols
