@@ -32,13 +32,13 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&branch, "branch", "", "branch of the package")
 	fs.StringVar(&revision, "revision", "", "revision of the package")
 	fs.StringVar(&tag, "tag", "", "tag of the package")
-	fs.BoolVar(&recurse, "no-recuse", true, "do not fetch recursively")
+	fs.BoolVar(&recurse, "recurse", true, "fetch recursively")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 }
 
 var cmdFetch = &cmd.Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
+	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-recurse] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors the upstream import path.
 
@@ -46,8 +46,8 @@ Flags:
 	-branch branch
 		fetch from the name branch. If not supplied the default upstream
 		branch will be used.
-	-no-recurse
-		do not fetch recursively.
+	-recurse
+		fetch dependent packages recursively.
 	-tag tag
 		fetch the specified tag. If not supplie the default upstream 
 		branch will be used.
