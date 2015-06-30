@@ -8,15 +8,25 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
+	goos := runtime.GOOS
+	goarch := runtime.GOARCH
+
 	defaults := []func(*gcoption){
 		func(opt *gcoption) {
 			opt.goos = runtime.GOOS
+			if v := os.Getenv("GOOS"); v != "" {
+				opt.goos = v
+			}
 		},
 		func(opt *gcoption) {
 			opt.goarch = runtime.GOARCH
+			if v := os.Getenv("GOARCH"); v != "" {
+				opt.goarch = v
+			}
 		},
 	}
 	var options gcoption
@@ -26,16 +36,14 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 
 	return func(c *Context) error {
 		goroot := runtime.GOROOT()
-		goos := options.goos
-		goarch := options.goarch
 		archchar, err := build.ArchChar(goarch)
 		if err != nil {
 			return err
 		}
 		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
 		c.tc = &gcToolchain{
-			goos:   goos,
-			goarch: goarch,
+			goos:   options.goos,
+			goarch: options.goarch,
 			gc:     filepath.Join(tooldir, archchar+"g"),
 			ld:     filepath.Join(tooldir, archchar+"l"),
 			as:     filepath.Join(tooldir, archchar+"a"),
@@ -74,6 +82,15 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 }
 
 func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
+	if t.goos != runtime.GOOS || t.goarch != runtime.GOARCH {
+		i := strings.Index(outfile, ".")
+		if i > 0 {
+			outfile = fmt.Sprintf("%s-%s-%s%s", outfile[:i], t.goos, t.goarch, outfile[i:])
+		} else {
+			outfile = fmt.Sprintf("%s-%s-%s", outfile, t.goos, t.goarch)
+		}
+	}
+
 	args := append(pkg.ldflags, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)

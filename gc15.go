@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // gc toolchain
@@ -68,6 +69,23 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 }
 
 func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
+	goos := runtime.GOOS
+	goarch := runtime.GOARCH
+	if v := os.Getenv("GOOS"); v != "" {
+		goos = v
+	}
+	if v := os.Getenv("GOARCH"); v != "" {
+		goarch = v
+	}
+
+	if goos != runtime.GOOS || goarch != runtime.GOARCH {
+		i := strings.Index(outfile, ".")
+		if i > 0 {
+			outfile = fmt.Sprintf("%s-%s-%s%s", outfile[:i], goos, goarch, outfile[i:])
+		} else {
+			outfile = fmt.Sprintf("%s-%s-%s", outfile, goos, goarch)
+		}
+	}
 	args := append(pkg.ldflags, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
