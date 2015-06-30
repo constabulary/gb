@@ -34,7 +34,7 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&branch, "branch", "", "branch of the package")
 	fs.StringVar(&revision, "revision", "", "revision of the package")
 	fs.StringVar(&tag, "tag", "", "tag of the package")
-	fs.BoolVar(&noRecurse, "no-recurse", true, "do not fetch recursively")
+	fs.BoolVar(&noRecurse, "no-recurse", false, "do not fetch recursively")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 }
 
