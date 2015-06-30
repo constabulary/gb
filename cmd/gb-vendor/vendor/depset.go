@@ -49,14 +49,14 @@ func LoadTree(root string, prefix string) (*Depset, error) {
 			return nil
 		}
 
-		p, err := loadPackage(&d, dir, importpath)
+		p, err := loadPackage(&d, dir)
 		if err != nil {
 			if _, ok := err.(*build.NoGoError); ok {
 				return nil
 			}
 			return fmt.Errorf("loadPackage(%q, %q): %v", dir, importpath, err)
 		}
-		p.ImportPath = importpath
+		p.ImportPath = filepath.ToSlash(importpath)
 		if p != nil {
 			d.Pkgs[p.ImportPath] = p
 		}
@@ -68,7 +68,7 @@ func LoadTree(root string, prefix string) (*Depset, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := fn(root+"/", fi); err != nil {
+	if err := fn(root+string(filepath.Separator), fi); err != nil {
 		return nil, err
 	}
 
@@ -77,7 +77,7 @@ func LoadTree(root string, prefix string) (*Depset, error) {
 	return &d, err
 }
 
-func loadPackage(d *Depset, dir, importpath string) (*Pkg, error) {
+func loadPackage(d *Depset, dir string) (*Pkg, error) {
 	p := Pkg{
 		Depset: d,
 	}
@@ -86,28 +86,6 @@ func loadPackage(d *Depset, dir, importpath string) (*Pkg, error) {
 	// expolit local import logic
 	p.Package, err = build.ImportDir(dir, build.ImportComment)
 	return &p, err
-}
-
-func eachFile(dir string, fn func(string, os.FileInfo) error) error {
-	f, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	files, err := f.Readdir(-1)
-	if err != nil {
-		return err
-	}
-	for _, fi := range files {
-		if fi.IsDir() {
-			continue
-		}
-		path := filepath.Join(dir, fi.Name())
-		if err := fn(path, fi); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func eachDir(dir string, fn func(string, os.FileInfo) error) error {
