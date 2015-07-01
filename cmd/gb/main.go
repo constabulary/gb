@@ -86,6 +86,7 @@ func main() {
 		gb.GcToolchain(),
 		gb.Gcflags(gcflags),
 		gb.Ldflags(ldflags),
+		gb.BuildTags(buildTags),
 	)
 	if err != nil {
 		gb.Fatalf("unable to construct context: %v", err)
