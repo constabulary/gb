@@ -73,6 +73,15 @@ func Ldflags(flags string) func(*Context) error {
 	}
 }
 
+// BuildTags sets options build tags.
+func BuildTags(flags string) func(*Context) error {
+	return func(c *Context) error {
+		var err error
+		c.BuildTags, err = splitQuotedFields(flags)
+		return err
+	}
+}
+
 func newContext(p *Project, bc *build.Context) *Context {
 	permits := make(chan bool, runtime.NumCPU())
 	for i := cap(permits); i > 0; i-- {

@@ -29,7 +29,7 @@ var (
 	// skip caching of packages
 	FF bool
 
-	ldflags, gcflags string
+	ldflags, gcflags, buildTags string
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
@@ -40,6 +40,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
 	fs.StringVar(&ldflags, "ldflags", "", "flags passed to the linker")
 	fs.StringVar(&gcflags, "gcflags", "", "flags passed to the compiler")
+	fs.StringVar(&buildTags, "tags", "", "a list of build tags")
 }
 
 var BuildCmd = &cmd.Command{
@@ -68,6 +69,10 @@ The build flags are
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'
 		arguments to pass on each go tool compile invocation.
+	-tags 'tag list'
+		a list of build tags to consider satisfied during the build.
+		For more information about build tags, see the description of
+		build constraints in the documentation for the go/build package.
 
 The list flags accept a space-separated list of strings. To embed spaces in an element in the list, surround it with either single or double quotes.
 
@@ -80,7 +85,6 @@ For more about specifying packages, see 'gb help packages'. For more about where
 		defer func() {
 			gb.Debugf("build duration: %v %v", time.Since(t0), ctx.Statistics.String())
 		}()
-
 		pkgs, err := cmd.ResolvePackages(ctx, args...)
 		if err != nil {
 			ctx.Destroy()
