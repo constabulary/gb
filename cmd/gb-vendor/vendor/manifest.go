@@ -142,13 +142,8 @@ func readManifest(r io.Reader) (*Manifest, error) {
 	return &m, err
 }
 
-// Implement sort for dependencies
 type byImportpath []Dependency
 
-func (s byImportpath) Len() int { return len(s) }
-func (s byImportpath) Less(i, j int) bool {
-	return s[i].Importpath < s[j].Importpath
-}
-func (s byImportpath) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
+func (s byImportpath) Len() int           { return len(s) }
+func (s byImportpath) Less(i, j int) bool { return s[i].Importpath < s[j].Importpath }
+func (s byImportpath) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
