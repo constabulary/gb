@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"sort"
 )
 
 // gb-vendor manifest support
@@ -70,7 +71,7 @@ type Dependency struct {
 	// dependency was fetched from.
 	Repository string `json:"repository"`
 
-	// Revision is the revision that descibves the dependency's
+	// Revision is the revision that describes the dependency's
 	// remote revision.
 	Revision string `json:"revision"`
 
@@ -86,6 +87,8 @@ type Dependency struct {
 // WriteManifest writes a Manifest to the path. If the manifest does
 // not exist, it is created. If it does exist, it will be overwritten.
 // If the manifest file is empty (0 dependencies) it will be deleted.
+// The dependencies will be ordered by import path to reduce churn when making
+// changes.
 // TODO(dfc) write to temporary file and move atomically to avoid
 // destroying a working vendorfile.
 func WriteManifest(path string, m *Manifest) error {
@@ -109,6 +112,7 @@ func WriteManifest(path string, m *Manifest) error {
 }
 
 func writeManifest(w io.Writer, m *Manifest) error {
+	sort.Sort(byImportpath(m.Dependencies))
 	buf, err := json.MarshalIndent(m, "", "\t")
 	if err != nil {
 		return err
@@ -136,4 +140,15 @@ func readManifest(r io.Reader) (*Manifest, error) {
 	d := json.NewDecoder(r)
 	err := d.Decode(&m)
 	return &m, err
+}
+
+// Implement sort for dependencies
+type byImportpath []Dependency
+
+func (s byImportpath) Len() int { return len(s) }
+func (s byImportpath) Less(i, j int) bool {
+	return s[i].Importpath < s[j].Importpath
+}
+func (s byImportpath) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
