@@ -25,6 +25,9 @@ func TestParseImports(t *testing.T) {
 }
 
 func TestFetchMetadata(t *testing.T) {
+	if testing.Short() {
+		t.Skipf("skipping network tests in -short mode")
+	}
 	tests := []struct {
 		path     string
 		want     string
@@ -80,6 +83,9 @@ go get gopkg.in/check.v1
 }
 
 func TestParseMetadata(t *testing.T) {
+	if testing.Short() {
+		t.Skipf("skipping network tests in -short mode")
+	}
 	tests := []struct {
 		path       string
 		importpath string

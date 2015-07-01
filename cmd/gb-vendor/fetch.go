@@ -24,6 +24,8 @@ var (
 
 	tag string
 
+	noRecurse bool // Container variable to house the value of the no-recurse flag.
+
 	recurse  bool // should we fetch recursively
 	insecure bool // Allow the use of insecure protocols
 )
@@ -32,7 +34,7 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&branch, "branch", "", "branch of the package")
 	fs.StringVar(&revision, "revision", "", "revision of the package")
 	fs.StringVar(&tag, "tag", "", "tag of the package")
-	fs.BoolVar(&recurse, "no-recuse", true, "do not fetch recursively")
+	fs.BoolVar(&noRecurse, "no-recurse", false, "do not fetch recursively")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
 }
 
@@ -63,6 +65,7 @@ Flags:
 			return fmt.Errorf("fetch: import path missing")
 		}
 		path := args[0]
+		recurse = !noRecurse
 		return fetch(ctx, path, recurse)
 	},
 	AddFlags: addFetchFlags,
@@ -137,7 +140,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 			{filepath.Join(runtime.GOROOT(), "src"), ""},
 			{filepath.Join(ctx.Projectdir(), "src"), ""},
 		}
-		m, err := vendor.ReadManifest(filepath.Join("vendor", "manifest"))
+		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
 			return err
 		}
