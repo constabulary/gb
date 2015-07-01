@@ -7,6 +7,9 @@ import (
 )
 
 func TestDeduceRemoteRepo(t *testing.T) {
+	if testing.Short() {
+		t.Skipf("skipping network tests in -short mode")
+	}
 	tests := []struct {
 		path     string
 		want     RemoteRepo
