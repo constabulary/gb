@@ -23,7 +23,7 @@ var (
 	revision string
 
 	tag string
-	
+
 	noRecurse bool // Container variable to house the value of the no-recurse flag.
 
 	recurse  bool // should we fetch recursively
@@ -140,7 +140,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 			{filepath.Join(runtime.GOROOT(), "src"), ""},
 			{filepath.Join(ctx.Projectdir(), "src"), ""},
 		}
-		m, err := vendor.ReadManifest(filepath.Join("vendor", "manifest"))
+		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
 			return err
 		}
