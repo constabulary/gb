@@ -21,3 +21,9 @@ You can create as many projects as you like and move between them simply by chan
 ## Read more
 
 gb has its own site, [getgb.io](http://getgb.io/), head over there for more information.
+
+## Contributions
+
+We welcome pull requests, bug fixes and issue reports.
+
+Before proposing a large change, please discuss your change by raising an issue.
