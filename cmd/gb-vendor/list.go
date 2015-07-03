@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"text/tabwriter"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -36,14 +37,14 @@ Flags:
 		if err != nil {
 			return fmt.Errorf("unable to parse template %q: %v", format, err)
 		}
-
+		w := tabwriter.NewWriter(os.Stdout, 1, 2, 1, ' ', 0)
 		for _, dep := range m.Dependencies {
-			if err := tmpl.Execute(os.Stdout, dep); err != nil {
+			if err := tmpl.Execute(w, dep); err != nil {
 				return fmt.Errorf("unable to execute template: %v", err)
 			}
-			fmt.Fprintln(os.Stdout)
+			fmt.Fprintln(w)
 		}
-		return nil
+		return w.Flush()
 	},
 	AddFlags: func(fs *flag.FlagSet) {
 		fs.StringVar(&format, "f", "{{.Importpath}}\t{{.Repository}}{{.Path}}\t{{.Branch}}\t{{.Revision}}", "format template")
