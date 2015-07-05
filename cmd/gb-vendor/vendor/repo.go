@@ -163,7 +163,8 @@ func probeGitUrl(schemes []string, host, path string, insecure bool) (string, er
 		switch scheme {
 		case "https":
 			url := scheme + "://" + host + "/" + path
-			if _, err := run("git", "ls-remote", "--exit-code", url, "HEAD"); err == nil {
+			out, err := run("git", "ls-remote", url, "HEAD")
+			if err == nil && bytes.Contains(out, []byte("HEAD")) {
 				return url, nil
 			}
 		case "http", "git":
@@ -171,7 +172,8 @@ func probeGitUrl(schemes []string, host, path string, insecure bool) (string, er
 			if !insecure {
 				gb.Infof("skipping insecure protocol: %v", url)
 			} else {
-				if _, err := run("git", "ls-remote", "--exit-code", url, "HEAD"); err == nil {
+				out, err := run("git", "ls-remote", url, "HEAD")
+				if err == nil && bytes.Contains(out, []byte("HEAD")) {
 					return url, nil
 				}
 			}
