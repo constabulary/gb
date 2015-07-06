@@ -84,6 +84,10 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 		if err == nil {
 			return repo, v[5], nil
 		}
+		repo, err = Gitrepo("code.google.com", "p/"+v[2], insecure)
+		if err == nil {
+			return repo, v[5], nil
+		}
 		return nil, "", fmt.Errorf("unknown repository type")
 	case lpregex.MatchString(path):
 		v := lpregex.FindStringSubmatch(path)
