@@ -2,6 +2,7 @@ package gb
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"fmt"
 	"go/build"
 	"io"
@@ -34,6 +35,8 @@ type Context struct {
 
 	gcflags []string // flags passed to the compiler
 	ldflags []string // flags passed to the linker
+
+	buildHash string // build hash
 }
 
 // NewContext returns a new build context from this project.
@@ -98,7 +101,7 @@ func (c *Context) IncludePaths() []string {
 // Pkgdir returns the path to precompiled packages.
 func (c *Context) Pkgdir() string {
 	// TODO(dfc) c.Context.{GOOS,GOARCH} may be out of date wrt. tc.{goos,goarch}
-	return filepath.Join(c.Project.Pkgdir(), c.Context.GOOS, c.Context.GOARCH)
+	return filepath.Join(c.Project.Pkgdir(), c.computeBuildHash())
 }
 
 // Workdir returns the path to this Context's working directory.
@@ -182,6 +185,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		Context: c,
 		Package: p,
 	}
+
 	pkg.Stale = stale || isStale(&pkg)
 	Debugf("loadPackage: %v %v (%v)", path, pkg.Stale, pkg.Dir)
 	c.pkgs[path] = &pkg
@@ -315,6 +319,26 @@ func treeCanMatchPattern(pattern string) func(name string) bool {
 // The pattern is a path including "...".
 func (c *Context) AllPackages(pattern string) []string {
 	return matchPackages(c, pattern)
+}
+
+func (c *Context) computeBuildHash() string {
+	if c.buildHash != "" {
+		return c.buildHash
+	}
+
+	Debugf("build hash properties : GOROOT:%s GOOS:%s GOARCH:%s gcflags:%s ldlags:%s BuildTag:%s compiler:%s",
+		c.GOROOT, c.GOOS, c.GOARCH, strings.Join(c.gcflags, ":"), strings.Join(c.ldflags, ":"), strings.Join(c.BuildTags, ":"), c.tc.compiler())
+
+	h := sha1.New()
+	h.Write([]byte(c.GOROOT))
+	h.Write([]byte(c.GOOS))
+	h.Write([]byte(c.GOARCH))
+	h.Write([]byte(strings.Join(c.gcflags, ":")))
+	h.Write([]byte(strings.Join(c.ldflags, ":")))
+	h.Write([]byte(strings.Join(c.BuildTags, ":")))
+	h.Write([]byte(c.tc.compiler()))
+	c.buildHash = fmt.Sprintf("gb%x", h.Sum(nil))[:12]
+	return c.buildHash
 }
 
 func matchPackages(c *Context, pattern string) []string {
