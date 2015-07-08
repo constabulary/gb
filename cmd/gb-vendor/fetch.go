@@ -51,7 +51,7 @@ Flags:
 	-no-recurse
 		do not fetch recursively.
 	-tag tag
-		fetch the specified tag. If not supplied the default upstream 
+		fetch the specified tag. If not supplied the default upstream
 		branch will be used.
 	-revision rev
 		fetch the specific revision from the branch (if supplied). If no
