@@ -18,8 +18,8 @@ type testFlagSpec struct {
 // testFlagDefn is the set of flags we process.
 var testFlagDefn = map[string]*testFlagSpec{
 	// local to the test plugin
-	"q":         {boolVar: true, passToAll: true},
-	"v":         {boolVar: true, passToAll: true},
+	"q":         {boolVar: true, passToTest: true, passToAll: true},
+	"v":         {boolVar: true, passToTest: true, passToAll: true},
 	"cover":     {boolVar: true},
 	"coverpkg":  {},
 	"covermode": {},
