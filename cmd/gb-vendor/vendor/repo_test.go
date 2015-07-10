@@ -88,6 +88,7 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		want: &bzrrepo{
 			url: "https://launchpad.net/mgo/v2",
 		},
+		insecure: true,
 	}, {
 		path: "launchpad.net/gnuflag",
 		want: &bzrrepo{
