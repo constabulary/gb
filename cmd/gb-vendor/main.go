@@ -32,14 +32,18 @@ var commands = []*cmd.Command{
 
 func main() {
 	args := os.Args[1:]
-	if len(args) < 1 || args[0] == "-h" || args[0] == "-help" {
+
+	switch {
+	case len(args) < 1, args[0] == "-h", args[0] == "-help":
 		fs.Usage()
 		os.Exit(1)
-	}
-
-	if args[0] == "help" {
+	case projectroot == "":
+		gb.Warnf("don't run this binary directly, it is meant to be run as 'gb vendor ...'")
+		gb.Fatalf("expected GB_PROJECT_DIR environment variable")
+	case args[0] == "help":
 		help(args[1:])
 		return
+	default:
 	}
 
 	root, err := cmd.FindProjectroot(projectroot)
