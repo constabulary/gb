@@ -32,7 +32,7 @@ var commands = []*cmd.Command{
 
 func main() {
 	args := os.Args[1:]
-	if len(args) < 1 || args[0] == "-h" {
+	if len(args) < 1 || args[0] == "-h" || args[0] == "-help" {
 		fs.Usage()
 		os.Exit(1)
 	}
