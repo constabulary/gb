@@ -31,13 +31,6 @@ var commands = []*cmd.Command{
 }
 
 func main() {
-	root, err := cmd.FindProjectroot(projectroot)
-	if err != nil {
-		gb.Fatalf("could not locate project root: %v", err)
-	}
-	project := gb.NewProject(root)
-	gb.Debugf("project root %q", project.Projectdir())
-
 	args := os.Args[1:]
 	if len(args) < 1 || args[0] == "-h" {
 		fs.Usage()
@@ -48,6 +41,13 @@ func main() {
 		help(args[1:])
 		return
 	}
+
+	root, err := cmd.FindProjectroot(projectroot)
+	if err != nil {
+		gb.Fatalf("could not locate project root: %v", err)
+	}
+	project := gb.NewProject(root)
+	gb.Debugf("project root %q", project.Projectdir())
 
 	for _, command := range commands {
 		if command.Name == args[0] && command.Runnable() {
