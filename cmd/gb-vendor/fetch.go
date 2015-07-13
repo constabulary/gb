@@ -86,7 +86,15 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 		return fmt.Errorf("%s is already vendored", path)
 	}
 
-	wc, err := repo.Checkout(branch, tag, revision)
+	var wc vendor.WorkingCopy
+
+	// if we are not recursing, then always fetch the HEAD of the master
+	if recurse {
+		wc, err = repo.Checkout(branch, tag, revision)
+	} else {
+		wc, err = repo.Checkout("", "", "")
+	}
+
 	if err != nil {
 		return err
 	}
