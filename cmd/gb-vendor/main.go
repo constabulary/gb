@@ -31,23 +31,26 @@ var commands = []*cmd.Command{
 }
 
 func main() {
+	args := os.Args[1:]
+
+	switch {
+	case len(args) < 1, args[0] == "-h", args[0] == "-help":
+		fs.Usage()
+		os.Exit(1)
+	case args[0] == "help":
+		help(args[1:])
+		return
+	case projectroot == "":
+		gb.Fatalf("don't run this binary directly, it is meant to be run as 'gb vendor ...'")
+	default:
+	}
+
 	root, err := cmd.FindProjectroot(projectroot)
 	if err != nil {
 		gb.Fatalf("could not locate project root: %v", err)
 	}
 	project := gb.NewProject(root)
 	gb.Debugf("project root %q", project.Projectdir())
-
-	args := os.Args[1:]
-	if len(args) < 1 || args[0] == "-h" {
-		fs.Usage()
-		os.Exit(1)
-	}
-
-	if args[0] == "help" {
-		help(args[1:])
-		return
-	}
 
 	for _, command := range commands {
 		if command.Name == args[0] && command.Runnable() {
