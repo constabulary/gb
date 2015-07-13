@@ -38,8 +38,7 @@ func main() {
 		fs.Usage()
 		os.Exit(1)
 	case projectroot == "":
-		gb.Warnf("don't run this binary directly, it is meant to be run as 'gb vendor ...'")
-		gb.Fatalf("expected GB_PROJECT_DIR environment variable")
+		gb.Fatalf("don't run this binary directly, it is meant to be run as 'gb vendor ...'")
 	case args[0] == "help":
 		help(args[1:])
 		return
