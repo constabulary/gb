@@ -37,11 +37,11 @@ func main() {
 	case len(args) < 1, args[0] == "-h", args[0] == "-help":
 		fs.Usage()
 		os.Exit(1)
-	case projectroot == "":
-		gb.Fatalf("don't run this binary directly, it is meant to be run as 'gb vendor ...'")
 	case args[0] == "help":
 		help(args[1:])
 		return
+	case projectroot == "":
+		gb.Fatalf("don't run this binary directly, it is meant to be run as 'gb vendor ...'")
 	default:
 	}
 
