@@ -230,18 +230,20 @@ func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...str
 		url.Scheme = scheme
 
 		switch url.Scheme {
-		case "https":
+		case "https", "ssh":
 			if err := vcs(&url); err == nil {
 				return url.String(), nil
 			}
 		case "http", "git":
 			if !insecure {
 				gb.Infof("skipping insecure protocol: %s", url.String())
-			} else {
-				if err := vcs(&url); err == nil {
-					return url.String(), nil
-				}
+				continue
 			}
+			if err := vcs(&url); err == nil {
+				return url.String(), nil
+			}
+		default:
+			return "", fmt.Errorf("unsupported scheme: %v", url.Scheme)
 		}
 	}
 	return "", fmt.Errorf("unable to determine remote protocol")
