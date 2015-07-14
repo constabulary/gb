@@ -223,6 +223,7 @@ func probeBzrUrl(u string) error {
 // probe calls the supplied vcs function to probe a variety of url constructions.
 // If vcs returns non nil, it is assumed that the url is not a valid repo.
 func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...string) (string, error) {
+	var unsuccessful []string
 	for _, scheme := range schemes {
 
 		// make copy of url and apply scheme
@@ -245,8 +246,9 @@ func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...str
 		default:
 			return "", fmt.Errorf("unsupported scheme: %v", url.Scheme)
 		}
+		unsuccessful = append(unsuccessful, url.String())
 	}
-	return "", fmt.Errorf("unable to determine remote protocol")
+	return "", fmt.Errorf("vcs probe failed, tried: %s", strings.Join(unsuccessful, ","))
 }
 
 // gitrepo is a git RemoteRepo.
