@@ -173,7 +173,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 // Gitrepo returns a RemoteRepo representing a remote git repository.
 func Gitrepo(url *url.URL, insecure bool, schemes ...string) (RemoteRepo, error) {
 	if schemes == nil {
-		schemes = []string{"https", "git", "http"}
+		schemes = []string{"https", "git", "ssh", "http"}
 	}
 	u, err := probeGitUrl(url, insecure, schemes)
 	if err != nil {
@@ -223,6 +223,7 @@ func probeBzrUrl(u string) error {
 // probe calls the supplied vcs function to probe a variety of url constructions.
 // If vcs returns non nil, it is assumed that the url is not a valid repo.
 func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...string) (string, error) {
+	var unsuccessful []string
 	for _, scheme := range schemes {
 
 		// make copy of url and apply scheme
@@ -230,21 +231,24 @@ func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...str
 		url.Scheme = scheme
 
 		switch url.Scheme {
-		case "https":
+		case "https", "ssh":
 			if err := vcs(&url); err == nil {
 				return url.String(), nil
 			}
 		case "http", "git":
 			if !insecure {
 				gb.Infof("skipping insecure protocol: %s", url.String())
-			} else {
-				if err := vcs(&url); err == nil {
-					return url.String(), nil
-				}
+				continue
 			}
+			if err := vcs(&url); err == nil {
+				return url.String(), nil
+			}
+		default:
+			return "", fmt.Errorf("unsupported scheme: %v", url.Scheme)
 		}
+		unsuccessful = append(unsuccessful, url.String())
 	}
-	return "", fmt.Errorf("unable to determine remote protocol")
+	return "", fmt.Errorf("vcs probe failed, tried: %s", strings.Join(unsuccessful, ","))
 }
 
 // gitrepo is a git RemoteRepo.
