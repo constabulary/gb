@@ -26,14 +26,22 @@ func togopath(srcdirs []string) string {
 	return joinlist(s)
 }
 
-func NewProject(root string) *Project {
-	return &Project{
-		rootdir: root,
-		srcdirs: []Srcdir{
-			{Root: filepath.Join(root, "src")},
-			{Root: filepath.Join(root, "vendor", "src")},
-		},
+func SourceDir(root string) func(*Project) {
+	return func(p *Project) {
+		p.srcdirs = append(p.srcdirs, Srcdir{Root: root})
 	}
+}
+
+func NewProject(root string, options ...func(*Project)) *Project {
+	proj := Project{
+		rootdir: root,
+	}
+
+	for _, opt := range options {
+		opt(&proj)
+	}
+
+	return &proj
 }
 
 // Pkgdir returns the path to precompiled packages.

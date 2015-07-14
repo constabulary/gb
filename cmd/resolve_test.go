@@ -41,7 +41,9 @@ func getwd(t *testing.T) string {
 func testProject(t *testing.T) *gb.Project {
 	cwd := getwd(t)
 	root := filepath.Join(cwd, "..", "testdata")
-	return gb.NewProject(root)
+	return gb.NewProject(root,
+		gb.SourceDir(filepath.Join(root, "src")),
+	)
 }
 
 func testContext(t *testing.T, opts ...func(*gb.Context) error) *gb.Context {
