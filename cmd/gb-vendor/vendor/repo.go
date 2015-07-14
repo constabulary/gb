@@ -151,7 +151,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 // Gitrepo returns a RemoteRepo representing a remote git repository.
 func Gitrepo(host, path string, insecure bool, schemes ...string) (RemoteRepo, error) {
 	if schemes == nil {
-		schemes = []string{"https", "git", "http"}
+		schemes = []string{"https", "git", "ssh", "http"}
 	}
 	url, err := probeGitUrl(schemes, host, path, insecure)
 	if err != nil {
@@ -165,7 +165,7 @@ func Gitrepo(host, path string, insecure bool, schemes ...string) (RemoteRepo, e
 func probeGitUrl(schemes []string, host, path string, insecure bool) (string, error) {
 	for _, scheme := range schemes {
 		switch scheme {
-		case "https":
+		case "https", "ssh":
 			url := scheme + "://" + host + "/" + path
 			out, err := run("git", "ls-remote", url, "HEAD")
 			if err == nil && bytes.Contains(out, []byte("HEAD")) {
