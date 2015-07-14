@@ -40,6 +40,10 @@ type Context struct {
 // By default this context will use the gc toolchain with the
 // host's GOOS and GOARCH values.
 func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
+	if len(p.srcdirs) == 0 {
+		return nil, fmt.Errorf("no source directories supplied")
+	}
+
 	bc := build.Default
 	bc.GOPATH = togopath(p.Srcdirs())
 	defaults := []func(*Context) error{

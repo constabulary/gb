@@ -78,7 +78,11 @@ func main() {
 	if err != nil {
 		gb.Fatalf("could not locate project root: %v", err)
 	}
-	project := gb.NewProject(root)
+
+	project := gb.NewProject(root,
+		gb.SourceDir(filepath.Join(root, "src")),
+		gb.SourceDir(filepath.Join(root, "vendor", "src")),
+	)
 
 	gb.Debugf("project root %q", project.Projectdir())
 
