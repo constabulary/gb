@@ -44,6 +44,9 @@ type Command struct {
 // Non runnable commands are only informational.
 func (c *Command) Runnable() bool { return c.Run != nil }
 
+// Hidden indicates this is a command which is hidden from help / alldoc.go.
+func (c *Command) Hidden() bool { return c.Name == "depset" }
+
 // RunCommand detects the project root, parses flags and runs the Command.
 func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args []string) error {
 	if cmd.AddFlags != nil {

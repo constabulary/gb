@@ -48,7 +48,7 @@ var BuildCmd = &cmd.Command{
 	UsageLine: "build [build flags] [packages]",
 	Long: `Build compiles the packages named by the import paths, along with their dependencies.
 
-The build flags are 
+The build flags are
 
 	-f
 		ignore cached packages if present, new packages built will overwrite any cached packages.

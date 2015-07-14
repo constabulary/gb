@@ -62,13 +62,6 @@ The list flags accept a space-separated list of strings. To embed spaces in an e
 For more about specifying packages, see 'gb help packages'. For more about where packages and binaries are installed, run 'gb help project'.
 
 
-Usage:
-
-        gb
-
-
-
-
 Show documentation for a package or symbol
 
 Usage:

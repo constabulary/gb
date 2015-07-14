@@ -142,6 +142,12 @@ func sortedCommands() []*cmd.Command {
 	sort.Strings(sortedKeys)
 	var cmds []*cmd.Command
 	for _, c := range sortedKeys {
+
+		// skip hidden commands
+		if commands[c].Hidden() {
+			continue
+		}
+
 		cmds = append(cmds, commands[c])
 	}
 	return cmds
