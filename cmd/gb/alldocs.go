@@ -14,6 +14,7 @@ The commands are:
         doc         show documentation for a package or symbol
         env         print project environment variables
         generate    generate Go files by processing source
+        info        info returns information about this project
         list        list the packages named by the importpaths
         plugin      run a plugin
         test        test packages
@@ -53,10 +54,19 @@ The build flags are
 		increases verbosity, effectively lowering the output level from INFO to DEBUG.
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
+	-gcflags 'arg list'
+		arguments to pass on each go tool compile invocation.
 
 The list flags accept a space-separated list of strings. To embed spaces in an element in the list, surround it with either single or double quotes.
 
 For more about specifying packages, see 'gb help packages'. For more about where packages and binaries are installed, run 'gb help project'.
+
+
+Usage:
+
+        gb
+
+
 
 
 Show documentation for a package or symbol
@@ -88,6 +98,17 @@ Those commands can run any process but the intent is to create or update Go
 source files, for instance by running yacc.
 
 See 'go help generate'
+
+
+Info returns information about this project
+
+Usage:
+
+        gb info
+
+info returns information about this project.
+
+info returns 0 if the project is well formed, and non zero otherwise.
 
 
 List the packages named by the importpaths
