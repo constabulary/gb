@@ -32,7 +32,7 @@ func Copypath(dst string, src string) error {
 
 		if info.Mode()&os.ModeSymlink != 0 {
 			if debugCopypath {
-				fmt.Printf("skiping symlink: %v\n", path)
+				fmt.Printf("skipping symlink: %v\n", path)
 			}
 			return nil
 		}
