@@ -7,7 +7,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
-	"github.com/constabulary/gb/cmd/gb-vendor/vendor"
+	"github.com/constabulary/gb/vendor"
 )
 
 func addRestoreFlags(fs *flag.FlagSet) {
