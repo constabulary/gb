@@ -42,7 +42,7 @@ var cmdFetch = &cmd.Command{
 	Name:      "fetch",
 	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
 	Short:     "fetch a remote dependency",
-	Long: `fetch vendors the upstream import path.
+	Long: `fetch vendors an upstream import path.
 
 Flags:
 	-branch branch
@@ -61,12 +61,16 @@ Flags:
 
 `,
 	Run: func(ctx *gb.Context, args []string) error {
-		if len(args) != 1 {
+		switch len(args) {
+		case 0:
 			return fmt.Errorf("fetch: import path missing")
+		case 1:
+			path := args[0]
+			recurse = !noRecurse
+			return fetch(ctx, path, recurse)
+		default:
+			return fmt.Errorf("more than one import path supplied")
 		}
-		path := args[0]
-		recurse = !noRecurse
-		return fetch(ctx, path, recurse)
 	},
 	AddFlags: addFetchFlags,
 }
