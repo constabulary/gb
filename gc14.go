@@ -10,15 +10,24 @@ import (
 	"runtime"
 )
 
-func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
+func GcToolchain(opts ...func(*GcOption)) func(c *Context) error {
+	envor := func(key, def string) string {
+		if v, ok := os.LookupEnv(key); ok {
+			return v
+		} else {
+			return def
+		}
+	}
+
 	defaults := []func(*gcoption){
 		func(opt *gcoption) {
-			opt.goos = runtime.GOOS
+			opt.goos = envor("GOOS", runtime.GOOS)
 		},
 		func(opt *gcoption) {
-			opt.goarch = runtime.GOARCH
+			opt.goarch = envor("GOARCH", runtime.GOARCH)
 		},
 	}
+
 	var options gcoption
 	for _, opt := range append(defaults, opts...) {
 		opt(&options)
@@ -28,6 +37,12 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 		goroot := runtime.GOROOT()
 		goos := options.goos
 		goarch := options.goarch
+
+		// cross-compliation is not supported yet #31
+		if goos != runtime.GOOS || goarch != runtime.GOARCH {
+			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", runtime.GOOS, runtime.GOARCH, goos, goarch)
+		}
+
 		archchar, err := build.ArchChar(goarch)
 		if err != nil {
 			return err

@@ -1,9 +1,10 @@
 package gb_test
 
 import (
-	"github.com/constabulary/gb"
 	"log"
 	"path/filepath"
+
+	"github.com/constabulary/gb"
 )
 
 func ExampleNewPackage() {
