@@ -68,7 +68,7 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	return cmd.Run(ctx, args)
 }
 
-// NewDefaultContext creates a gb.Context for the project root.
+// NewContext creates a gb.Context for the project root.
 func NewContext(projectroot string, options ...func(*gb.Context) error) (*gb.Context, error) {
 	if projectroot == "" {
 		return nil, fmt.Errorf("project root is blank")
