@@ -74,19 +74,8 @@ func main() {
 		gb.Fatalf("could not make project root absolute: %v", err)
 	}
 
-	root, err := cmd.FindProjectroot(cwd)
-	if err != nil {
-		gb.Fatalf("could not locate project root: %v", err)
-	}
-
-	project := gb.NewProject(root,
-		gb.SourceDir(filepath.Join(root, "src")),
-		gb.SourceDir(filepath.Join(root, "vendor", "src")),
-	)
-
-	gb.Debugf("project root %q", project.Projectdir())
-
-	ctx, err := project.NewContext(
+	ctx, err := cmd.NewContext(
+		cwd, // project root
 		gb.GcToolchain(),
 		gb.Gcflags(gcflags),
 		gb.Ldflags(ldflags),
@@ -96,9 +85,9 @@ func main() {
 	}
 
 	if command.ParseArgs != nil {
-		args = command.ParseArgs(ctx, root, args)
+		args = command.ParseArgs(ctx, ctx.Projectdir(), args)
 	} else {
-		args = cmd.ImportPaths(ctx, root, args)
+		args = cmd.ImportPaths(ctx, ctx.Projectdir(), args)
 	}
 
 	gb.Debugf("args: %v", args)

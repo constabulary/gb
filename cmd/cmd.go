@@ -59,13 +59,24 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	}
 	args = fs.Args() // reset to the remaining arguments
 
+	ctx, err := NewContext(projectroot, gb.GcToolchain())
+	if err != nil {
+		return fmt.Errorf("unable to construct context: %v", err)
+	}
+
+	gb.Debugf("args: %v", args)
+	return cmd.Run(ctx, args)
+}
+
+// NewContext creates a gb.Context for the project root.
+func NewContext(projectroot string, options ...func(*gb.Context) error) (*gb.Context, error) {
 	if projectroot == "" {
-		return fmt.Errorf("project root is blank")
+		return nil, fmt.Errorf("project root is blank")
 	}
 
 	root, err := FindProjectroot(projectroot)
 	if err != nil {
-		return fmt.Errorf("could not locate project root: %v", err)
+		return nil, fmt.Errorf("could not locate project root: %v", err)
 	}
 	project := gb.NewProject(root,
 		gb.SourceDir(filepath.Join(root, "src")),
@@ -73,15 +84,7 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	)
 
 	gb.Debugf("project root %q", project.Projectdir())
-
-	ctx, err := project.NewContext(
-		gb.GcToolchain(),
-	)
-	if err != nil {
-		return fmt.Errorf("unable to construct context: %v", err)
-	}
-	gb.Debugf("args: %v", args)
-	return cmd.Run(ctx, args)
+	return project.NewContext(options...)
 }
 
 func mkdir(path string) error {
