@@ -10,9 +10,9 @@ import (
 	"runtime"
 )
 
-func GcToolchain(opts ...func(*GcOption)) func(c *Context) error {
+func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	envor := func(key, def string) string {
-		if v, ok := os.LookupEnv(key); ok {
+		if v := os.Getenv(key); v != "" {
 			return v
 		} else {
 			return def
