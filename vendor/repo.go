@@ -54,11 +54,22 @@ var (
 
 // DeduceRemoteRepo takes a potential import path and returns a RemoteRepo
 // representing the remote location of the source of an import path.
+// Remote repositories can be bare import paths, or urls including a checkout scheme.
 // If deduction would cause traversal of an insecure host, a message will be
 // printed and the travelsal path will be ignored.
 func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
-	validimport := regexp.MustCompile(`^([A-Za-z0-9-]+)(.[A-Za-z0-9-]+)+(/[A-Za-z0-9-_.]+)+$`)
-	if !validimport.MatchString(path) {
+	u, err := url.Parse(path)
+	if err != nil {
+		return nil, "", fmt.Errorf("%q is not a valid import path", path)
+	}
+
+	var schemes []string
+	if u.Scheme != "" {
+		schemes = append(schemes, u.Scheme)
+	}
+
+	path = u.Host + u.Path
+	if !regexp.MustCompile(`^([A-Za-z0-9-]+)(.[A-Za-z0-9-]+)+(/[A-Za-z0-9-_.]+)+$`).MatchString(path) {
 		return nil, "", fmt.Errorf("%q is not a valid import path", path)
 	}
 
@@ -69,7 +80,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 			Host: "github.com",
 			Path: v[2],
 		}
-		repo, err := Gitrepo(url, insecure)
+		repo, err := Gitrepo(url, insecure, schemes...)
 		return repo, v[0][len(v[1]):], err
 	case bbregex.MatchString(path):
 		v := bbregex.FindStringSubmatch(path)
@@ -77,7 +88,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 			Host: "bitbucket.org",
 			Path: v[2],
 		}
-		repo, err := Gitrepo(url, insecure)
+		repo, err := Gitrepo(url, insecure, schemes...)
 		if err == nil {
 			return repo, v[0][len(v[1]):], nil
 		}
@@ -92,11 +103,11 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 			Host: "code.google.com",
 			Path: "p/" + v[2],
 		}
-		repo, err := Hgrepo(url, insecure)
+		repo, err := Hgrepo(url, insecure, schemes...)
 		if err == nil {
 			return repo, v[5], nil
 		}
-		repo, err = Gitrepo(url, insecure)
+		repo, err = Gitrepo(url, insecure, schemes...)
 		if err == nil {
 			return repo, v[5], nil
 		}
@@ -124,7 +135,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 				Host: x[0],
 				Path: x[1],
 			}
-			repo, err := Gitrepo(url, insecure)
+			repo, err := Gitrepo(url, insecure, schemes...)
 			return repo, v[6], err
 		case "hg":
 			x := strings.SplitN(v[1], "/", 2)
@@ -132,7 +143,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 				Host: x[0],
 				Path: x[1],
 			}
-			repo, err := Hgrepo(url, insecure)
+			repo, err := Hgrepo(url, insecure, schemes...)
 			return repo, v[6], err
 		case "bzr":
 			repo, err := Bzrrepo("https://" + v[1])
@@ -148,7 +159,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	u, err := url.Parse(reporoot)
+	u, err = url.Parse(reporoot)
 	if err != nil {
 		return nil, "", err
 	}
@@ -172,7 +183,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 
 // Gitrepo returns a RemoteRepo representing a remote git repository.
 func Gitrepo(url *url.URL, insecure bool, schemes ...string) (RemoteRepo, error) {
-	if schemes == nil {
+	if len(schemes) == 0 {
 		schemes = []string{"https", "git", "ssh", "http"}
 	}
 	u, err := probeGitUrl(url, insecure, schemes)
@@ -337,7 +348,7 @@ func (g *GitClone) Branch() (string, error) {
 
 // Hgrepo returns a RemoteRepo representing a remote git repository.
 func Hgrepo(u *url.URL, insecure bool, schemes ...string) (RemoteRepo, error) {
-	if schemes == nil {
+	if len(schemes) == 0 {
 		schemes = []string{"https", "http"}
 	}
 	url, err := probeHgUrl(u, insecure, schemes)

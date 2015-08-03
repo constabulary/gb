@@ -100,6 +100,17 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		want: &bzrrepo{
 			url: "https://launchpad.net/gnuflag",
 		},
+	}, {
+		path: "https://github.com/pkg/sftp",
+		want: &gitrepo{
+			url: "https://github.com/pkg/sftp",
+		},
+	}, {
+		path: "git://github.com/pkg/sftp",
+		want: &gitrepo{
+			url: "git://github.com/pkg/sftp",
+		},
+		insecure: true,
 	}}
 
 	for _, tt := range tests {
