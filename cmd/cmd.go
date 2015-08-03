@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/constabulary/gb"
 )
@@ -66,7 +67,10 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	if err != nil {
 		return fmt.Errorf("could not locate project root: %v", err)
 	}
-	project := gb.NewProject(root)
+	project := gb.NewProject(root,
+		gb.SourceDir(filepath.Join(root, "src")),
+		gb.SourceDir(filepath.Join(root, "vendor", "src")),
+	)
 
 	gb.Debugf("project root %q", project.Projectdir())
 
