@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -43,6 +44,9 @@ var cmdFetch = &cmd.Command{
 	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
+
+The import path may include a url scheme. This may be useful when fetching dependencies
+from private repositories that cannot be probed.
 
 Flags:
 	-branch branch
@@ -85,6 +89,10 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 	if err != nil {
 		return err
 	}
+
+	// strip of any scheme portion from the path, it is already
+	// encoded in the repo.
+	path = stripscheme(path)
 
 	if m.HasImportpath(path) {
 		return fmt.Errorf("%s is already vendored", path)
@@ -273,4 +281,13 @@ func findMissing(pkgs []*vendor.Pkg, dsm map[string]*vendor.Depset) map[string]b
 		fn(pkg.ImportPath)
 	}
 	return missing
+}
+
+// stripscheme removes any scheme components from url like paths.
+func stripscheme(path string) string {
+	u, err := url.Parse(path)
+	if err != nil {
+		panic(err)
+	}
+	return u.Host + u.Path
 }
