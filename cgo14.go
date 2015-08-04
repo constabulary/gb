@@ -48,10 +48,10 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	}
 
 	var ofiles []string
-	for _, f := range cfiles {
-		ofile := stripext(f) + ".o"
+	for _, cfile := range cfiles {
+		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cfile))+".o")
 		ofiles = append(ofiles, ofile)
-		if err := rungcc1(pkg.Context, pkg.Dir, ofile, f).Result(); err != nil {
+		if err := rungcc1(pkg, pkg.Dir, ofile, cfile).Result(); err != nil {
 			return fn(ErrTarget{err})
 		}
 	}
