@@ -68,12 +68,14 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 		}
 		gofiles = append(gofiles, cgofiles...)
 	}
-	objs := []ObjTarget{Gc(pkg, gofiles, deps...)}
+	
+	gc := Gc(pkg, gofiles, deps...)
+	objs := []ObjTarget{gc}
 	if len(cgoobj) > 0 {
 		objs = append(objs, cgoobj...)
 	}
 	for _, sfile := range pkg.SFiles {
-		objs = append(objs, Asm(pkg, sfile))
+		objs = append(objs, Asm(pkg, sfile, gc))
 	}
 	if pkg.Complete() {
 		return Install(pkg, objs[0].(PkgTarget))
@@ -232,12 +234,12 @@ func (a *asm) asm() error {
 
 // Asm returns a Target representing the result of assembling
 // sfile with the Context specified asssembler.
-func Asm(pkg *Package, sfile string) ObjTarget {
+func Asm(pkg *Package, sfile string, deps ...Target) ObjTarget {
 	asm := asm{
 		pkg:   pkg,
 		sfile: sfile,
 	}
-	asm.target = newTarget(asm.asm)
+	asm.target = newTarget(asm.asm, deps...)
 	return &asm
 }
 

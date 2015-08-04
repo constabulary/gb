@@ -34,9 +34,12 @@ func (p *Package) isMain() bool {
 func (p *Package) Imports() []*Package {
 	pkgs := make([]*Package, 0, len(p.Package.Imports))
 	for _, i := range p.Package.Imports {
-		if Stdlib[i] {
+	
+		// ignore fake packages
+		if i == "C" || i == "unsafe" {
 			continue
 		}
+
 		pkg, ok := p.pkgs[i]
 		if !ok {
 			panic("could not locate package: " + i)

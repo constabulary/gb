@@ -167,9 +167,12 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
-		if Stdlib[i] {
+
+		// ignore fake packages
+		if i == "C" || i == "unsafe" {
 			continue
 		}
+
 		if onStack(i) {
 			push(i)
 			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))

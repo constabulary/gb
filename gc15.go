@@ -35,19 +35,10 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	}
 
 	return func(c *Context) error {
-		goroot := runtime.GOROOT()
-		goos := options.goos
-		goarch := options.goarch
-
-		// cross-compliation is not supported yet #31
-		if goos != runtime.GOOS || goarch != runtime.GOARCH {
-			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", runtime.GOOS, runtime.GOARCH, goos, goarch)
-		}
-
-		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
+		tooldir := filepath.Join(runtime.GOROOT(), "pkg", "tool", runtime.GOOS+"_"+runtime.GOARCH)
 		c.tc = &gcToolchain{
-			goos:   goos,
-			goarch: goarch,
+			goos:   options.goos,
+			goarch: options.goarch,
 			gc:     filepath.Join(tooldir, "compile"),
 			ld:     filepath.Join(tooldir, "link"),
 			as:     filepath.Join(tooldir, "asm"),
@@ -66,6 +57,14 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 	if complete {
 		args = append(args, "-complete")
 	}
+
+	// runtime requires special support
+	if pkg.Name == "runtime" {
+		args = append(args, "-+")
+		asmhdr := filepath.Join(filepath.Dir(outfile), "go_asm.h")
+		args = append(args, "-asmhdr", asmhdr)
+	}
+
 	args = append(args, files...)
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
@@ -75,7 +74,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
-	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", includedir, sfile}
+	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", filepath.Dir(filepath.Dir(ofile)),"-I", includedir, sfile}
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
