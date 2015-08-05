@@ -17,10 +17,10 @@ func (t cgoTarget) Objfile() string { return string(t) }
 func (t cgoTarget) Result() error   { return nil }
 
 // rungcc1 invokes gcc to compile cfile into ofile
-func rungcc1(pkg *Package, dir, ofile, cfile string) Target {
+func rungcc1(pkg *Package, ofile, cfile string) Target {
 	_, cgoCFLAGS, _, _ := cflags(pkg, true)
 	args := []string{"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
-		"-I", dir,
+		"-I", pkg.Dir,
 		"-I", filepath.Dir(ofile),
 	}
 	args = append(args, cgoCFLAGS...)
@@ -30,7 +30,7 @@ func rungcc1(pkg *Package, dir, ofile, cfile string) Target {
 		"-c", cfile,
 	)
 	cmd := exec.Command(gcc(), args...)
-	cmd.Dir = dir
+	cmd.Dir = pkg.Dir
 	return pkg.Run(cmd)
 }
 
