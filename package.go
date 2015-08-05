@@ -3,6 +3,8 @@ package gb
 import (
 	"fmt"
 	"go/build"
+	"path/filepath"
+	"strings"
 )
 
 // Package represents a resolved package from the Project with respect to the Context.
@@ -59,4 +61,15 @@ func (p *Package) String() string {
 func (p *Package) Complete() bool {
 	has := func(s []string) bool { return len(s) > 0 }
 	return !(has(p.SFiles) || has(p.CgoFiles))
+}
+
+// Objdir returns the destination for object files compiled for this Package.
+func (pkg *Package) Objdir() string {
+	switch pkg.Scope {
+	case "test":
+		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
+		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	default:
+		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	}
 }
