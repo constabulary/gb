@@ -51,13 +51,13 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	for _, cfile := range cfiles {
 		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cfile))+".o")
 		ofiles = append(ofiles, ofile)
-		if err := rungcc1(pkg, pkg.Dir, ofile, cfile).Result(); err != nil {
+		if err := rungcc1(pkg, ofile, cfile).Result(); err != nil {
 			return fn(ErrTarget{err})
 		}
 	}
 
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
-	if err := rungcc2(pkg, pkg.Dir, ofile, ofiles); err != nil {
+	if err := rungcc2(pkg, ofile, ofiles); err != nil {
 		return fn(ErrTarget{err})
 	}
 

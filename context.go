@@ -203,7 +203,9 @@ func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
 	annotate := func() error {
 		<-c.permits
 		Debugf("run %v", cmd.Args)
+		t0 := time.Now()
 		err := cmd.Run()
+		c.Record(cmd.Args[0], time.Since(t0))
 		c.permits <- true
 		if err != nil {
 			err = fmt.Errorf("run %v: %v", cmd.Args, err)
