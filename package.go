@@ -34,7 +34,7 @@ func (p *Package) isMain() bool {
 func (p *Package) Imports() []*Package {
 	pkgs := make([]*Package, 0, len(p.Package.Imports))
 	for _, i := range p.Package.Imports {
-		if Stdlib[i] {
+		if shouldignore(i) {
 			continue
 		}
 		pkg, ok := p.pkgs[i]

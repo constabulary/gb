@@ -167,7 +167,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
-		if Stdlib[i] {
+		if shouldignore(i) {
 			continue
 		}
 		if onStack(i) {
@@ -395,4 +395,10 @@ NextVar:
 		out = append(out, inkv)
 	}
 	return out
+}
+
+// shouldignore tests if the package should be ignored.
+func shouldignore(p string) bool {
+	//	return p == "C" || p == "unsafe"
+	return Stdlib[p]
 }
