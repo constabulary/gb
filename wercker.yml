@@ -2,7 +2,7 @@ box: wercker/golang
 build:
   steps:
     # golint step!
-    - wercker/golint
+    # - wercker/golint
 
     # Build the project
     - script:
