@@ -20,6 +20,6 @@ build:
     - script:
         name: integration test/sqlite3
         code: | 
-          git clone https://github.com/constabulary/integration-tests
+          git clone --quiet https://github.com/constabulary/integration-tests
           gb vendor -R integration-tests/sqlite3 restore
           gb build -R integration-tests/sqlite3
