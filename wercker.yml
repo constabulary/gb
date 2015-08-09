@@ -6,12 +6,12 @@ build:
 
     # Build the project
     - script:
-        name: go build
+        name: go get
         code: |
-          go build ./...
+          go get github.com/constabulary/gb/...
 
     # Test the project
     - script:
         name: go test
         code: |
-          go test ./...
+          go test github.com/constabulary/gb/...
