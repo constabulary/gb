@@ -24,6 +24,7 @@ build:
     - script:
         name: integration test/sqlite3
         code: | 
-          git -C ${WERCKER_ROOT} clone --quiet https://github.com/constabulary/integration-tests 
-          gb vendor -v -R ${WERCKER_ROOT}/integration-tests/sqlite3 restore
-          gb build -v -R ${WERCKER_ROOT}/integration-tests/sqlite3
+          cd ${WERCKER_STEP_TEMP}
+          git clone --quiet https://github.com/constabulary/integration-tests 
+          gb vendor -v -R integration-tests/sqlite3 restore
+          gb build -v -R integration-tests/sqlite3
