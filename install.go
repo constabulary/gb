@@ -90,8 +90,8 @@ func isStale(pkg *Package) bool {
 		return true
 	}
 
+	// tests are always stale, they are never installed
 	if pkg.Scope == "test" {
-		// tests are always stale, they are never installed
 		return true
 	}
 
