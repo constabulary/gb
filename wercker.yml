@@ -1,14 +1,20 @@
 box: wercker/golang
 build:
   steps:
+    - script:
+        name: tree
+        code: |
+          tree
     # golint step!
     # - wercker/golint
 
     # Build the project
     - script:
-        name: go get
+        name: go install
         code: |
-          go get github.com/constabulary/gb/...
+          mkdir -p src/github.com/constabulary
+          mv gb src/github.com/constabulary/
+	  go install -v github.com/constabulary/gb/...
 
     # Test the project
     - script:
