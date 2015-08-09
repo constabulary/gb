@@ -68,7 +68,7 @@ func main() {
 	}
 
 	args = fs.Args() // reset args to the leftovers from fs.Parse
-	if command == commands["plugin"] && name != "plugin" {
+	if command == commands["plugin"] {
 		args = append([]string{name}, args...)
 	}
 	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
