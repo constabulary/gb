@@ -9,7 +9,7 @@ build:
         name: go install
         code: |
           mkdir -p ${WERCKER_ROOT}/src/github.com/constabulary
-          mv ${WERCKER_ROOT}/gb ${WERCKER_ROOT}/src/github.com/constabulary/
+          mv * ${WERCKER_ROOT}/src/github.com/constabulary/
           go install -v github.com/constabulary/gb/...
 
     # Test the project
