@@ -111,6 +111,12 @@ func TestDeduceRemoteRepo(t *testing.T) {
 			url: "git://github.com/pkg/sftp",
 		},
 		insecure: true,
+	}, {
+		path: "code.google.com/p/google-api-go-client/bigquery/v2",
+		want: &hgrepo{
+			url: "https://code.google.com/p/google-api-go-client",
+		},
+		extra: "/bigquery/v2",
 	}}
 
 	for _, tt := range tests {
@@ -121,7 +127,7 @@ func TestDeduceRemoteRepo(t *testing.T) {
 			continue
 		}
 		if !reflect.DeepEqual(got, tt.want) || extra != tt.extra {
-			t.Errorf("RemoteRepoFromPath(%q): want %#v, %v, got %#v, %v", tt.path, tt.want, tt.extra, got, extra)
+			t.Errorf("DeduceRemoteRepo(%q): want %#v, %v, got %#v, %v", tt.path, tt.want, tt.extra, got, extra)
 		}
 	}
 }
