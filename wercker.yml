@@ -14,7 +14,7 @@ build:
         code: |
           mkdir -p src/github.com/constabulary
           mv gb src/github.com/constabulary/
-	  go install -v github.com/constabulary/gb/...
+          go install -v github.com/constabulary/gb/...
 
     # Test the project
     - script:
