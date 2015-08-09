@@ -1,10 +1,6 @@
 box: wercker/golang
 build:
   steps:
-    - script:
-        name: tree
-        code: |
-          tree
     # golint step!
     # - wercker/golint
 
@@ -12,8 +8,8 @@ build:
     - script:
         name: go install
         code: |
-          mkdir -p src/github.com/constabulary
-          mv gb src/github.com/constabulary/
+          mkdir -p ${WERCKER_ROOT}/src/github.com/constabulary
+          mv ${WERCKER_ROOT}/gb ${WERCKER_ROOT}/src/github.com/constabulary/
           go install -v github.com/constabulary/gb/...
 
     # Test the project
@@ -27,5 +23,5 @@ build:
         name: integration test/sqlite3
         code: | 
           git clone --quiet https://github.com/constabulary/integration-tests
-          gb vendor -v -R integration-tests/sqlite3 restore
-          gb build -v -R integration-tests/sqlite3
+          gb vendor -v -R ${WERCKER_ROOT}/integration-tests/sqlite3 restore
+          gb build -v -R ${WERCKER_ROOT}/integration-tests/sqlite3
