@@ -50,7 +50,6 @@ func main() {
 			os.Exit(1)
 		}
 		command = commands["plugin"]
-		args = append([]string{"plugin"}, args...)
 	}
 
 	// add extra flags if necessary
@@ -68,7 +67,10 @@ func main() {
 		gb.Fatalf("could not parse flags: %v", err)
 	}
 
-	args = fs.Args()              // reset args to the leftovers from fs.Parse
+	args = fs.Args() // reset args to the leftovers from fs.Parse
+	if command == commands["plugin"] {
+		args = append([]string{name}, args...)
+	}
 	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
 	if err != nil {
 		gb.Fatalf("could not make project root absolute: %v", err)

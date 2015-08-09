@@ -1,1 +1,30 @@
 box: wercker/golang
+build:
+  steps:
+    # Sets the go workspace and places you package
+    # at the right place in the workspace tree
+    - setup-go-workspace
+
+    # golint step!
+    # - wercker/golint
+
+    # Build the project
+    - script:
+        name: go install
+        code: |
+          go install -v github.com/constabulary/gb/...
+
+    # Test the project
+    - script:
+        name: go test
+        code: |
+          go test github.com/constabulary/gb/...
+
+    # Integration tests
+    - script:
+        name: integration test/sqlite3
+        code: | 
+          cd ${WERCKER_STEP_TEMP}
+          git clone --quiet https://github.com/constabulary/integration-tests 
+          gb vendor -v -R integration-tests/sqlite3 restore
+          gb build -v -R integration-tests/sqlite3
