@@ -15,3 +15,11 @@ build:
         name: go test
         code: |
           go test github.com/constabulary/gb/...
+
+    # Integration tests
+    - script:
+        name: integration test/sqlite3
+        code: | 
+          git clone https://github.com/constabulary/integration-tests
+          gb vendor -R integration-tests/sqlite3 restore
+          gb build -R integration-tests/sqlite3
