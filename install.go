@@ -12,10 +12,6 @@ func Install(pkg *Package, t PkgTarget) PkgTarget {
 	if pkg.SkipInstall {
 		return t
 	}
-	if pkg.isMain() {
-		Debugf("%v is a main package, not installing", pkg)
-		return t
-	}
 	if pkg.Scope == "test" {
 		Debugf("%v is test scoped, not installing", pkg)
 		return t
@@ -28,27 +24,20 @@ func Install(pkg *Package, t PkgTarget) PkgTarget {
 	return &i
 }
 
-// cachePackage returns a PkgTarget representing the cached output of
-// pkg.
-func cachedPackage(pkg *Package) *cachedPkgTarget {
-	return &cachedPkgTarget{
-		pkg: pkg,
-	}
-}
-
-type cachedPkgTarget struct {
+// cachePackage returns a PkgTarget representing the cached output of pkg.
+type cachedPackage struct {
 	pkg *Package
 }
 
-func (c *cachedPkgTarget) Pkgfile() string {
+func (c *cachedPackage) Pkgfile() string {
 	return pkgfile(c.pkg)
 }
 
-func (c *cachedPkgTarget) String() string {
+func (c *cachedPackage) String() string {
 	return fmt.Sprintf("cached %v", c.pkg.ImportPath)
 }
 
-func (c *cachedPkgTarget) Result() error {
+func (c *cachedPackage) Result() error {
 	// TODO(dfc) _, err := os.Stat(c.Pkgfile())
 	return nil
 }

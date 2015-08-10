@@ -54,7 +54,7 @@ func BuildDependencies(targets map[string]PkgTarget, pkg *Package) []Target {
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
 	if !pkg.Stale {
-		return cachedPackage(pkg)
+		return &cachedPackage{pkg: pkg}
 	}
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)

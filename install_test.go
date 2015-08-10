@@ -25,7 +25,7 @@ func TestStale(t *testing.T) {
 		pkgs: []string{"a", "b"},
 		stale: map[string]bool{
 			"a": false,
-			"b": true,
+			"b": false,
 		},
 	}}
 
