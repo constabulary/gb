@@ -57,6 +57,32 @@ func TestBuild(t *testing.T) {
 	}
 }
 
+func TestPkgname(t *testing.T) {
+	tests := []struct {
+		pkg  string
+		name string
+	}{{
+		pkg:  "a",
+		name: "a",
+	}, {
+		pkg:  "b",
+		name: "b",
+	}}
+
+	ctx := testContext(t)
+	for _, tt := range tests {
+		pkg, err := ctx.ResolvePackage(tt.pkg)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		if got, want := pkgname(pkg), tt.name; got != want {
+			t.Errorf("pkgname(%v): want %v, got %v", want, got)
+		}
+	}
+	ctx.Destroy()
+}
+
 func sameErr(e1, e2 error) bool {
 	if e1 != nil && e2 != nil {
 		return e1.Error() == e2.Error()

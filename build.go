@@ -293,6 +293,13 @@ func objname(pkg *Package) string {
 	}
 }
 
+func pkgname(pkg *Package) string {
+	if pkg.isMain() {
+		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
+	}
+	return pkg.Name
+}
+
 // Binfile returns the destination of the compiled target of this command.
 // TODO(dfc) this should be Target.
 func (pkg *Package) Binfile() string {

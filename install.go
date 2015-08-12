@@ -111,6 +111,11 @@ func isStale(pkg *Package) bool {
 		return err != nil || fi.ModTime().After(built)
 	}
 
+	newerThan := func(file string) bool {
+		fi, err := os.Stat(file)
+		return err != nil || fi.ModTime().Before(built)
+	}
+
 	// As a courtesy to developers installing new versions of the compiler
 	// frequently, define that packages are stale if they are
 	// older than the compiler, and commands if they are older than
@@ -131,9 +136,13 @@ func isStale(pkg *Package) bool {
 		}
 	}
 
-	srcs := stringList(pkg.GoFiles, pkg.CFiles, pkg.CXXFiles, pkg.MFiles, pkg.HFiles, pkg.SFiles, pkg.CgoFiles, pkg.SysoFiles, pkg.SwigFiles, pkg.SwigCXXFiles)
+	// if the main package is up to date but _newer_ than the binary (which
+	// could have been removed), then consider it stale.
+	if pkg.isMain() && newerThan(filepath.Join(pkg.Bindir(), pkgname(pkg))) {
+		return true
+	}
 
-	// TODO(dfc) is pkg.isMain(), check to see if the binfile is up to date
+	srcs := stringList(pkg.GoFiles, pkg.CFiles, pkg.CXXFiles, pkg.MFiles, pkg.HFiles, pkg.SFiles, pkg.CgoFiles, pkg.SysoFiles, pkg.SwigFiles, pkg.SwigCXXFiles)
 
 	for _, src := range srcs {
 		if olderThan(filepath.Join(pkg.Dir, src)) {
