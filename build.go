@@ -268,6 +268,9 @@ func (l *ld) link() error {
 // Ld returns a Target representing the result of linking a
 // Package into a command with the Context provided linker.
 func Ld(pkg *Package, afile PkgTarget) Target {
+	if !pkg.Stale {
+		return &cachedTarget{target: afile}
+	}
 	ld := ld{
 		pkg:   pkg,
 		afile: afile,

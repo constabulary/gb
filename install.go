@@ -42,6 +42,18 @@ func (c *cachedPackage) Result() error {
 	return nil
 }
 
+type cachedTarget struct {
+	target Target
+}
+
+func (c *cachedTarget) String() string {
+	return fmt.Sprintf("cached %v", c.target)
+}
+
+func (c *cachedTarget) Result() error {
+	return nil
+}
+
 type install struct {
 	target
 	PkgTarget
@@ -120,6 +132,9 @@ func isStale(pkg *Package) bool {
 	}
 
 	srcs := stringList(pkg.GoFiles, pkg.CFiles, pkg.CXXFiles, pkg.MFiles, pkg.HFiles, pkg.SFiles, pkg.CgoFiles, pkg.SysoFiles, pkg.SwigFiles, pkg.SwigCXXFiles)
+
+	// TODO(dfc) is pkg.isMain(), check to see if the binfile is up to date
+
 	for _, src := range srcs {
 		if olderThan(filepath.Join(pkg.Dir, src)) {
 			return true
