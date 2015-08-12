@@ -25,7 +25,7 @@ func TestStale(t *testing.T) {
 		pkgs: []string{"a", "b"},
 		stale: map[string]bool{
 			"a": false,
-			"b": true,
+			"b": false,
 		},
 	}}
 
@@ -54,6 +54,8 @@ func TestStale(t *testing.T) {
 		return p
 	}
 
+	Verbose = true
+	defer func() { Verbose = false }()
 	for _, tt := range tests {
 		ctx := newctx()
 		defer ctx.Destroy()

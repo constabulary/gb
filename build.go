@@ -54,7 +54,7 @@ func BuildDependencies(targets map[string]PkgTarget, pkg *Package) []Target {
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
 	if !pkg.Stale {
-		return cachedPackage(pkg)
+		return &cachedPackage{pkg: pkg}
 	}
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
@@ -268,6 +268,9 @@ func (l *ld) link() error {
 // Ld returns a Target representing the result of linking a
 // Package into a command with the Context provided linker.
 func Ld(pkg *Package, afile PkgTarget) Target {
+	if !pkg.Stale {
+		return &cachedTarget{target: afile}
+	}
 	ld := ld{
 		pkg:   pkg,
 		afile: afile,
@@ -288,6 +291,13 @@ func objname(pkg *Package) string {
 	default:
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath)) + ".a"
 	}
+}
+
+func pkgname(pkg *Package) string {
+	if pkg.isMain() {
+		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
+	}
+	return pkg.Name
 }
 
 // Binfile returns the destination of the compiled target of this command.
