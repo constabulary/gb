@@ -19,6 +19,10 @@ func ParseImports(root string) (map[string]bool, error) {
 
 	var walkFn = func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
+			name := info.Name()
+			if strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_") || name == "testdata" {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		if filepath.Ext(path) != ".go" { // Parse only go source files
