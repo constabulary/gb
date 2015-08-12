@@ -12,10 +12,6 @@ func Install(pkg *Package, t PkgTarget) PkgTarget {
 	if pkg.SkipInstall {
 		return t
 	}
-	if pkg.isMain() {
-		Debugf("%v is a main package, not installing", pkg)
-		return t
-	}
 	if pkg.Scope == "test" {
 		Debugf("%v is test scoped, not installing", pkg)
 		return t
@@ -28,28 +24,33 @@ func Install(pkg *Package, t PkgTarget) PkgTarget {
 	return &i
 }
 
-// cachePackage returns a PkgTarget representing the cached output of
-// pkg.
-func cachedPackage(pkg *Package) *cachedPkgTarget {
-	return &cachedPkgTarget{
-		pkg: pkg,
-	}
-}
-
-type cachedPkgTarget struct {
+// cachePackage returns a PkgTarget representing the cached output of pkg.
+type cachedPackage struct {
 	pkg *Package
 }
 
-func (c *cachedPkgTarget) Pkgfile() string {
+func (c *cachedPackage) Pkgfile() string {
 	return pkgfile(c.pkg)
 }
 
-func (c *cachedPkgTarget) String() string {
+func (c *cachedPackage) String() string {
 	return fmt.Sprintf("cached %v", c.pkg.ImportPath)
 }
 
-func (c *cachedPkgTarget) Result() error {
+func (c *cachedPackage) Result() error {
 	// TODO(dfc) _, err := os.Stat(c.Pkgfile())
+	return nil
+}
+
+type cachedTarget struct {
+	target Target
+}
+
+func (c *cachedTarget) String() string {
+	return fmt.Sprintf("cached %v", c.target)
+}
+
+func (c *cachedTarget) Result() error {
 	return nil
 }
 
@@ -90,8 +91,8 @@ func isStale(pkg *Package) bool {
 		return true
 	}
 
+	// tests are always stale, they are never installed
 	if pkg.Scope == "test" {
-		// tests are always stale, they are never installed
 		return true
 	}
 
@@ -108,6 +109,11 @@ func isStale(pkg *Package) bool {
 	olderThan := func(file string) bool {
 		fi, err := os.Stat(file)
 		return err != nil || fi.ModTime().After(built)
+	}
+
+	newerThan := func(file string) bool {
+		fi, err := os.Stat(file)
+		return err != nil || fi.ModTime().Before(built)
 	}
 
 	// As a courtesy to developers installing new versions of the compiler
@@ -130,7 +136,14 @@ func isStale(pkg *Package) bool {
 		}
 	}
 
+	// if the main package is up to date but _newer_ than the binary (which
+	// could have been removed), then consider it stale.
+	if pkg.isMain() && newerThan(filepath.Join(pkg.Bindir(), pkgname(pkg))) {
+		return true
+	}
+
 	srcs := stringList(pkg.GoFiles, pkg.CFiles, pkg.CXXFiles, pkg.MFiles, pkg.HFiles, pkg.SFiles, pkg.CgoFiles, pkg.SysoFiles, pkg.SwigFiles, pkg.SwigCXXFiles)
+
 	for _, src := range srcs {
 		if olderThan(filepath.Join(pkg.Dir, src)) {
 			return true

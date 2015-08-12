@@ -3,7 +3,6 @@ package gb
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -55,7 +54,7 @@ func BuildDependencies(targets map[string]PkgTarget, pkg *Package) []Target {
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
 	if !pkg.Stale {
-		return cachedPackage(pkg)
+		return &cachedPackage{pkg: pkg}
 	}
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
@@ -68,14 +67,13 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 		}
 		gofiles = append(gofiles, cgofiles...)
 	}
-	
-	gc := Gc(pkg, gofiles, deps...)
-	objs := []ObjTarget{gc}
+	compile := Gc(pkg, gofiles, deps...)
+	objs := []ObjTarget{compile}
 	if len(cgoobj) > 0 {
 		objs = append(objs, cgoobj...)
 	}
 	for _, sfile := range pkg.SFiles {
-		objs = append(objs, Asm(pkg, sfile, gc))
+		objs = append(objs, Asm(pkg, sfile, compile))
 	}
 	if pkg.Complete() {
 		return Install(pkg, objs[0].(PkgTarget))
@@ -270,6 +268,9 @@ func (l *ld) link() error {
 // Ld returns a Target representing the result of linking a
 // Package into a command with the Context provided linker.
 func Ld(pkg *Package, afile PkgTarget) Target {
+	if !pkg.Stale {
+		return &cachedTarget{target: afile}
+	}
 	ld := ld{
 		pkg:   pkg,
 		afile: afile,
@@ -283,17 +284,6 @@ func objfile(pkg *Package) string {
 	return filepath.Join(pkg.Objdir(), objname(pkg))
 }
 
-// Objdir returns the destination for object files compiled for this Package.
-func (pkg *Package) Objdir() string {
-	switch pkg.Scope {
-	case "test":
-		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
-		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
-	default:
-		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
-	}
-}
-
 func objname(pkg *Package) string {
 	switch pkg.Name {
 	case "main":
@@ -301,6 +291,13 @@ func objname(pkg *Package) string {
 	default:
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath)) + ".a"
 	}
+}
+
+func pkgname(pkg *Package) string {
+	if pkg.isMain() {
+		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
+	}
+	return pkg.Name
 }
 
 // Binfile returns the destination of the compiled target of this command.

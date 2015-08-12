@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -51,6 +52,14 @@ See gb help plugins.
 	},
 	// plugin should not interpret arguments
 	ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
+
+	FlagParse: func(flags *flag.FlagSet, args []string) error {
+		args = args[1:]
+		if args[0] == "plugin" {
+			args = args[1:]
+		}
+		return flags.Parse(args[1:])
+	},
 }
 
 func lookupPlugin(arg string) (string, error) {

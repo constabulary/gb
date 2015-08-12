@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // cgo support functions
@@ -16,22 +17,25 @@ func (t cgoTarget) Objfile() string { return string(t) }
 func (t cgoTarget) Result() error   { return nil }
 
 // rungcc1 invokes gcc to compile cfile into ofile
-func rungcc1(ctx *Context, dir, ofile, cfile string) Target {
-	cmd := exec.Command(gcc(),
-		"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
-		"-I", dir,
+func rungcc1(pkg *Package, ofile, cfile string) Target {
+	_, cgoCFLAGS, _, _ := cflags(pkg, true)
+	args := []string{"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
+		"-I", pkg.Dir,
 		"-I", filepath.Dir(ofile),
+	}
+	args = append(args, cgoCFLAGS...)
+	args = append(args,
 		"-g", "-O2",
 		"-o", ofile,
 		"-c", cfile,
 	)
-	cmd.Dir = dir
-	return ctx.Run(cmd)
-	// return ctx.run(dir, nil, gcc(), args...)
+	cmd := exec.Command(gcc(), args...)
+	cmd.Dir = pkg.Dir
+	return pkg.Run(cmd)
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
-func rungcc2(pkg *Package, dir string, ofile string, ofiles []string) error {
+func rungcc2(pkg *Package, ofile string, ofiles []string) error {
 	args := []string{
 		"-fPIC", "-m64", "-fmessage-length=0",
 	}
@@ -42,7 +46,10 @@ func rungcc2(pkg *Package, dir string, ofile string, ofiles []string) error {
 	args = append(args, ofiles...)
 	_, _, _, cgoLDFLAGS := cflags(pkg, true)
 	args = append(args, cgoLDFLAGS...) // this has to go at the end, because reasons!
-	return pkg.run(dir, nil, gcc(), args...)
+	t0 := time.Now()
+	err := pkg.run(pkg.Dir, nil, gcc(), args...)
+	pkg.Record("gcc2", time.Since(t0))
+	return err
 }
 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.
@@ -64,7 +71,10 @@ func rungcc3(ctx *Context, dir string, ofiles []string) (string, error) {
 		}
 		args = append(args, libgcc, "-Wl,--build-id=none")
 	}
-	return ofile, ctx.run(dir, nil, gcc(), args...)
+	t0 := time.Now()
+	err := ctx.run(dir, nil, gcc(), args...)
+	ctx.Record("gcc3", time.Since(t0))
+	return ofile, err
 }
 
 // libgcc returns the value of gcc -print-libgcc-file-name.

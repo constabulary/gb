@@ -105,11 +105,11 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 		}
 		repo, err := Hgrepo(url, insecure, schemes...)
 		if err == nil {
-			return repo, v[5], nil
+			return repo, v[0][len(v[1]):], nil
 		}
 		repo, err = Gitrepo(url, insecure, schemes...)
 		if err == nil {
-			return repo, v[5], nil
+			return repo, v[0][len(v[1]):], nil
 		}
 		return nil, "", fmt.Errorf("unknown repository type")
 	case lpregex.MatchString(path):

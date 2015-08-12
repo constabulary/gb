@@ -167,9 +167,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
-
-		// ignore fake packages
-		if i == "C" || i == "unsafe" {
+		if shouldignore(i) {
 			continue
 		}
 
@@ -206,7 +204,9 @@ func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
 	annotate := func() error {
 		<-c.permits
 		Debugf("run %v", cmd.Args)
+		t0 := time.Now()
 		err := cmd.Run()
+		c.Record(cmd.Args[0], time.Since(t0))
 		c.permits <- true
 		if err != nil {
 			err = fmt.Errorf("run %v: %v", cmd.Args, err)
@@ -398,4 +398,10 @@ NextVar:
 		out = append(out, inkv)
 	}
 	return out
+}
+
+// shouldignore tests if the package should be ignored.
+func shouldignore(p string) bool {
+	//	return p == "C" || p == "unsafe"
+	return Stdlib[p]
 }
