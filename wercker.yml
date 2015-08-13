@@ -22,9 +22,21 @@ build:
 
     # Integration tests
     - script:
+        name: integation test/setup
+        code:
+          git clone --quiet https://github.com/constabulary/integration-tests 
+
+    - script:
         name: integration test/sqlite3
         code: | 
-          cd ${WERCKER_STEP_TEMP}
-          git clone --quiet https://github.com/constabulary/integration-tests 
-          gb vendor -v -R integration-tests/sqlite3 restore
-          gb build -v -R integration-tests/sqlite3
+          gb vendor -R integration-tests/sqlite3 restore
+          gb build -R integration-tests/sqlite3
+
+    - script:
+        name: intergration test/goczmq
+        code: |
+          cd integration-tests/goczmq
+          bash -x setup.bash
+          gb vendor -v restore
+          gb build
+	  
