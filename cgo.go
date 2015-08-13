@@ -35,7 +35,7 @@ func rungcc1(pkg *Package, ofile, cfile string) Target {
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
-func rungcc2(pkg *Package, ofile string, ofiles []string) error {
+func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles []string) error {
 	args := []string{
 		"-fPIC", "-m64", "-fmessage-length=0",
 	}
@@ -44,7 +44,6 @@ func rungcc2(pkg *Package, ofile string, ofiles []string) error {
 	}
 	args = append(args, "-o", ofile)
 	args = append(args, ofiles...)
-	_, _, _, cgoLDFLAGS := cflags(pkg, true)
 	args = append(args, cgoLDFLAGS...) // this has to go at the end, because reasons!
 	t0 := time.Now()
 	err := pkg.run(pkg.Dir, nil, gcc(), args...)
@@ -183,4 +182,12 @@ func pkgconfig(p *Package) ([]string, []string, error) {
 	}
 	ldflags := strings.Fields(out.String())
 	return cflags, ldflags, nil
+}
+
+func quoteFlags(flags []string) []string {
+	quoted := make([]string, len(flags))
+	for i, f := range flags {
+		quoted[i] = strconv.Quote(f)
+	}
+	return quoted
 }
