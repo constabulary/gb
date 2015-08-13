@@ -89,7 +89,7 @@ func main() {
 	if command.ParseArgs != nil {
 		args = command.ParseArgs(ctx, ctx.Projectdir(), args)
 	} else {
-		args = cmd.ImportPaths(ctx, ctx.Projectdir(), args)
+		args = cmd.ImportPaths(ctx, cwd, args)
 	}
 
 	gb.Debugf("args: %v", args)

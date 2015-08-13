@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseImports(t *testing.T) {
-	root := filepath.Join(getwd(t), "_testdata")
+	root := filepath.Join(getwd(t), "_testdata", "src")
 
 	got, err := ParseImports(root)
 	if err != nil {

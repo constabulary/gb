@@ -188,7 +188,6 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		Package: p,
 	}
 	pkg.Stale = stale || isStale(&pkg)
-	Debugf("loadPackage: %v %v (%v)", path, pkg.Stale, pkg.Dir)
 	c.pkgs[path] = &pkg
 	return &pkg, nil
 }

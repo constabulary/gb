@@ -4,7 +4,6 @@ package gb
 
 import (
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -17,13 +16,14 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	fn := func(t ...ObjTarget) ([]ObjTarget, []string) {
 		return t, nil
 	}
-	_, _, _, cgoLDFLAGS := cflags(pkg, true)
-	_, pcLDFLAGS, err := pkgconfig(pkg)
+	_, _, cgoCFLAGS, cgoLDFLAGS := cflags(pkg, true)
+	pcCFLAGS, pcLDFLAGS, err := pkgconfig(pkg)
 	if err != nil {
 		return fn(ErrTarget{err})
 	}
+	cgoCFLAGS = append(cgoCFLAGS, pcCFLAGS...)
 	cgoLDFLAGS = append(cgoLDFLAGS, pcLDFLAGS...)
-	if err := runcgo1(pkg, nil, cgoLDFLAGS); err != nil {
+	if err := runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS); err != nil {
 		return fn(ErrTarget{err})
 	}
 
@@ -56,7 +56,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	}
 
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
-	if err := rungcc2(pkg, ofile, ofiles); err != nil {
+	if err := rungcc2(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles); err != nil {
 		return fn(ErrTarget{err})
 	}
 
@@ -92,13 +92,9 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 	args = append(args, pkg.CgoFiles...)
 
 	// Update $CGO_LDFLAGS with p.CgoLDFLAGS.
-	var cgoenv []string
-	if len(ldflags) > 0 {
-		flags := make([]string, len(ldflags))
-		for i, f := range ldflags {
-			flags[i] = strconv.Quote(f)
-		}
-		cgoenv = []string{"CGO_LDFLAGS=" + strings.Join(flags, " ")}
+	cgoenv := []string{
+		"CGO_CFLAGS=" + strings.Join(quoteFlags(cflags), " "),
+		"CGO_LDFLAGS=" + strings.Join(quoteFlags(ldflags), " "),
 	}
 	return pkg.run(pkg.Dir, cgoenv, cgo, args...)
 }
