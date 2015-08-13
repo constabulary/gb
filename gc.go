@@ -1,6 +1,7 @@
 package gb
 
 import "path/filepath"
+import "os"
 
 // gc toolchain
 
@@ -14,10 +15,10 @@ type gcoption struct {
 }
 
 func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
-	args := []string{"r"}
+	args := []string{"rv"}
 	args = append(args, afiles...)
 	dir := filepath.Dir(afiles[0])
-	return pkg.run(dir, nil, t.pack, args...)
+	return pkg.runOut(os.Stdout, dir, nil, t.pack, args...)
 }
 
 func (t *gcToolchain) compiler() string { return t.gc }

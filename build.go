@@ -75,9 +75,7 @@ func Compile(pkg *Package, deps ...Target) PkgTarget {
 	for _, sfile := range pkg.SFiles {
 		objs = append(objs, Asm(pkg, sfile, compile))
 	}
-	if pkg.Complete() {
-		return Install(pkg, objs[0].(PkgTarget))
-	}
+	fmt.Println("compile:", pkg.Name, "complete:", pkg.Complete())
 	return Install(pkg, Pack(pkg, objs...))
 }
 
@@ -197,15 +195,18 @@ func (p *pack) Pkgfile() string {
 
 // Pack returns a Target representing the result of packing a
 // set of Context specific object files into an archive.
-func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
-	if len(deps) < 2 {
-		return ErrTarget{fmt.Errorf("Pack requires at least two arguments: %v", deps)}
+func Pack(pkg *Package, objs ...ObjTarget) PkgTarget {
+	if pkg.Complete() {
+		return Install(pkg, objs[0].(PkgTarget))
+	}
+	if len(objs) < 2 {
+		return ErrTarget{fmt.Errorf("Pack requires at least two arguments: %v", objs)}
 	}
 	pack := pack{
 		c:   make(chan error, 1),
 		pkg: pkg,
 	}
-	go pack.pack(deps...)
+	go pack.pack(objs...)
 	return &pack
 }
 
@@ -220,7 +221,7 @@ func (a *asm) String() string {
 }
 
 func (a *asm) Objfile() string {
-	return filepath.Join(a.pkg.Workdir(), a.pkg.ImportPath, stripext(a.sfile)+".6")
+	return filepath.Join(a.pkg.Workdir(), a.pkg.ImportPath, stripext(a.sfile)+".o")
 }
 
 func (a *asm) asm() error {

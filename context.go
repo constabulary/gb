@@ -15,6 +15,11 @@ import (
 	"time"
 )
 
+const (
+	buildRuntime = true
+	maxpermits   = 1
+)
+
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
@@ -78,7 +83,7 @@ func Ldflags(flags string) func(*Context) error {
 }
 
 func newContext(p *Project, bc *build.Context) *Context {
-	permits := make(chan bool, runtime.NumCPU())
+	permits := make(chan bool, min(maxpermits, runtime.NumCPU()))
 	for i := cap(permits); i > 0; i-- {
 		permits <- true
 	}
@@ -89,6 +94,13 @@ func newContext(p *Project, bc *build.Context) *Context {
 		pkgs:    make(map[string]*Package),
 		permits: permits,
 	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // IncludePaths returns the include paths visible in this context.
@@ -401,6 +413,8 @@ NextVar:
 
 // shouldignore tests if the package should be ignored.
 func shouldignore(p string) bool {
-	//	return p == "C" || p == "unsafe"
-	return Stdlib[p]
+	if buildRuntime {
+		return p == "C" || p == "unsafe"
+	}
+	return stdlib[p]
 }

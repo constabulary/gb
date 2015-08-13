@@ -74,7 +74,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
-	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", filepath.Dir(filepath.Dir(ofile)),"-I", includedir, sfile}
+	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", filepath.Dir(filepath.Dir(ofile)), "-I", includedir, sfile}
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}

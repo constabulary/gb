@@ -2,7 +2,7 @@ package gb
 
 // packages from the standard lib. They are excluded
 // from the package map.
-var Stdlib = map[string]bool{
+var stdlib = map[string]bool{
 	"C":                   true,
 	"archive/tar":         true,
 	"archive/zip":         true,
