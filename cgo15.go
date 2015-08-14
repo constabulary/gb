@@ -16,7 +16,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	fn := func(t ...ObjTarget) ([]ObjTarget, []string) {
 		return t, nil
 	}
-	_, _, cgoCFLAGS, cgoLDFLAGS := cflags(pkg, true)
+	_, cgoCFLAGS, _, cgoLDFLAGS := cflags(pkg, false)
 	pcCFLAGS, pcLDFLAGS, err := pkgconfig(pkg)
 	if err != nil {
 		return fn(ErrTarget{err})
@@ -46,7 +46,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	for _, cfile := range cfiles {
 		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cfile))+".o")
 		ofiles = append(ofiles, ofile)
-		targets = append(targets, rungcc1(pkg, ofile, cfile))
+		targets = append(targets, rungcc1(pkg, cgoCFLAGS, ofile, cfile))
 	}
 
 	for _, t := range targets {
@@ -89,9 +89,10 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 		"-I", objdir,
 		"-I", pkg.Dir,
 	}
+	args = append(args, cflags...)
+	args = append(args, ldflags...)
 	args = append(args, pkg.CgoFiles...)
 
-	// Update $CGO_LDFLAGS with p.CgoLDFLAGS.
 	cgoenv := []string{
 		"CGO_CFLAGS=" + strings.Join(quoteFlags(cflags), " "),
 		"CGO_LDFLAGS=" + strings.Join(quoteFlags(ldflags), " "),
