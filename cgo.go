@@ -18,15 +18,13 @@ func (t cgoTarget) Objfile() string { return string(t) }
 func (t cgoTarget) Result() error   { return nil }
 
 // rungcc1 invokes gcc to compile cfile into ofile
-func rungcc1(pkg *Package, ofile, cfile string) Target {
-	_, cgoCFLAGS, _, _ := cflags(pkg, true)
-	args := []string{"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
+func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) Target {
+	args := []string{"-g", "-O2", "-fPIC", "-m64", "-pthread", "-fmessage-length=0",
 		"-I", pkg.Dir,
 		"-I", filepath.Dir(ofile),
 	}
 	args = append(args, cgoCFLAGS...)
 	args = append(args,
-		"-g", "-O2",
 		"-o", ofile,
 		"-c", cfile,
 	)
