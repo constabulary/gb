@@ -110,7 +110,7 @@ func (c *Context) Workdir() string { return c.workdir }
 
 // ResolvePackage resolves the package at path using the current context.
 func (c *Context) ResolvePackage(path string) (*Package, error) {
-	return c.loadPackage(nil, path)
+	return loadPackage(c, nil, path)
 }
 
 // ResolvePackageWithTests resolves the package at path using the current context
@@ -131,64 +131,6 @@ func (c *Context) ResolvePackageWithTests(path string) (*Package, error) {
 		}
 	}
 	return p, nil
-}
-
-// loadPackage recursively resolves path and its imports and if successful
-// stores those packages in the Context's internal package cache.
-func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
-	if build.IsLocalImport(path) {
-		// sanity check
-		return nil, fmt.Errorf("%q is not a valid import path", path)
-	}
-	if pkg, ok := c.pkgs[path]; ok {
-		// already loaded, just return
-		return pkg, nil
-	}
-
-	push := func(path string) {
-		stack = append(stack, path)
-	}
-	pop := func(path string) {
-		stack = stack[:len(stack)-1]
-	}
-	onStack := func(path string) bool {
-		for _, p := range stack {
-			if p == path {
-				return true
-			}
-		}
-		return false
-	}
-
-	p, err := c.Context.Import(path, c.Projectdir(), 0)
-	if err != nil {
-		return nil, err
-	}
-	push(path)
-	var stale bool
-	for _, i := range p.Imports {
-		if shouldignore(i) {
-			continue
-		}
-		if onStack(i) {
-			push(i)
-			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
-		}
-		pkg, err := c.loadPackage(stack, i)
-		if err != nil {
-			return nil, err
-		}
-		stale = stale || pkg.Stale
-	}
-	pop(path)
-
-	pkg := Package{
-		Context: c,
-		Package: p,
-	}
-	pkg.Stale = stale || isStale(&pkg)
-	c.pkgs[path] = &pkg
-	return &pkg, nil
 }
 
 // Destroy removes the temporary working files of this context.
