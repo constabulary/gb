@@ -24,7 +24,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 	cgoCFLAGS = append(cgoCFLAGS, pcCFLAGS...)
 	cgoLDFLAGS = append(cgoLDFLAGS, pcLDFLAGS...)
 
-	if err := runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS); err != nil {
+	if err := runcgo1(pkg, cgoCFLAGS, pcCFLAGS, cgoLDFLAGS); err != nil {
 		return fn(ErrTarget{err})
 	}
 
@@ -79,7 +79,7 @@ func cgo(pkg *Package) ([]ObjTarget, []string) {
 }
 
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.
-func runcgo1(pkg *Package, cflags, ldflags []string) error {
+func runcgo1(pkg *Package, cflags, pcflags, ldflags []string) error {
 	cgo := cgotool(pkg.Context)
 	objdir := pkg.Objdir()
 	if err := mkdir(objdir); err != nil {
@@ -91,6 +91,7 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 		"--",
 		"-I", pkg.Dir,
 	}
+	args = append(args, pcflags...)
 	args = append(args, pkg.CgoFiles...)
 
 	cgoenv := []string{
