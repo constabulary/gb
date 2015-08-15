@@ -6,49 +6,16 @@ import (
 	"time"
 )
 
+func BuildDependencies(targets map[string]PkgTarget, pkg *Package) []Target { panic("unimplemented") }
+
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
-// linking the final binary into pkg.Context.Bindir().
+// linking the final binary into pkg.Context.Bindir().||./
 func Build(pkgs ...*Package) error {
-	targets := make(map[string]PkgTarget)
-	roots := make([]Target, 0, len(pkgs))
-	for _, pkg := range pkgs {
-		target := buildPackage(targets, pkg)
-		if pkg.isMain() {
-			target = Ld(pkg, target.(PkgTarget))
-		}
-		roots = append(roots, target)
+	build, err := BuildAction(pkgs...)
+	if err != nil {
+		return err
 	}
-	for _, root := range roots {
-		if err := root.Result(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// buildPackage returns a Target repesenting the results of compiling
-// pkg and its dependencies.
-func buildPackage(targets map[string]PkgTarget, pkg *Package) Target {
-	if target, ok := targets[pkg.ImportPath]; ok {
-		// already compiled
-		return target
-	}
-	Debugf("buildPackage: %v", pkg.ImportPath)
-
-	deps := BuildDependencies(targets, pkg)
-	target := Compile(pkg, deps...)
-	targets[pkg.ImportPath] = target
-	return target
-}
-
-// BuildDependencies returns a []Target representing the results of
-// compiling the dependencies of pkg.
-func BuildDependencies(targets map[string]PkgTarget, pkg *Package) []Target {
-	var deps []Target
-	for _, i := range pkg.Imports() {
-		deps = append(deps, buildPackage(targets, i))
-	}
-	return deps
+	return Execute(build)
 }
 
 // Compile returns a Target representing all the steps required to build a go package.
@@ -163,82 +130,16 @@ type PkgTarget interface {
 	Pkgfile() string
 }
 
-type pack struct {
-	c   chan error
-	pkg *Package
-}
-
-func (p *pack) Result() error {
-	err := <-p.c
-	p.c <- err
-	return err
-}
-
-func (p *pack) pack(objs ...ObjTarget) {
-	afiles := make([]string, 0, len(objs))
-	for _, obj := range objs {
-		err := obj.Result()
-		if err != nil {
-			p.c <- err
-			return
-		}
-		// pkg.a (compiled Go code) is always first
-		afiles = append(afiles, obj.Objfile())
-	}
-	t0 := time.Now()
-	err := p.pkg.tc.Pack(p.pkg, afiles...)
-	p.pkg.Record("pack", time.Since(t0))
-	p.c <- err
-}
-
-func (p *pack) Pkgfile() string {
-	return objfile(p.pkg)
-}
-
 // Pack returns a Target representing the result of packing a
 // set of Context specific object files into an archive.
 func Pack(pkg *Package, deps ...ObjTarget) PkgTarget {
-	if len(deps) < 2 {
-		return ErrTarget{fmt.Errorf("Pack requires at least two arguments: %v", deps)}
-	}
-	pack := pack{
-		c:   make(chan error, 1),
-		pkg: pkg,
-	}
-	go pack.pack(deps...)
-	return &pack
-}
-
-type asm struct {
-	target
-	pkg   *Package
-	sfile string
-}
-
-func (a *asm) String() string {
-	return fmt.Sprintf("asm %v", a.sfile)
-}
-
-func (a *asm) Objfile() string {
-	return filepath.Join(a.pkg.Workdir(), a.pkg.ImportPath, stripext(a.sfile)+".6")
-}
-
-func (a *asm) asm() error {
-	t0 := time.Now()
-	err := a.pkg.tc.Asm(a.pkg, a.pkg.Dir, a.Objfile(), filepath.Join(a.pkg.Dir, a.sfile))
-	a.pkg.Record("asm", time.Since(t0))
-	return err
+	panic("removed")
 }
 
 // Asm returns a Target representing the result of assembling
 // sfile with the Context specified asssembler.
 func Asm(pkg *Package, sfile string, deps ...Target) ObjTarget {
-	asm := asm{
-		pkg:   pkg,
-		sfile: sfile,
-	}
-	asm.target = newTarget(asm.asm, deps...)
-	return &asm
+	panic("removed")
 }
 
 type ld struct {

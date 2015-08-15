@@ -2,7 +2,9 @@ package gb
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Actions and Tasks.
@@ -121,6 +123,28 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 	}
 
 	// step 2. create a tree of tasks and actions for building this package.
+
+	// step 2a. are there any .s files to assemble.
+
+	asmofile := func(sfile string) string {
+		return filepath.Join(pkg.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
+	}
+
+	var assemble []*Action
+	for _, sfile := range pkg.SFiles {
+		sfile := sfile
+		assemble = append(assemble, &Action{
+			Name: fmt.Sprintf("asm: %s/%s", pkg.ImportPath, sfile),
+			Task: TaskFn(func() error {
+				ofile := asmofile(sfile)
+				t0 := time.Now()
+				err := pkg.tc.Asm(pkg, pkg.Dir, ofile, filepath.Join(pkg.Dir, sfile))
+				pkg.Record("asm", time.Since(t0))
+				return err
+			}),
+		})
+	}
+
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 
@@ -137,6 +161,37 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 
 	build := &compile
 
+	// Do we need to pack ? Yes, replace build action with pack.
+	if len(assemble) > 0 {
+		pack := Action{
+			Name: fmt.Sprintf("pack: %s", pkg.ImportPath),
+			Deps: []*Action{
+				&compile,
+			},
+			Task: TaskFn(func() error {
+				// collect .o files, ofiles always starts with the gc compiled object.
+				ofiles := []string{
+					objfile(pkg),
+				}
+
+				// collect .o files for assemble
+				for _, sfile := range pkg.SFiles {
+					ofiles = append(ofiles, asmofile(sfile))
+				}
+
+				// TODO(dfc) collect cgo .o files
+
+				// pack
+				t0 := time.Now()
+				err := pkg.tc.Pack(pkg, ofiles...)
+				pkg.Record("pack", time.Since(t0))
+				return err
+			}),
+		}
+		pack.Deps = append(pack.Deps, assemble...)
+		build = &pack
+	}
+
 	// if this is a main package, add a link stage
 	if pkg.isMain() {
 		ld := ld{
@@ -150,5 +205,6 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 		}
 		build = &link
 	}
+	targets[pkg.ImportPath] = build
 	return build, nil
 }

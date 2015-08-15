@@ -4,6 +4,8 @@ import (
 	"flag"
 	"time"
 
+	"os"
+
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 )
@@ -80,17 +82,21 @@ For more about specifying packages, see 'gb help packages'. For more about where
 		defer func() {
 			gb.Debugf("build duration: %v %v", time.Since(t0), ctx.Statistics.String())
 		}()
+		defer ctx.Destroy()
 
 		pkgs, err := cmd.ResolvePackages(ctx, args...)
 		if err != nil {
-			ctx.Destroy()
 			return err
 		}
-		if err := gb.Build(pkgs...); err != nil {
-			ctx.Destroy()
+
+		build, err := gb.BuildAction(pkgs...)
+		if err != nil {
 			return err
 		}
-		return ctx.Destroy()
+
+		printActions(os.Stderr, build)
+
+		return gb.Execute(build)
 	},
 	AddFlags: addBuildFlags,
 }
