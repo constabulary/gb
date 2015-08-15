@@ -192,6 +192,21 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 		build = &pack
 	}
 
+	// should this package be cached
+	// TODO(dfc) pkg.SkipInstall should become Install
+	if !pkg.SkipInstall && pkg.Scope != "test" {
+		install := Action{
+			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
+			Deps: []*Action{
+				build,
+			},
+			Task: TaskFn(func() error {
+				return copyfile(pkgfile(pkg), objfile(pkg))
+			}),
+		}
+		build = &install
+	}
+
 	// if this is a main package, add a link stage
 	if pkg.isMain() {
 		ld := ld{

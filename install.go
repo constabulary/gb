@@ -9,19 +9,7 @@ import (
 
 // Install stores a copy of the compiled file in Project.Pkgdir
 func Install(pkg *Package, t PkgTarget) PkgTarget {
-	if pkg.SkipInstall {
-		return t
-	}
-	if pkg.Scope == "test" {
-		Debugf("%v is test scoped, not installing", pkg)
-		return t
-	}
-	i := install{
-		PkgTarget: t,
-		dest:      pkgfile(pkg),
-	}
-	i.target = newTarget(i.install, t)
-	return &i
+	panic("unimplemented")
 }
 
 // cachePackage returns a PkgTarget representing the cached output of pkg.
@@ -52,24 +40,6 @@ func (c *cachedTarget) String() string {
 
 func (c *cachedTarget) Result() error {
 	return nil
-}
-
-type install struct {
-	target
-	PkgTarget
-	dest string
-}
-
-func (i *install) String() string {
-	return fmt.Sprintf("cache %v", i.PkgTarget)
-}
-
-func (i *install) install() error {
-	return copyfile(i.dest, i.Pkgfile())
-}
-
-func (i *install) Result() error {
-	return i.target.Result()
 }
 
 // pkgdir returns the destination for object cached for this Package.
