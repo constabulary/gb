@@ -12,24 +12,6 @@ func Install(pkg *Package, t PkgTarget) PkgTarget {
 	panic("unimplemented")
 }
 
-// cachePackage returns a PkgTarget representing the cached output of pkg.
-type cachedPackage struct {
-	pkg *Package
-}
-
-func (c *cachedPackage) Pkgfile() string {
-	return pkgfile(c.pkg)
-}
-
-func (c *cachedPackage) String() string {
-	return fmt.Sprintf("cached %v", c.pkg.ImportPath)
-}
-
-func (c *cachedPackage) Result() error {
-	// TODO(dfc) _, err := os.Stat(c.Pkgfile())
-	return nil
-}
-
 type cachedTarget struct {
 	target Target
 }

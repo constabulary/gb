@@ -20,32 +20,7 @@ func Build(pkgs ...*Package) error {
 
 // Compile returns a Target representing all the steps required to build a go package.
 func Compile(pkg *Package, deps ...Target) PkgTarget {
-	if !pkg.Stale {
-		return &cachedPackage{pkg: pkg}
-	}
-	var gofiles []string
-	gofiles = append(gofiles, pkg.GoFiles...)
-	var cgoobj []ObjTarget
-	if len(pkg.CgoFiles) > 0 {
-		var cgofiles []string
-		cgoobj, cgofiles = cgo(pkg)
-		for _, o := range cgoobj {
-			deps = append(deps, o)
-		}
-		gofiles = append(gofiles, cgofiles...)
-	}
-	compile := Gc(pkg, gofiles, deps...)
-	objs := []ObjTarget{compile}
-	if len(cgoobj) > 0 {
-		objs = append(objs, cgoobj...)
-	}
-	for _, sfile := range pkg.SFiles {
-		objs = append(objs, Asm(pkg, sfile, compile))
-	}
-	if pkg.Complete() {
-		return Install(pkg, objs[0].(PkgTarget))
-	}
-	return Install(pkg, Pack(pkg, objs...))
+	panic("unimplemented")
 }
 
 // ObjTarget represents a compiled Go object (.5, .6, etc)

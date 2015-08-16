@@ -3,7 +3,6 @@ package gb
 import (
 	"bytes"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -18,7 +17,7 @@ func (t cgoTarget) Objfile() string { return string(t) }
 func (t cgoTarget) Result() error   { return nil }
 
 // rungcc1 invokes gcc to compile cfile into ofile
-func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) Target {
+func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 	args := []string{"-g", "-O2", "-fPIC", "-m64", "-pthread", "-fmessage-length=0",
 		"-I", pkg.Dir,
 		"-I", filepath.Dir(ofile),
@@ -28,9 +27,10 @@ func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) Target {
 		"-o", ofile,
 		"-c", cfile,
 	)
-	cmd := exec.Command(gcc(), args...)
-	cmd.Dir = pkg.Dir
-	return pkg.Run(cmd)
+	t0 := time.Now()
+	err := pkg.run(pkg.Dir, nil, gcc(), args...)
+	pkg.Record("gcc1", time.Since(t0))
+	return err
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
@@ -51,8 +51,7 @@ func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles 
 }
 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.
-func rungcc3(ctx *Context, dir string, ofiles []string) (string, error) {
-	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_all.o")
+func rungcc3(ctx *Context, dir string, ofile string, ofiles []string) error {
 	args := []string{
 		"-fPIC", "-m64", "-fmessage-length=0",
 	}
@@ -65,14 +64,14 @@ func rungcc3(ctx *Context, dir string, ofiles []string) (string, error) {
 	if !isClang() {
 		libgcc, err := libgcc(ctx)
 		if err != nil {
-			return "", nil
+			return nil
 		}
 		args = append(args, libgcc, "-Wl,--build-id=none")
 	}
 	t0 := time.Now()
 	err := ctx.run(dir, nil, gcc(), args...)
 	ctx.Record("gcc3", time.Since(t0))
-	return ofile, err
+	return err
 }
 
 // libgcc returns the value of gcc -print-libgcc-file-name.

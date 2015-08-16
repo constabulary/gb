@@ -126,27 +126,40 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 
 	// step 2a. are there any .s files to assemble.
 
-	asmofile := func(sfile string) string {
-		return filepath.Join(pkg.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
-	}
-
 	var assemble []*Action
+	var ofiles []string // additional ofiles to pack
 	for _, sfile := range pkg.SFiles {
 		sfile := sfile
+		ofile := filepath.Join(pkg.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
 		assemble = append(assemble, &Action{
 			Name: fmt.Sprintf("asm: %s/%s", pkg.ImportPath, sfile),
 			Task: TaskFn(func() error {
-				ofile := asmofile(sfile)
 				t0 := time.Now()
 				err := pkg.tc.Asm(pkg, pkg.Dir, ofile, filepath.Join(pkg.Dir, sfile))
 				pkg.Record("asm", time.Since(t0))
 				return err
 			}),
 		})
+		ofiles = append(ofiles, ofile)
 	}
 
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
+
+	// step 2b. are there any .c files that we have to run cgo on ?
+
+	if len(pkg.CgoFiles) > 0 {
+		cgoACTION, cgoOFILE, cgoGOFILES, err := cgo(pkg)
+		if err != nil {
+			return nil, err
+		}
+
+		gofiles = append(gofiles, cgoGOFILES...)
+		ofiles = append(ofiles, cgoOFILE)
+		deps = append(deps, cgoACTION)
+	}
+
+	// step 2c. compile all the go files for this package, including pkg.CgoFiles
 
 	gc := gc{
 		pkg:     pkg,
@@ -162,7 +175,7 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 	build := &compile
 
 	// Do we need to pack ? Yes, replace build action with pack.
-	if len(assemble) > 0 {
+	if len(ofiles) > 0 {
 		pack := Action{
 			Name: fmt.Sprintf("pack: %s", pkg.ImportPath),
 			Deps: []*Action{
@@ -170,16 +183,11 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 			},
 			Task: TaskFn(func() error {
 				// collect .o files, ofiles always starts with the gc compiled object.
-				ofiles := []string{
-					objfile(pkg),
-				}
-
-				// collect .o files for assemble
-				for _, sfile := range pkg.SFiles {
-					ofiles = append(ofiles, asmofile(sfile))
-				}
-
-				// TODO(dfc) collect cgo .o files
+				// TODO(dfc) objfile(pkg) should already be at the top of this set
+				ofiles = append(
+					[]string{objfile(pkg)},
+					ofiles...,
+				)
 
 				// pack
 				t0 := time.Now()
@@ -220,6 +228,9 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 		}
 		build = &link
 	}
+
+	// record the final action as the action that represents
+	// building this package.
 	targets[pkg.ImportPath] = build
 	return build, nil
 }
