@@ -12,14 +12,14 @@ import (
 // cgo produces a an Action representing the cgo steps
 // an ofile representing the result of the cgo steps
 // a set of .go files for compilation, and an error.
-func cgo(pkg *Package) (*Action, string, []string, error) {
+func cgo(pkg *Package) (*Action, []string, []string, error) {
 
 	// collect cflags and ldflags from the package
 	// the environment, and pkg-config.
 	_, cgoCFLAGS, _, cgoLDFLAGS := cflags(pkg, false)
 	pcCFLAGS, pcLDFLAGS, err := pkgconfig(pkg)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, nil, nil, err
 	}
 	cgoCFLAGS = append(cgoCFLAGS, pcCFLAGS...)
 	cgoLDFLAGS = append(cgoLDFLAGS, pcLDFLAGS...)
@@ -30,7 +30,8 @@ func cgo(pkg *Package) (*Action, string, []string, error) {
 			Task: TaskFn(func() error {
 				return runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS)
 			}),
-		}}
+		},
+	}
 
 	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
 	for _, f := range pkg.CgoFiles {
@@ -89,7 +90,7 @@ func cgo(pkg *Package) (*Action, string, []string, error) {
 		}),
 	}
 
-	return &action, allo, cgofiles, nil
+	return &action, []string{allo}, cgofiles, nil
 }
 
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.

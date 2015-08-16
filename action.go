@@ -149,13 +149,13 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 	// step 2b. are there any .c files that we have to run cgo on ?
 
 	if len(pkg.CgoFiles) > 0 {
-		cgoACTION, cgoOFILE, cgoGOFILES, err := cgo(pkg)
+		cgoACTION, cgoOFILES, cgoGOFILES, err := cgo(pkg)
 		if err != nil {
 			return nil, err
 		}
 
 		gofiles = append(gofiles, cgoGOFILES...)
-		ofiles = append(ofiles, cgoOFILE)
+		ofiles = append(ofiles, cgoOFILES...)
 		deps = append(deps, cgoACTION)
 	}
 
