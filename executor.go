@@ -6,14 +6,14 @@ import (
 
 // Execute executes a tree of *Actions sequentually in depth first order.
 func Execute(a *Action) error {
-	seen := make(map[*Action]bool)
+	seen := make(map[*Action]error)
 	return execute(seen, a)
 }
 
-func execute(seen map[*Action]bool, a *Action) error {
+func execute(seen map[*Action]error, a *Action) error {
 	// step 0, have we been here before
-	if seen[a] {
-		return nil
+	if err, ok := seen[a]; ok {
+		return err
 	}
 
 	// step 1, build all dependencies
@@ -24,8 +24,9 @@ func execute(seen map[*Action]bool, a *Action) error {
 	}
 
 	// step 2, now execute ourselves
-	seen[a] = true
-	return a.Run()
+	err := a.Run()
+	seen[a] = err
+	return err
 }
 
 // ExecuteConcurrent executes all actions in a tree concurrently.
@@ -44,6 +45,9 @@ func ExecuteConcurrent(a *Action, n int) error {
 	for i := 0; i < cap(permits); i++ {
 		permits <- true
 	}
+
+	// wg tracks all the outstanding actions
+	var wg sync.WaitGroup
 
 	var execute func(map[*Action]chan error, *Action) chan error
 	execute = func(seen map[*Action]chan error, a *Action) chan error {
@@ -68,7 +72,9 @@ func ExecuteConcurrent(a *Action, n int) error {
 			results = append(results, execute(seen, dep))
 		}
 
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			// wait for dependant actions
 			for _, r := range results {
 				if err := get(r); err != nil {
@@ -84,5 +90,7 @@ func ExecuteConcurrent(a *Action, n int) error {
 		return result
 
 	}
-	return get(execute(seen, a))
+	err := get(execute(seen, a))
+	wg.Wait()
+	return err
 }
