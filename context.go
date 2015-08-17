@@ -139,24 +139,6 @@ func (c *Context) Destroy() error {
 	return os.RemoveAll(c.workdir)
 }
 
-// Run returns a Target representing the result of executing a CmdTarget.
-func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
-	annotate := func() error {
-		<-c.permits
-		Debugf("run %v", cmd.Args)
-		t0 := time.Now()
-		err := cmd.Run()
-		c.Record(cmd.Args[0], time.Since(t0))
-		c.permits <- true
-		if err != nil {
-			err = fmt.Errorf("run %v: %v", cmd.Args, err)
-		}
-		return err
-	}
-	target := newTarget(annotate, deps...)
-	return &target // TODO
-}
-
 func (c *Context) run(dir string, env []string, command string, args ...string) error {
 	var buf bytes.Buffer
 	err := c.runOut(&buf, dir, env, command, args...)

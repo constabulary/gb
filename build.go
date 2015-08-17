@@ -198,14 +198,6 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	return build, nil
 }
 
-// ObjTarget represents a compiled Go object (.5, .6, etc)
-type ObjTarget interface {
-	Target
-
-	// Objfile is the name of the file that is produced if the target is successful.
-	Objfile() string
-}
-
 // BuildDependencies returns a slice of Actions representing the steps required
 // to build all dependant packages of this package.
 func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, error) {
@@ -252,19 +244,6 @@ func Gc(pkg *Package, gofiles []string) error {
 	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Projectdir(), objfile(pkg), gofiles, pkg.Complete())
 	pkg.Record("compile", time.Since(t0))
 	return err
-}
-
-type objpkgtarget interface {
-	ObjTarget
-	Pkgfile() string // implements PkgTarget
-}
-
-// PkgTarget represents a Target that produces a pkg (.a) file.
-type PkgTarget interface {
-	Target
-
-	// Pkgfile returns the name of the file that is produced by the Target if successful.
-	Pkgfile() string
 }
 
 func Link(pkg *Package) error {

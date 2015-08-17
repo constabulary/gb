@@ -1,28 +1,10 @@
 package gb
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 )
-
-// Install stores a copy of the compiled file in Project.Pkgdir
-func Install(pkg *Package, t PkgTarget) PkgTarget {
-	panic("unimplemented")
-}
-
-type cachedTarget struct {
-	target Target
-}
-
-func (c *cachedTarget) String() string {
-	return fmt.Sprintf("cached %v", c.target)
-}
-
-func (c *cachedTarget) Result() error {
-	return nil
-}
 
 // pkgdir returns the destination for object cached for this Package.
 func pkgdir(pkg *Package) string {
