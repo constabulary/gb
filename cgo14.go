@@ -124,7 +124,7 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 		"CGO_CFLAGS=" + strings.Join(quoteFlags(cflags), " "),
 		"CGO_LDFLAGS=" + strings.Join(quoteFlags(ldflags), " "),
 	}
-	return pkg.run(pkg.Dir, cgoenv, cgo, args...)
+	return run(pkg.Dir, cgoenv, cgo, args...)
 }
 
 // runcgo2 invokes the cgo tool to create _cgo_import.go
@@ -137,5 +137,5 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 		"-dynimport", ofile,
 		"-dynout", dynout,
 	}
-	return pkg.run(pkg.Dir, nil, cgo, args...)
+	return run(pkg.Dir, nil, cgo, args...)
 }

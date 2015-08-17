@@ -131,16 +131,16 @@ func (c *Context) Destroy() error {
 	return os.RemoveAll(c.workdir)
 }
 
-func (c *Context) run(dir string, env []string, command string, args ...string) error {
+func run(dir string, env []string, command string, args ...string) error {
 	var buf bytes.Buffer
-	err := c.runOut(&buf, dir, env, command, args...)
+	err := runOut(&buf, dir, env, command, args...)
 	if err != nil {
 		return fmt.Errorf("# %s %s: %v\n%s", command, strings.Join(args, " "), err, buf.String())
 	}
 	return nil
 }
 
-func (c *Context) runOut(output io.Writer, dir string, env []string, command string, args ...string) error {
+func runOut(output io.Writer, dir string, env []string, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = dir
 	cmd.Stdout = output

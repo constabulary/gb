@@ -23,7 +23,7 @@ func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 		"-c", cfile,
 	)
 	t0 := time.Now()
-	err := pkg.run(pkg.Dir, nil, gcc(), args...)
+	err := run(pkg.Dir, nil, gcc(), args...)
 	pkg.Record("gcc1", time.Since(t0))
 	return err
 }
@@ -40,7 +40,7 @@ func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles 
 	args = append(args, ofiles...)
 	args = append(args, cgoLDFLAGS...) // this has to go at the end, because reasons!
 	t0 := time.Now()
-	err := pkg.run(pkg.Dir, nil, gcc(), args...)
+	err := run(pkg.Dir, nil, gcc(), args...)
 	pkg.Record("gcc2", time.Since(t0))
 	return err
 }
@@ -64,7 +64,7 @@ func rungcc3(ctx *Context, dir string, ofile string, ofiles []string) error {
 		args = append(args, libgcc, "-Wl,--build-id=none")
 	}
 	t0 := time.Now()
-	err := ctx.run(dir, nil, gcc(), args...)
+	err := run(dir, nil, gcc(), args...)
 	ctx.Record("gcc3", time.Since(t0))
 	return err
 }
@@ -75,7 +75,7 @@ func libgcc(ctx *Context) (string, error) {
 		"-print-libgcc-file-name",
 	}
 	var buf bytes.Buffer
-	err := ctx.runOut(&buf, ".", nil, gcc(), args...)
+	err := runOut(&buf, ".", nil, gcc(), args...)
 	return strings.TrimSpace(buf.String()), err
 }
 
@@ -158,7 +158,7 @@ func pkgconfig(p *Package) ([]string, []string, error) {
 	}
 	args = append(args, p.CgoPkgConfig...)
 	var out bytes.Buffer
-	err := p.runOut(&out, p.Dir, nil, "pkg-config", args...)
+	err := runOut(&out, p.Dir, nil, "pkg-config", args...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -169,7 +169,7 @@ func pkgconfig(p *Package) ([]string, []string, error) {
 	}
 	args = append(args, p.CgoPkgConfig...)
 	out.Reset()
-	err = p.runOut(&out, p.Dir, nil, "pkg-config", args...)
+	err = runOut(&out, p.Dir, nil, "pkg-config", args...)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -130,7 +130,10 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 			Imports:    pkg.XTestImports,
 		})
 		// build external test dependencies
-		// deps := gb.BuildDependencies(targets, xtestpkg)
+		deps, err := gb.BuildDependencies(targets, xtestpkg)
+		if err != nil {
+			return nil, err
+		}
 		xtestpkg.Scope = "test"
 		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
