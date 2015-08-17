@@ -51,7 +51,8 @@ func ExecuteConcurrent(a *Action, n int) error {
 		// step 0, have we seen this action before ?
 		mu.Lock()
 		if result, ok := seen[a]; ok {
-			// yes! so wait for the result and return it to the caller
+			// yes! return the result channel so others can wait
+			//  on our action
 			mu.Unlock()
 			return result
 		}
@@ -67,13 +68,14 @@ func ExecuteConcurrent(a *Action, n int) error {
 			results = append(results, execute(seen, dep))
 		}
 
-		// now execute our action
 		go func() {
+			// wait for dependant actions
 			for _, r := range results {
 				if err := get(r); err != nil {
 					result <- err
 				}
 			}
+			// wait for a permit and execute our action
 			<-permits
 			result <- a.Run()
 			permits <- true
