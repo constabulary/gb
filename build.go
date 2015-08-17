@@ -94,10 +94,10 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 	return build, nil
 }
 
-// Compile returns an Action representing the steps required to build this package.
+// Compile returns an Action representing the steps required to compile this package.
 func Compile(pkg *Package, deps ...*Action) (*Action, error) {
-	// step 0. are there any .s files to assemble.
 
+	// step 0. are there any .s files to assemble.
 	var assemble []*Action
 	var ofiles []string // additional ofiles to pack
 	for _, sfile := range pkg.SFiles {
@@ -119,7 +119,6 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	gofiles = append(gofiles, pkg.GoFiles...)
 
 	// step 1. are there any .c files that we have to run cgo on ?
-
 	if len(pkg.CgoFiles) > 0 {
 		cgoACTION, cgoOFILES, cgoGOFILES, err := cgo(pkg)
 		if err != nil {
@@ -132,12 +131,11 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	}
 
 	// step 2. compile all the go files for this package, including pkg.CgoFiles
-
 	compile := Action{
 		Name: fmt.Sprintf("compile: %s", pkg.ImportPath),
 		Deps: deps,
 		Task: TaskFn(func() error {
-			return Gc(pkg, gofiles)
+			return gc(pkg, gofiles)
 		}),
 	}
 
@@ -190,7 +188,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 			Name: fmt.Sprintf("link: %s", pkg.ImportPath),
 			Deps: []*Action{build},
 			Task: TaskFn(func() error {
-				return Link(pkg)
+				return link(pkg)
 			}),
 		}
 		build = &link
@@ -216,7 +214,7 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 	return deps, nil
 }
 
-func Gc(pkg *Package, gofiles []string) error {
+func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
 	if pkg.Scope != "test" {
 		// only log compilation message if not in test scope
@@ -246,7 +244,7 @@ func Gc(pkg *Package, gofiles []string) error {
 	return err
 }
 
-func Link(pkg *Package) error {
+func link(pkg *Package) error {
 	t0 := time.Now()
 	target := pkg.Binfile()
 	if err := mkdir(filepath.Dir(target)); err != nil {
@@ -286,7 +284,6 @@ func pkgname(pkg *Package) string {
 }
 
 // Binfile returns the destination of the compiled target of this command.
-// TODO(dfc) this should be Target.
 func (pkg *Package) Binfile() string {
 	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
 	var target string
