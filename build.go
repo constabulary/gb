@@ -3,18 +3,19 @@ package gb
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
 
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
-// linking the final binary into pkg.Context.Bindir().||./
+// linking the final binary into pkg.Context.Bindir().
 func Build(pkgs ...*Package) error {
 	build, err := BuildPackages(pkgs...)
 	if err != nil {
 		return err
 	}
-	return Execute(build)
+	return ExecuteConcurrent(build, runtime.NumCPU())
 }
 
 // BuildAction produces a tree of *Actions that can be executed to build
@@ -73,23 +74,29 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 		return nil, nil
 	}
 
-	// step 1. walk dependencies
-	var deps []*Action
-	for _, i := range pkg.Imports() {
-		a, err := BuildPackage(targets, i)
-		if err != nil {
-			return nil, err
-		}
-		if a == nil {
-			// no action required for this Package
-			continue
-		}
-		deps = append(deps, a)
+	// step 1. build dependencies
+	deps, err := BuildDependencies(targets, pkg)
+	if err != nil {
+		return nil, err
+	}
+	build, err := Compile(pkg, deps...)
+	if err != nil {
+		return nil, err
 	}
 
-	// step 2. create a tree of tasks and actions for building this package.
+	if build == nil {
+		panic("build action was nil") // shouldn't happen
+	}
 
-	// step 2a. are there any .s files to assemble.
+	// record the final action as the action that represents
+	// building this package.
+	targets[pkg.ImportPath] = build
+	return build, nil
+}
+
+// Compile returns an Action representing the steps required to build this package.
+func Compile(pkg *Package, deps ...*Action) (*Action, error) {
+	// step 0. are there any .s files to assemble.
 
 	var assemble []*Action
 	var ofiles []string // additional ofiles to pack
@@ -111,7 +118,7 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 
-	// step 2b. are there any .c files that we have to run cgo on ?
+	// step 1. are there any .c files that we have to run cgo on ?
 
 	if len(pkg.CgoFiles) > 0 {
 		cgoACTION, cgoOFILES, cgoGOFILES, err := cgo(pkg)
@@ -124,13 +131,13 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 		deps = append(deps, cgoACTION)
 	}
 
-	// step 2c. compile all the go files for this package, including pkg.CgoFiles
+	// step 2. compile all the go files for this package, including pkg.CgoFiles
 
 	compile := Action{
 		Name: fmt.Sprintf("compile: %s", pkg.ImportPath),
 		Deps: deps,
 		Task: TaskFn(func() error {
-			return Compile(pkg, gofiles)
+			return Gc(pkg, gofiles)
 		}),
 	}
 
@@ -188,10 +195,6 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 		}
 		build = &link
 	}
-
-	// record the final action as the action that represents
-	// building this package.
-	targets[pkg.ImportPath] = build
 	return build, nil
 }
 
@@ -203,7 +206,25 @@ type ObjTarget interface {
 	Objfile() string
 }
 
-func Compile(pkg *Package, gofiles []string) error {
+// BuildDependencies returns a slice of Actions representing the steps required
+// to build all dependant packages of this package.
+func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, error) {
+	var deps []*Action
+	for _, i := range pkg.Imports() {
+		a, err := BuildPackage(targets, i)
+		if err != nil {
+			return nil, err
+		}
+		if a == nil {
+			// no action required for this Package
+			continue
+		}
+		deps = append(deps, a)
+	}
+	return deps, nil
+}
+
+func Gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
 	if pkg.Scope != "test" {
 		// only log compilation message if not in test scope

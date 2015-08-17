@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/constabulary/gb"
 )
@@ -15,22 +16,52 @@ import (
 // package pkg, and its dependencies, and linking it with the
 // test runner.
 func Test(flags []string, pkgs ...*gb.Package) error {
-	targets := make(map[string]gb.PkgTarget)
-	roots := make([]gb.Target, 0, len(pkgs))
-	for _, pkg := range pkgs {
-		// commands are built as packages for testing.
-		target := testPackage(targets, pkg, flags)
-		roots = append(roots, target)
+	test, err := TestPackages(flags, pkgs...)
+	if err != nil {
+		return err
 	}
-	for _, root := range roots {
-		if err := root.Result(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return gb.Execute(test)
 }
 
-func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package, flags []string) gb.Target {
+// TestPackages produces a graph of Actions that when executed build
+// and test the supplied packages.
+func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
+	targets := make(map[string]*gb.Action) // maps package import paths to their test run action
+
+	names := func(pkgs []*gb.Package) []string {
+		var names []string
+		for _, pkg := range pkgs {
+			names = append(names, pkg.ImportPath)
+		}
+		return names
+	}
+
+	// create top level test action to root all test actions
+	test := gb.Action{
+		Name: fmt.Sprintf("test: %s", strings.Join(names(pkgs), ",")),
+		Task: gb.TaskFn(func() error {
+			fmt.Println("tested")
+			return nil
+		}),
+	}
+
+	for _, pkg := range pkgs {
+		a, err := TestPackage(targets, pkg, flags)
+		if err != nil {
+			return nil, err
+		}
+		if a == nil {
+			// nothing to do ?? not even a test action ?
+			continue
+		}
+		test.Deps = append(test.Deps, a)
+	}
+	return &test, nil
+}
+
+// TestPackage returns an Action representing the steps required to build
+// and test this Package.
+func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string) (*gb.Action, error) {
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 	gofiles = append(gofiles, pkg.TestGoFiles...)
@@ -72,11 +103,17 @@ func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package, flags []strin
 	})
 
 	// build dependencies
-	// deps := gb.BuildDependencies(targets, testpkg)
+	deps, err := gb.BuildDependencies(targets, testpkg)
+	if err != nil {
+		return nil, err
+	}
 	testpkg.Scope = "test"
 	testpkg.Stale = true
 
-	testobj := gb.Compile(testpkg, nil) //, deps...)
+	testobj, err := gb.Compile(testpkg, deps...)
+	if err != nil {
+		return nil, err
+	}
 
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
@@ -92,24 +129,34 @@ func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package, flags []strin
 		xtestpkg.Scope = "test"
 		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
-		testobj = gb.Compile(xtestpkg, nil) // , append(deps, testobj)...)
+		testobj, err = gb.Compile(xtestpkg, append(deps, testobj)...)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	_ = testobj // shut up
-
-	testmain, err := buildTestMain(testpkg)
+	testmainpkg, err := buildTestMain(testpkg)
 	if err != nil {
-		return gb.ErrTarget{err}
+		return nil, err
 	}
-	// buildmain := gb.Ld(testmain, gb.Compile(testmain, testobj))
+	testmain, err := gb.Compile(testmainpkg, testobj)
+	if err != nil {
+		return nil, err
+	}
 
-	cmd := exec.Command(testmain.Binfile()+".test", flags...)
+	cmd := exec.Command(testmainpkg.Binfile()+".test", flags...)
 	cmd.Dir = pkg.Dir // tests run in the original source directory
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	gb.Debugf("scheduling run of %v", cmd.Args)
-	return nil // pkg.Run(cmd, buildmain)
+	return &gb.Action{
+		Name: fmt.Sprintf("run: %s", cmd.Args),
+		Deps: []*gb.Action{testmain},
+		Task: gb.TaskFn(func() error {
+			return cmd.Run()
+		}),
+	}, nil
 }
 
 func buildTestMain(pkg *gb.Package) (*gb.Package, error) {

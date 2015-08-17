@@ -29,7 +29,7 @@ func NewPackage(ctx *Context, p *build.Package) *Package {
 
 // isMain returns true if this is a command, a main package.
 func (p *Package) isMain() bool {
-	return p.Name == "main"
+	return p.Name == "main" || strings.HasSuffix(p.ImportPath, "testmain") && p.Scope == "test"
 }
 
 // Imports returns the Pacakges that this Package depends on.
