@@ -72,11 +72,11 @@ func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package, flags []strin
 	})
 
 	// build dependencies
-	deps := gb.BuildDependencies(targets, testpkg)
+	// deps := gb.BuildDependencies(targets, testpkg)
 	testpkg.Scope = "test"
 	testpkg.Stale = true
 
-	testobj := gb.Compile(testpkg, deps...)
+	testobj := gb.Compile(testpkg, nil) //, deps...)
 
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
@@ -88,18 +88,20 @@ func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package, flags []strin
 			Imports:    pkg.XTestImports,
 		})
 		// build external test dependencies
-		deps := gb.BuildDependencies(targets, xtestpkg)
+		// deps := gb.BuildDependencies(targets, xtestpkg)
 		xtestpkg.Scope = "test"
 		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
-		testobj = gb.Compile(xtestpkg, append(deps, testobj)...)
+		testobj = gb.Compile(xtestpkg, nil) // , append(deps, testobj)...)
 	}
+
+	_ = testobj // shut up
 
 	testmain, err := buildTestMain(testpkg)
 	if err != nil {
 		return gb.ErrTarget{err}
 	}
-	buildmain := gb.Ld(testmain, gb.Compile(testmain, testobj))
+	// buildmain := gb.Ld(testmain, gb.Compile(testmain, testobj))
 
 	cmd := exec.Command(testmain.Binfile()+".test", flags...)
 	cmd.Dir = pkg.Dir // tests run in the original source directory
@@ -107,7 +109,7 @@ func testPackage(targets map[string]gb.PkgTarget, pkg *gb.Package, flags []strin
 	cmd.Stderr = os.Stderr
 
 	gb.Debugf("scheduling run of %v", cmd.Args)
-	return pkg.Run(cmd, buildmain)
+	return nil // pkg.Run(cmd, buildmain)
 }
 
 func buildTestMain(pkg *gb.Package) (*gb.Package, error) {

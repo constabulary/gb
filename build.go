@@ -7,12 +7,10 @@ import (
 	"time"
 )
 
-func BuildDependencies(targets map[string]PkgTarget, pkg *Package) []Target { panic("unimplemented") }
-
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
 // linking the final binary into pkg.Context.Bindir().||./
 func Build(pkgs ...*Package) error {
-	build, err := BuildAction(pkgs...)
+	build, err := BuildPackages(pkgs...)
 	if err != nil {
 		return err
 	}
@@ -24,7 +22,7 @@ func Build(pkgs ...*Package) error {
 // BuildAction walks the tree of *Packages and returns a corresponding
 // tree of *Actions representing the steps required to build *Package
 // and any of its dependencies
-func BuildAction(pkgs ...*Package) (*Action, error) {
+func BuildPackages(pkgs ...*Package) (*Action, error) {
 	targets := make(map[string]*Action) // maps package importpath ot Action name
 
 	names := func(pkgs []*Package) []string {
@@ -43,8 +41,9 @@ func BuildAction(pkgs ...*Package) (*Action, error) {
 			return nil
 		}),
 	}
+
 	for _, pkg := range pkgs {
-		a, err := buildAction0(targets, pkg)
+		a, err := BuildPackage(targets, pkg)
 		if err != nil {
 			return nil, err
 		}
@@ -57,7 +56,9 @@ func BuildAction(pkgs ...*Package) (*Action, error) {
 	return &build, nil
 }
 
-func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
+// BuildPackage returns an Action representing the steps required to
+// build this package.
+func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 
 	// if this action is already present in the map, return it
 	// rather than creating a new action.
@@ -75,7 +76,7 @@ func buildAction0(targets map[string]*Action, pkg *Package) (*Action, error) {
 	// step 1. walk dependencies
 	var deps []*Action
 	for _, i := range pkg.Imports() {
-		a, err := buildAction0(targets, i)
+		a, err := BuildPackage(targets, i)
 		if err != nil {
 			return nil, err
 		}

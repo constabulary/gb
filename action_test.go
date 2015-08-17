@@ -74,7 +74,7 @@ func TestBuildAction(t *testing.T) {
 		if err != nil {
 			continue
 		}
-		got, err := BuildAction(pkg)
+		got, err := BuildPackages(pkg)
 		if !sameErr(err, tt.err) {
 			t.Errorf("BuildAction(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue

@@ -159,4 +159,3 @@ func isWhitespace(c byte) bool {
 func stripext(path string) string {
 	return path[:len(path)-len(filepath.Ext(path))]
 }
-
