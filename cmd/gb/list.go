@@ -54,13 +54,11 @@ Flags:
 }
 
 func list(ctx *gb.Context, args []string) error {
-	gb.Debugf("list: %v", args)
 	if formatStdin {
 		var formatBuffer bytes.Buffer
 		io.Copy(&formatBuffer, os.Stdin)
 		format = formatBuffer.String()
 	}
-	args = cmd.ImportPaths(ctx, cmd.MustGetwd(), args)
 	pkgs, err := cmd.ResolvePackages(ctx, args...)
 	if err != nil {
 		gb.Fatalf("unable to resolve: %v", err)
