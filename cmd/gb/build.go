@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"time"
-	// "os"
+	"os"
 	"runtime"
+	"time"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -94,7 +94,7 @@ For more about specifying packages, see 'gb help packages'. For more about where
 			return err
 		}
 
-		// printActions(os.Stderr, build)
+		printActions(os.Stderr, build)
 
 		return gb.ExecuteConcurrent(build, runtime.NumCPU())
 	},

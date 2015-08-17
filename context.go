@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -29,8 +28,6 @@ type Context struct {
 	SkipInstall bool // do not cache compiled packages
 
 	pkgs map[string]*Package // map of package paths to resolved packages
-
-	permits chan bool // used to limit concurrency of Run targets
 
 	gcflags []string // flags passed to the compiler
 	ldflags []string // flags passed to the linker
@@ -78,16 +75,11 @@ func Ldflags(flags string) func(*Context) error {
 }
 
 func newContext(p *Project, bc *build.Context) *Context {
-	permits := make(chan bool, runtime.NumCPU())
-	for i := cap(permits); i > 0; i-- {
-		permits <- true
-	}
 	return &Context{
 		Project: p,
 		Context: bc,
 		workdir: mktmpdir(),
 		pkgs:    make(map[string]*Package),
-		permits: permits,
 	}
 }
 
@@ -154,9 +146,7 @@ func (c *Context) runOut(output io.Writer, dir string, env []string, command str
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
 	cmd.Env = mergeEnvLists(env, envForDir(cmd.Dir))
-	<-c.permits
 	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
-	c.permits <- true
 	err := cmd.Run()
 	return err
 }

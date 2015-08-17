@@ -74,6 +74,22 @@ func (pkg *Package) Objdir() string {
 	}
 }
 
+// Binfile returns the destination of the compiled target of this command.
+func (pkg *Package) Binfile() string {
+	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
+	var target string
+	switch pkg.Scope {
+	case "test":
+		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+	default:
+		target = filepath.Join(pkg.Bindir(), binname(pkg))
+	}
+	if pkg.GOOS == "windows" {
+		target += ".exe"
+	}
+	return target
+}
+
 // loadPackage recursively resolves path and its imports and if successful
 // stores those packages in the Context's internal package cache.
 func loadPackage(c *Context, stack []string, path string) (*Package, error) {

@@ -79,6 +79,8 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// step 2. build this package
 	build, err := Compile(pkg, deps...)
 	if err != nil {
 		return nil, err
@@ -240,7 +242,7 @@ func gc(pkg *Package, gofiles []string) error {
 		}
 	}
 	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Projectdir(), objfile(pkg), gofiles, pkg.Complete())
-	pkg.Record("compile", time.Since(t0))
+	pkg.Record("gc", time.Since(t0))
 	return err
 }
 
@@ -281,22 +283,6 @@ func pkgname(pkg *Package) string {
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 	}
 	return pkg.Name
-}
-
-// Binfile returns the destination of the compiled target of this command.
-func (pkg *Package) Binfile() string {
-	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
-	var target string
-	switch pkg.Scope {
-	case "test":
-		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
-	default:
-		target = filepath.Join(pkg.Bindir(), binname(pkg))
-	}
-	if pkg.GOOS == "windows" {
-		target += ".exe"
-	}
-	return target
 }
 
 func binname(pkg *Package) string {
