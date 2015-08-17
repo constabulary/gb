@@ -31,6 +31,8 @@ var (
 	FF bool
 
 	ldflags, gcflags string
+
+	P int // number of executors to run in parallel
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
@@ -39,6 +41,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&R, "r", false, "perform a release build")
 	fs.BoolVar(&F, "f", false, "rebuild up to date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
+	fs.IntVar(&P, "P", runtime.NumCPU(), "number of parallel jobs")
 	fs.StringVar(&ldflags, "ldflags", "", "flags passed to the linker")
 	fs.StringVar(&gcflags, "gcflags", "", "flags passed to the compiler")
 }
@@ -60,6 +63,9 @@ The build flags are
 	-q
 		decreases verbosity, effectively raising the output level to ERROR.
 		In a successful build, no output will be displayed.
+	-P
+		The number of build jobs to run in parallel, including test execution.
+		By default this is the number of CPUs visible to gb.
 	-R
 		sets the base of the project root search path from the current working directory to the value supplied.
 		Effectively gb changes working directory to this path before searching for the project root.
@@ -91,7 +97,7 @@ For more about specifying packages, see 'gb help packages'. For more about where
 
 		printActions(os.Stderr, build)
 
-		return gb.ExecuteConcurrent(build, runtime.NumCPU())
+		return gb.ExecuteConcurrent(build, P)
 	},
 	AddFlags: addBuildFlags,
 }

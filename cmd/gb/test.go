@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -57,7 +56,7 @@ See 'go help test'
 
 		printActions(os.Stderr, test)
 
-		return gb.ExecuteConcurrent(test, runtime.NumCPU())
+		return gb.ExecuteConcurrent(test, P)
 	},
 	AddFlags: addTestFlags,
 	FlagParse: func(flags *flag.FlagSet, args []string) error {
