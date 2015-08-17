@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/constabulary/gb"
 )
@@ -26,6 +27,9 @@ func Test(flags []string, pkgs ...*gb.Package) error {
 // TestPackages produces a graph of Actions that when executed build
 // and test the supplied packages.
 func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
+	if len(pkgs) < 1 {
+		return nil, fmt.Errorf("no test packages provided")
+	}
 	targets := make(map[string]*gb.Action) // maps package import paths to their test run action
 
 	names := func(pkgs []*gb.Package) []string {
@@ -37,10 +41,11 @@ func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
 	}
 
 	// create top level test action to root all test actions
+	t0 := time.Now()
 	test := gb.Action{
 		Name: fmt.Sprintf("test: %s", strings.Join(names(pkgs), ",")),
 		Task: gb.TaskFn(func() error {
-			fmt.Println("tested")
+			gb.Debugf("test duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		}),
 	}

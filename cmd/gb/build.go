@@ -4,7 +4,6 @@ import (
 	"flag"
 	"os"
 	"runtime"
-	"time"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -76,12 +75,8 @@ The list flags accept a space-separated list of strings. To embed spaces in an e
 For more about specifying packages, see 'gb help packages'. For more about where packages and binaries are installed, run 'gb help project'.`,
 	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
-		t0 := time.Now()
 		ctx.Force = F
 		ctx.SkipInstall = FF
-		defer func() {
-			gb.Debugf("build duration: %v %v", time.Since(t0), ctx.Statistics.String())
-		}()
 		defer ctx.Destroy()
 
 		pkgs, err := cmd.ResolvePackages(ctx, args...)

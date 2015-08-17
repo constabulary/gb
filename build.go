@@ -24,7 +24,11 @@ func Build(pkgs ...*Package) error {
 // tree of *Actions representing the steps required to build *Package
 // and any of its dependencies
 func BuildPackages(pkgs ...*Package) (*Action, error) {
-	targets := make(map[string]*Action) // maps package importpath ot Action name
+	if len(pkgs) < 1 {
+		return nil, fmt.Errorf("no packages supplied")
+	}
+
+	targets := make(map[string]*Action) // maps package importpath to build action
 
 	names := func(pkgs []*Package) []string {
 		var names []string
@@ -35,10 +39,11 @@ func BuildPackages(pkgs ...*Package) (*Action, error) {
 	}
 
 	// create top level build action to unify all packages
+	t0 := time.Now()
 	build := Action{
 		Name: fmt.Sprintf("build: %s", strings.Join(names(pkgs), ",")),
 		Task: TaskFn(func() error {
-			fmt.Println("built")
+			Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		}),
 	}
