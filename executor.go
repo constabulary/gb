@@ -79,6 +79,7 @@ func ExecuteConcurrent(a *Action, n int) error {
 			for _, r := range results {
 				if err := get(r); err != nil {
 					result <- err
+					return
 				}
 			}
 			// wait for a permit and execute our action

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -48,10 +49,15 @@ See 'go help test'
 		if err != nil {
 			return err
 		}
-		if err := cmd.Test(cmd.TestFlags(tfs), pkgs...); err != nil {
+		defer ctx.Destroy()
+		test, err := cmd.TestPackages(cmd.TestFlags(tfs), pkgs...)
+		if err != nil {
 			return err
 		}
-		return ctx.Destroy()
+
+		printActions(os.Stderr, test)
+
+		return gb.ExecuteConcurrent(test, runtime.NumCPU())
 	},
 	AddFlags: addTestFlags,
 	FlagParse: func(flags *flag.FlagSet, args []string) error {
