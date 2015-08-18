@@ -48,13 +48,19 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	}
 }
 
-func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
+func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error {
 	args := append(pkg.gcflags, "-p", importpath, "-pack")
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-I", d)
 	}
-	if complete {
+	if pkg.Standard && pkg.ImportPath == "runtime" {
+		// runtime compiles with a special gc flag to emit
+		// additional reflect type data.
+		args = append(args, "-+")
+	}
+
+	if pkg.Complete() {
 		args = append(args, "-complete")
 	}
 

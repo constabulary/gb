@@ -61,7 +61,7 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	}
 }
 
-func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string, complete bool) error {
+func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error {
 	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
 
 	args := append(pkg.gcflags, "-p", importpath, "-pack")
@@ -69,7 +69,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 	for _, d := range searchpaths {
 		args = append(args, "-I", d)
 	}
-	if complete {
+	if pkg.Complete() {
 		args = append(args, "-complete")
 	}
 	args = append(args, files...)
