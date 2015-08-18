@@ -18,7 +18,7 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 	args := []string{"rv"}
 	args = append(args, afiles...)
 	dir := filepath.Dir(afiles[0])
-	return pkg.runOut(os.Stdout, dir, nil, t.pack, args...)
+	return runOut(os.Stdout, dir, nil, t.pack, args...)
 }
 
 func (t *gcToolchain) compiler() string { return t.gc }

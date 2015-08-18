@@ -3,7 +3,6 @@ package gb
 import (
 	"bytes"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -12,27 +11,21 @@ import (
 
 // cgo support functions
 
-type cgoTarget string
-
-func (t cgoTarget) Objfile() string { return string(t) }
-func (t cgoTarget) Result() error   { return nil }
-
 // rungcc1 invokes gcc to compile cfile into ofile
-func rungcc1(pkg *Package, ofile, cfile string) Target {
-	_, cgoCFLAGS, _, _ := cflags(pkg, true)
-	args := []string{"-fPIC", "-m64", "-pthread", "-fmessage-length=0",
+func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
+	args := []string{"-g", "-O2", "-fPIC", "-m64", "-pthread", "-fmessage-length=0",
 		"-I", pkg.Dir,
 		"-I", filepath.Dir(ofile),
 	}
 	args = append(args, cgoCFLAGS...)
 	args = append(args,
-		"-g", "-O2",
 		"-o", ofile,
 		"-c", cfile,
 	)
-	cmd := exec.Command(gcc(), args...)
-	cmd.Dir = pkg.Dir
-	return pkg.Run(cmd)
+	t0 := time.Now()
+	err := run(pkg.Dir, nil, gcc(), args...)
+	pkg.Record("gcc1", time.Since(t0))
+	return err
 }
 
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
@@ -47,14 +40,13 @@ func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles 
 	args = append(args, ofiles...)
 	args = append(args, cgoLDFLAGS...) // this has to go at the end, because reasons!
 	t0 := time.Now()
-	err := pkg.run(pkg.Dir, nil, gcc(), args...)
+	err := run(pkg.Dir, nil, gcc(), args...)
 	pkg.Record("gcc2", time.Since(t0))
 	return err
 }
 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.
-func rungcc3(ctx *Context, dir string, ofiles []string) (string, error) {
-	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_all.o")
+func rungcc3(ctx *Context, dir string, ofile string, ofiles []string) error {
 	args := []string{
 		"-fPIC", "-m64", "-fmessage-length=0",
 	}
@@ -67,14 +59,14 @@ func rungcc3(ctx *Context, dir string, ofiles []string) (string, error) {
 	if !isClang() {
 		libgcc, err := libgcc(ctx)
 		if err != nil {
-			return "", nil
+			return nil
 		}
 		args = append(args, libgcc, "-Wl,--build-id=none")
 	}
 	t0 := time.Now()
-	err := ctx.run(dir, nil, gcc(), args...)
+	err := run(dir, nil, gcc(), args...)
 	ctx.Record("gcc3", time.Since(t0))
-	return ofile, err
+	return err
 }
 
 // libgcc returns the value of gcc -print-libgcc-file-name.
@@ -83,7 +75,7 @@ func libgcc(ctx *Context) (string, error) {
 		"-print-libgcc-file-name",
 	}
 	var buf bytes.Buffer
-	err := ctx.runOut(&buf, ".", nil, gcc(), args...)
+	err := runOut(&buf, ".", nil, gcc(), args...)
 	return strings.TrimSpace(buf.String()), err
 }
 
@@ -166,7 +158,7 @@ func pkgconfig(p *Package) ([]string, []string, error) {
 	}
 	args = append(args, p.CgoPkgConfig...)
 	var out bytes.Buffer
-	err := p.runOut(&out, p.Dir, nil, "pkg-config", args...)
+	err := runOut(&out, p.Dir, nil, "pkg-config", args...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -177,7 +169,7 @@ func pkgconfig(p *Package) ([]string, []string, error) {
 	}
 	args = append(args, p.CgoPkgConfig...)
 	out.Reset()
-	err = p.runOut(&out, p.Dir, nil, "pkg-config", args...)
+	err = runOut(&out, p.Dir, nil, "pkg-config", args...)
 	if err != nil {
 		return nil, nil, err
 	}

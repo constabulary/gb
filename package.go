@@ -29,7 +29,7 @@ func NewPackage(ctx *Context, p *build.Package) *Package {
 
 // isMain returns true if this is a command, a main package.
 func (p *Package) isMain() bool {
-	return p.Name == "main"
+	return p.Name == "main" || strings.HasSuffix(p.ImportPath, "testmain") && p.Scope == "test"
 }
 
 // Imports returns the Pacakges that this Package depends on.
@@ -73,4 +73,78 @@ func (pkg *Package) Objdir() string {
 	default:
 		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
+}
+
+// Binfile returns the destination of the compiled target of this command.
+func (pkg *Package) Binfile() string {
+	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
+	var target string
+	switch pkg.Scope {
+	case "test":
+		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+	default:
+		target = filepath.Join(pkg.Bindir(), binname(pkg))
+	}
+	if pkg.GOOS == "windows" {
+		target += ".exe"
+	}
+	return target
+}
+
+// loadPackage recursively resolves path and its imports and if successful
+// stores those packages in the Context's internal package cache.
+func loadPackage(c *Context, stack []string, path string) (*Package, error) {
+	if build.IsLocalImport(path) {
+		// sanity check
+		return nil, fmt.Errorf("%q is not a valid import path", path)
+	}
+	if pkg, ok := c.pkgs[path]; ok {
+		// already loaded, just return
+		return pkg, nil
+	}
+
+	push := func(path string) {
+		stack = append(stack, path)
+	}
+	pop := func(path string) {
+		stack = stack[:len(stack)-1]
+	}
+	onStack := func(path string) bool {
+		for _, p := range stack {
+			if p == path {
+				return true
+			}
+		}
+		return false
+	}
+
+	p, err := c.Context.Import(path, c.Projectdir(), 0)
+	if err != nil {
+		return nil, err
+	}
+	push(path)
+	var stale bool
+	for _, i := range p.Imports {
+		if shouldignore(i) {
+			continue
+		}
+		if onStack(i) {
+			push(i)
+			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
+		}
+		pkg, err := loadPackage(c, stack, i)
+		if err != nil {
+			return nil, err
+		}
+		stale = stale || pkg.Stale
+	}
+	pop(path)
+
+	pkg := Package{
+		Context: c,
+		Package: p,
+	}
+	pkg.Stale = stale || isStale(&pkg)
+	c.pkgs[path] = &pkg
+	return &pkg, nil
 }

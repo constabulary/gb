@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"time"
+	"os"
+	"runtime"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -30,6 +31,10 @@ var (
 	FF bool
 
 	ldflags, gcflags string
+
+	P int // number of executors to run in parallel
+
+	dotfile string // path to dot output file
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
@@ -38,8 +43,10 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&R, "r", false, "perform a release build")
 	fs.BoolVar(&F, "f", false, "rebuild up to date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
+	fs.IntVar(&P, "P", runtime.NumCPU(), "number of parallel jobs")
 	fs.StringVar(&ldflags, "ldflags", "", "flags passed to the linker")
 	fs.StringVar(&gcflags, "gcflags", "", "flags passed to the compiler")
+	fs.StringVar(&dotfile, "dotfile", "", "path to dot output file")
 }
 
 var BuildCmd = &cmd.Command{
@@ -59,11 +66,16 @@ The build flags are
 	-q
 		decreases verbosity, effectively raising the output level to ERROR.
 		In a successful build, no output will be displayed.
+	-P
+		The number of build jobs to run in parallel, including test execution.
+		By default this is the number of CPUs visible to gb.
 	-R
 		sets the base of the project root search path from the current working directory to the value supplied.
 		Effectively gb changes working directory to this path before searching for the project root.
 	-v
 		increases verbosity, effectively lowering the output level from INFO to DEBUG.
+	-dotfile
+		if provided, gb will output a dot formatted file of the build steps to be performed.
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'
@@ -74,23 +86,30 @@ The list flags accept a space-separated list of strings. To embed spaces in an e
 For more about specifying packages, see 'gb help packages'. For more about where packages and binaries are installed, run 'gb help project'.`,
 	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
-		t0 := time.Now()
 		ctx.Force = F
 		ctx.SkipInstall = FF
-		defer func() {
-			gb.Debugf("build duration: %v %v", time.Since(t0), ctx.Statistics.String())
-		}()
+		defer ctx.Destroy()
 
 		pkgs, err := cmd.ResolvePackages(ctx, args...)
 		if err != nil {
-			ctx.Destroy()
 			return err
 		}
-		if err := gb.Build(pkgs...); err != nil {
-			ctx.Destroy()
+
+		build, err := gb.BuildPackages(pkgs...)
+		if err != nil {
 			return err
 		}
-		return ctx.Destroy()
+
+		if dotfile != "" {
+			f, err := os.Create(dotfile)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			printActions(f, build)
+		}
+
+		return gb.ExecuteConcurrent(build, P)
 	},
 	AddFlags: addBuildFlags,
 }

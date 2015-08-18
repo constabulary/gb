@@ -32,6 +32,15 @@ build:
           gb vendor -R integration-tests/sqlite3 restore
           gb build -R integration-tests/sqlite3
 
+# disabled, no access to libsdl2-dev on wercker
+#    - script:
+#        name: integration test/go-sdl2
+#        code: |
+#          cd integration-tests/go-sdl2
+#          bash -x setup.bash
+#          gb vendor -v restore
+#          gb build
+
     - script:
         name: intergration test/goczmq
         code: |
