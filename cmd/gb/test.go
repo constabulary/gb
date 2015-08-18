@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -43,20 +42,28 @@ See 'go help test'
 
 `,
 	Run: func(ctx *gb.Context, args []string) error {
-		t0 := time.Now()
 		ctx.Force = F
 		ctx.SkipInstall = FF
-		defer func() {
-			gb.Debugf("test duration: %v %v", time.Since(t0), ctx.Statistics.String())
-		}()
 		pkgs, err := cmd.ResolvePackagesWithTests(ctx, args...)
 		if err != nil {
 			return err
 		}
-		if err := cmd.Test(cmd.TestFlags(tfs), pkgs...); err != nil {
+		defer ctx.Destroy()
+		test, err := cmd.TestPackages(cmd.TestFlags(tfs), pkgs...)
+		if err != nil {
 			return err
 		}
-		return ctx.Destroy()
+
+		if dotfile != "" {
+			f, err := os.Create(dotfile)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			printActions(f, test)
+		}
+
+		return gb.ExecuteConcurrent(test, P)
 	},
 	AddFlags: addTestFlags,
 	FlagParse: func(flags *flag.FlagSet, args []string) error {

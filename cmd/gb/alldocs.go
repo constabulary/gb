@@ -47,11 +47,16 @@ The build flags are
 	-q
 		decreases verbosity, effectively raising the output level to ERROR.
 		In a successful build, no output will be displayed.
+	-P
+		The number of build jobs to run in parallel, including test execution.
+		By default this is the number of CPUs visible to gb.
 	-R
 		sets the base of the project root search path from the current working directory to the value supplied.
 		Effectively gb changes working directory to this path before searching for the project root.
 	-v
 		increases verbosity, effectively lowering the output level from INFO to DEBUG.
+	-dotfile
+		if provided, gb will output a dot formatted file of the build steps to be performed.
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'

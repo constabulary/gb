@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -29,8 +28,6 @@ type Context struct {
 	SkipInstall bool // do not cache compiled packages
 
 	pkgs map[string]*Package // map of package paths to resolved packages
-
-	permits chan bool // used to limit concurrency of Run targets
 
 	gcflags []string // flags passed to the compiler
 	ldflags []string // flags passed to the linker
@@ -78,16 +75,11 @@ func Ldflags(flags string) func(*Context) error {
 }
 
 func newContext(p *Project, bc *build.Context) *Context {
-	permits := make(chan bool, runtime.NumCPU())
-	for i := cap(permits); i > 0; i-- {
-		permits <- true
-	}
 	return &Context{
 		Project: p,
 		Context: bc,
 		workdir: mktmpdir(),
 		pkgs:    make(map[string]*Package),
-		permits: permits,
 	}
 }
 
@@ -139,42 +131,22 @@ func (c *Context) Destroy() error {
 	return os.RemoveAll(c.workdir)
 }
 
-// Run returns a Target representing the result of executing a CmdTarget.
-func (c *Context) Run(cmd *exec.Cmd, deps ...Target) Target {
-	annotate := func() error {
-		<-c.permits
-		Debugf("run %v", cmd.Args)
-		t0 := time.Now()
-		err := cmd.Run()
-		c.Record(cmd.Args[0], time.Since(t0))
-		c.permits <- true
-		if err != nil {
-			err = fmt.Errorf("run %v: %v", cmd.Args, err)
-		}
-		return err
-	}
-	target := newTarget(annotate, deps...)
-	return &target // TODO
-}
-
-func (c *Context) run(dir string, env []string, command string, args ...string) error {
+func run(dir string, env []string, command string, args ...string) error {
 	var buf bytes.Buffer
-	err := c.runOut(&buf, dir, env, command, args...)
+	err := runOut(&buf, dir, env, command, args...)
 	if err != nil {
 		return fmt.Errorf("# %s %s: %v\n%s", command, strings.Join(args, " "), err, buf.String())
 	}
 	return nil
 }
 
-func (c *Context) runOut(output io.Writer, dir string, env []string, command string, args ...string) error {
+func runOut(output io.Writer, dir string, env []string, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = dir
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
 	cmd.Env = mergeEnvLists(env, envForDir(cmd.Dir))
-	<-c.permits
 	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
-	c.permits <- true
 	err := cmd.Run()
 	return err
 }

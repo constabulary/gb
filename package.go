@@ -29,7 +29,7 @@ func NewPackage(ctx *Context, p *build.Package) *Package {
 
 // isMain returns true if this is a command, a main package.
 func (p *Package) isMain() bool {
-	return p.Name == "main"
+	return p.Name == "main" || strings.HasSuffix(p.ImportPath, "testmain") && p.Scope == "test"
 }
 
 // Imports returns the Pacakges that this Package depends on.
@@ -72,6 +72,22 @@ func (pkg *Package) Objdir() string {
 	default:
 		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
+}
+
+// Binfile returns the destination of the compiled target of this command.
+func (pkg *Package) Binfile() string {
+	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
+	var target string
+	switch pkg.Scope {
+	case "test":
+		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+	default:
+		target = filepath.Join(pkg.Bindir(), binname(pkg))
+	}
+	if pkg.GOOS == "windows" {
+		target += ".exe"
+	}
+	return target
 }
 
 // loadPackage recursively resolves path and its imports and if successful
