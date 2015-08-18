@@ -104,28 +104,11 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 // Compile returns an Action representing the steps required to compile this package.
 func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 
-	// step 0. are there any .s files to assemble.
-	var assemble []*Action
-	var ofiles []string // additional ofiles to pack
-	for _, sfile := range pkg.SFiles {
-		sfile := sfile
-		ofile := filepath.Join(pkg.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
-		assemble = append(assemble, &Action{
-			Name: fmt.Sprintf("asm: %s/%s", pkg.ImportPath, sfile),
-			Task: TaskFn(func() error {
-				t0 := time.Now()
-				err := pkg.tc.Asm(pkg, pkg.Dir, ofile, filepath.Join(pkg.Dir, sfile))
-				pkg.Record("asm", time.Since(t0))
-				return err
-			}),
-		})
-		ofiles = append(ofiles, ofile)
-	}
-
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 
 	// step 1. are there any .c files that we have to run cgo on ?
+	var ofiles []string // additional ofiles to pack
 	if len(pkg.CgoFiles) > 0 {
 		cgoACTION, cgoOFILES, cgoGOFILES, err := cgo(pkg)
 		if err != nil {
@@ -144,6 +127,25 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		Task: TaskFn(func() error {
 			return gc(pkg, gofiles)
 		}),
+	}
+
+	// step 3. are there any .s files to assemble.
+	var assemble []*Action
+	for _, sfile := range pkg.SFiles {
+		sfile := sfile
+		ofile := filepath.Join(pkg.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
+		assemble = append(assemble, &Action{
+			Name: fmt.Sprintf("asm: %s/%s", pkg.ImportPath, sfile),
+			Task: TaskFn(func() error {
+				t0 := time.Now()
+				err := pkg.tc.Asm(pkg, pkg.Dir, ofile, filepath.Join(pkg.Dir, sfile))
+				pkg.Record("asm", time.Since(t0))
+				return err
+			}),
+			// asm depends on compile because compile will generate the local go_asm.h
+			Deps: []*Action{&compile},
+		})
+		ofiles = append(ofiles, ofile)
 	}
 
 	build := &compile
