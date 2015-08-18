@@ -55,6 +55,8 @@ The build flags are
 		Effectively gb changes working directory to this path before searching for the project root.
 	-v
 		increases verbosity, effectively lowering the output level from INFO to DEBUG.
+	-dotfile
+		if provided, gb will output a dot formatted file of the build steps to be performed.
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'

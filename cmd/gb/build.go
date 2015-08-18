@@ -33,6 +33,8 @@ var (
 	ldflags, gcflags string
 
 	P int // number of executors to run in parallel
+
+	dotfile string // path to dot output file
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
@@ -44,6 +46,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.IntVar(&P, "P", runtime.NumCPU(), "number of parallel jobs")
 	fs.StringVar(&ldflags, "ldflags", "", "flags passed to the linker")
 	fs.StringVar(&gcflags, "gcflags", "", "flags passed to the compiler")
+	fs.StringVar(&dotfile, "dotfile", "", "path to dot output file")
 }
 
 var BuildCmd = &cmd.Command{
@@ -71,6 +74,8 @@ The build flags are
 		Effectively gb changes working directory to this path before searching for the project root.
 	-v
 		increases verbosity, effectively lowering the output level from INFO to DEBUG.
+	-dotfile
+		if provided, gb will output a dot formatted file of the build steps to be performed.
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'
@@ -95,7 +100,14 @@ For more about specifying packages, see 'gb help packages'. For more about where
 			return err
 		}
 
-		printActions(os.Stderr, build)
+		if dotfile != "" {
+			f, err := os.Create(dotfile)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			printActions(f, build)
+		}
 
 		return gb.ExecuteConcurrent(build, P)
 	},

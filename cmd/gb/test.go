@@ -54,7 +54,14 @@ See 'go help test'
 			return err
 		}
 
-		printActions(os.Stderr, test)
+		if dotfile != "" {
+			f, err := os.Create(dotfile)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			printActions(f, test)
+		}
 
 		return gb.ExecuteConcurrent(test, P)
 	},
