@@ -14,6 +14,7 @@ type Package struct {
 	Scope         string // scope: build, test, etc
 	ExtraIncludes string // hook for test
 	Stale         bool   // is the package out of date wrt. its cached copy
+	Standard      bool   // is this package part of the standard library
 }
 
 // NewPackage creates a resolved Package.
@@ -57,10 +58,19 @@ func (p *Package) String() string {
 }
 
 // Complete indicates if this is a pure Go package
-// TODO(dfc) this should be pure go with respect to tags and scope
 func (p *Package) Complete() bool {
-	has := func(s []string) bool { return len(s) > 0 }
-	return !(has(p.SFiles) || has(p.CgoFiles))
+	// If we're giving the compiler the entire package (no C etc files), tell it that,
+	// so that it can give good error messages about forward declarations.
+	// Exceptions: a few standard packages have forward declarations for
+	// pieces supplied behind-the-scenes by package runtime.
+	extFiles := len(p.CgoFiles) + len(p.CFiles) + len(p.CXXFiles) + len(p.MFiles) + len(p.SFiles) + len(p.SysoFiles) + len(p.SwigFiles) + len(p.SwigCXXFiles)
+	if p.Standard {
+		switch p.ImportPath {
+		case "bytes", "net", "os", "runtime/pprof", "sync", "time":
+			extFiles++
+		}
+	}
+	return extFiles == 0
 }
 
 // Objdir returns the destination for object files compiled for this Package.
@@ -124,6 +134,7 @@ func loadPackage(c *Context, stack []string, path string) (*Package, error) {
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
+
 		if shouldignore(i) {
 			continue
 		}
@@ -140,8 +151,9 @@ func loadPackage(c *Context, stack []string, path string) (*Package, error) {
 	pop(path)
 
 	pkg := Package{
-		Context: c,
-		Package: p,
+		Context:  c,
+		Package:  p,
+		Standard: p.Goroot && p.ImportPath != "" && !strings.Contains(p.ImportPath, "."),
 	}
 	pkg.Stale = stale || isStale(&pkg)
 	c.pkgs[path] = &pkg

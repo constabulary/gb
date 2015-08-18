@@ -246,7 +246,7 @@ func gc(pkg *Package, gofiles []string) error {
 			gofiles[i] = fullpath
 		}
 	}
-	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Projectdir(), objfile(pkg), gofiles, pkg.Complete())
+	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Projectdir(), objfile(pkg), gofiles)
 	pkg.Record("gc", time.Since(t0))
 	return err
 }
