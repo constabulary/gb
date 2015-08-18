@@ -132,6 +132,15 @@ func loadPackage(c *Context, stack []string, path string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// everything depends on runtime, except the runtime itself.
+	// TODO(dfc) see if this can be made more selective by adding
+	// runtime as a dependency of some select packages.
+	standard := p.Goroot && p.ImportPath != "" && !strings.Contains(p.ImportPath, ".")
+	if standard && p.ImportPath != "runtime" {
+		p.Imports = append(p.Imports, "runtime")
+	}
+
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
@@ -154,7 +163,7 @@ func loadPackage(c *Context, stack []string, path string) (*Package, error) {
 	pkg := Package{
 		Context:  c,
 		Package:  p,
-		Standard: p.Goroot && p.ImportPath != "" && !strings.Contains(p.ImportPath, "."),
+		Standard: standard,
 	}
 	pkg.Stale = stale || isStale(&pkg)
 	c.pkgs[path] = &pkg
