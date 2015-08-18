@@ -15,6 +15,10 @@ var (
 	args []string
 )
 
+const (
+	noDestroyContext = false
+)
+
 func init() {
 	fs.BoolVar(&gb.Quiet, "q", gb.Quiet, "suppress log messages below ERROR level")
 	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
@@ -84,6 +88,10 @@ func main() {
 	)
 	if err != nil {
 		gb.Fatalf("unable to construct context: %v", err)
+	}
+
+	if !noDestroyContext {
+		defer ctx.Destroy()
 	}
 
 	if command.ParseArgs != nil {
