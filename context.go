@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-const (
-	buildRuntime = true
-	maxpermits   = 1
-)
-
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
@@ -322,12 +317,4 @@ NextVar:
 		out = append(out, inkv)
 	}
 	return out
-}
-
-// shouldignore tests if the package should be ignored.
-func shouldignore(p string) bool {
-	if buildRuntime {
-		return p == "C" || p == "unsafe"
-	}
-	return stdlib[p]
 }

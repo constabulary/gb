@@ -103,3 +103,8 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 	return fmt.Errorf("gc15 does not support cc")
 }
+
+// shouldignore tests if the package should be ignored.
+func shouldignore(p string) bool {
+	return p == "C" || p == "unsafe"
+}

@@ -114,3 +114,8 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 	}
 	return run(pkg.Dir, nil, t.cc, args...)
 }
+
+// shouldignore tests if the package should be ignored.
+func shouldignore(p string) bool {
+	return stdlib[p]
+}

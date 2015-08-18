@@ -144,7 +144,6 @@ func loadPackage(c *Context, stack []string, path string) (*Package, error) {
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
-
 		if shouldignore(i) {
 			continue
 		}
