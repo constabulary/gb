@@ -32,15 +32,15 @@ type Toolchain interface {
 // Actions and Tasks.
 //
 // Actions and Tasks allow gb to separate the role of describing the
-// order in which work will be done, from describing that work itself.
+// order in which work will be done, from the work itself.
 // Actions are the former, they describe the graph of dependencies
 // between actions, and thus the work to be done. By traversing the action
-// graph, we can do the work, execute the Tasks in a sane order.
+// graph, we can do the work, executing Tasks in a sane order.
 //
 // Tasks describe the work to be done, without being concerned with
 // the order in which the work is done -- that is up to the code that
 // places Tasks into actions. Tasks also know more intimate details about
-// filesystems, processes, file lists, etc that Actions do not.
+// filesystems, processes, file lists, etc, that Actions do not.
 //
 // Action graphs (they are not strictly trees as branchs converge on base actions)
 // contain only work to be performed, there are no Actions with empty Tasks
@@ -50,7 +50,7 @@ type Toolchain interface {
 // or even graphed.
 
 // An Action describes a task to be performed and a set
-// of Actions that task depends on.
+// of Actions that the task depends on.
 type Action struct {
 
 	// Name describes the action.
