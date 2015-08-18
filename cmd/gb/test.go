@@ -48,7 +48,7 @@ See 'go help test'
 		if err != nil {
 			return err
 		}
-		defer ctx.Destroy()
+
 		test, err := cmd.TestPackages(cmd.TestFlags(tfs), pkgs...)
 		if err != nil {
 			return err

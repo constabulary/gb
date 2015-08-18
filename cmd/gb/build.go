@@ -88,7 +88,6 @@ For more about specifying packages, see 'gb help packages'. For more about where
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
 		ctx.Force = F
 		ctx.SkipInstall = FF
-		defer ctx.Destroy()
 
 		pkgs, err := cmd.ResolvePackages(ctx, args...)
 		if err != nil {
