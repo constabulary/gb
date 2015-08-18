@@ -16,7 +16,7 @@ var (
 )
 
 const (
-	noDestroyContext = false
+	noDestroyContext = true
 )
 
 func init() {
