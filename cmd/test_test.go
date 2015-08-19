@@ -35,6 +35,9 @@ func TestTestPackage(t *testing.T) {
 			pkg: "extest", // test external tests
 			err: nil,
 		}, {
+			pkg: "external_only_test", // issue 312
+			err: nil,
+		}, {
 			pkg: "g", // test that _test files can modify the internal package under test
 			err: nil,
 		}, {

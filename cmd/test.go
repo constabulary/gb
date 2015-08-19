@@ -85,7 +85,6 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	}
 
 	// internal tests
-
 	testpkg := gb.NewPackage(pkg.Context, &build.Package{
 		Name:       name,
 		ImportPath: pkg.ImportPath,
@@ -106,18 +105,24 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 		Imports: imports,
 	})
+	testpkg.Scope = "test"
+	testpkg.Stale = true
 
 	// build dependencies
 	deps, err := gb.BuildDependencies(targets, testpkg)
 	if err != nil {
 		return nil, err
 	}
-	testpkg.Scope = "test"
-	testpkg.Stale = true
 
-	testobj, err := gb.Compile(testpkg, deps...)
-	if err != nil {
-		return nil, err
+	// only build the internal test if there is Go source or
+	// internal test files.
+	var testobj *gb.Action
+	if len(testpkg.GoFiles)+len(testpkg.TestGoFiles) > 0 {
+		var err error
+		testobj, err = gb.Compile(testpkg, deps...)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// external tests
@@ -137,7 +142,12 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		xtestpkg.Scope = "test"
 		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
-		testobj, err = gb.Compile(xtestpkg, append(deps, testobj)...)
+
+		// if there is an internal test object, add it as a dependency.
+		if testobj != nil {
+			deps = append(deps, testobj)
+		}
+		testobj, err = gb.Compile(xtestpkg, deps...)
 		if err != nil {
 			return nil, err
 		}
