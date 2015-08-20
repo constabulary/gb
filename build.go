@@ -49,6 +49,10 @@ func BuildPackages(pkgs ...*Package) (*Action, error) {
 	}
 
 	for _, pkg := range pkgs {
+		if len(pkg.GoFiles)+len(pkg.Cgofiles) == 0 {
+			Debugf("skipping %v: no go files", pkg.ImportPath)
+			continue
+		}
 		a, err := BuildPackage(targets, pkg)
 		if err != nil {
 			return nil, err
@@ -122,7 +126,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	if len(gofiles) == 0 {
 		return nil, fmt.Errorf("compile %q: no go files supplied", pkg.ImportPath)
 	}
-	
+
 	// step 2. compile all the go files for this package, including pkg.CgoFiles
 	compile := Action{
 		Name: fmt.Sprintf("compile: %s", pkg.ImportPath),
