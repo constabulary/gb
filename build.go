@@ -103,7 +103,6 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 
 // Compile returns an Action representing the steps required to compile this package.
 func Compile(pkg *Package, deps ...*Action) (*Action, error) {
-
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 
@@ -120,6 +119,10 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		deps = append(deps, cgoACTION)
 	}
 
+	if len(gofiles) == 0 {
+		return nil, fmt.Errorf("compile %q: no go files supplied", pkg.ImportPath)
+	}
+	
 	// step 2. compile all the go files for this package, including pkg.CgoFiles
 	compile := Action{
 		Name: fmt.Sprintf("compile: %s", pkg.ImportPath),
