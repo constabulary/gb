@@ -49,7 +49,7 @@ func BuildPackages(pkgs ...*Package) (*Action, error) {
 	}
 
 	for _, pkg := range pkgs {
-		if len(pkg.GoFiles)+len(pkg.Cgofiles) == 0 {
+		if len(pkg.GoFiles)+len(pkg.CgoFiles) == 0 {
 			Debugf("skipping %v: no go files", pkg.ImportPath)
 			continue
 		}
