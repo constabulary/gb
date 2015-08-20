@@ -117,7 +117,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	// only build the internal test if there is Go source or
 	// internal test files.
 	var testobj *gb.Action
-	if len(testpkg.GoFiles)+len(testpkg.TestGoFiles) > 0 {
+	if len(testpkg.GoFiles)+len(testpkg.CgoFiles)+len(testpkg.TestGoFiles) > 0 {
 		var err error
 		testobj, err = gb.Compile(testpkg, deps...)
 		if err != nil {
