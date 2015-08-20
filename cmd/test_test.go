@@ -44,6 +44,12 @@ func TestTestPackage(t *testing.T) {
 			pkg: "cgoonlynotest",
 			err: nil,
 		}, {
+			pkg: "testonly",
+			err: nil,
+		}, {
+			pkg: "extestonly",
+			err: nil,
+		}, {
 			pkg: "g", // test that _test files can modify the internal package under test
 			err: nil,
 		}, {
