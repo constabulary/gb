@@ -58,6 +58,9 @@ See gb help plugins.
 		if args[0] == "plugin" {
 			args = args[1:]
 		}
+		if len(args) == 0 {
+			return nil
+		}
 		return flags.Parse(args[1:])
 	},
 }
