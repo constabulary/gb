@@ -69,17 +69,13 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 
 	if pkg.Complete() {
 		args = append(args, "-complete")
-	}
-
-	// runtime requires special support
-	if pkg.Name == "runtime" {
-		args = append(args, "-+")
-		asmhdr := filepath.Join(filepath.Dir(outfile), "go_asm.h")
+	} else {
+		asmhdr := filepath.Join(filepath.Dir(outfile), pkg.Name, "go_asm.h")
 		args = append(args, "-asmhdr", asmhdr)
 	}
 
 	args = append(args, files...)
-	if err := mkdir(filepath.Dir(outfile)); err != nil {
+	if err := mkdir(filepath.Join(filepath.Dir(outfile), pkg.Name)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
 	}
 	return runOut(os.Stdout, srcdir, nil, t.gc, args...)
