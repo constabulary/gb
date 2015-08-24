@@ -37,7 +37,7 @@ func (p *Package) isMain() bool {
 func (p *Package) Imports() []*Package {
 	pkgs := make([]*Package, 0, len(p.Package.Imports))
 	for _, i := range p.Package.Imports {
-		if shouldignore(i) {
+		if p.shouldignore(i) {
 			continue
 		}
 
@@ -144,7 +144,7 @@ func loadPackage(c *Context, stack []string, path string) (*Package, error) {
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
-		if shouldignore(i) {
+		if c.shouldignore(i) {
 			continue
 		}
 		if onStack(i) {

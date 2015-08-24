@@ -243,6 +243,14 @@ func (c *Context) AllPackages(pattern string) []string {
 	return matchPackages(c, pattern)
 }
 
+// shouldignore tests if the package should be ignored.
+func (c *Context) shouldignore(p string) bool {
+	if c.tc.isCrossCompile() {
+		return p == "C" || p == "unsafe"
+	}
+	return stdlib[p]
+}
+
 func matchPackages(c *Context, pattern string) []string {
 	Debugf("matchPackages: %v %v", c.srcdirs[0].Root, pattern)
 	match := func(string) bool { return true }

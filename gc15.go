@@ -35,14 +35,21 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	}
 
 	return func(c *Context) error {
-		tooldir := filepath.Join(runtime.GOROOT(), "pkg", "tool", runtime.GOOS+"_"+runtime.GOARCH)
+		goroot := runtime.GOROOT()
+		gohostos := runtime.GOOS
+		gohostarch := runtime.GOARCH
+		gotargetos := options.goos
+		gotargetarch := options.goarch
+		tooldir := filepath.Join(goroot, "pkg", "tool", gohostos+"_"+gohostarch)
 		c.tc = &gcToolchain{
-			goos:   options.goos,
-			goarch: options.goarch,
-			gc:     filepath.Join(tooldir, "compile"),
-			ld:     filepath.Join(tooldir, "link"),
-			as:     filepath.Join(tooldir, "asm"),
-			pack:   filepath.Join(tooldir, "pack"),
+			gohostos:     gohostos,
+			gohostarch:   gohostarch,
+			gotargetos:   gotargetos,
+			gotargetarch: gotargetarch,
+			gc:           filepath.Join(tooldir, "compile"),
+			ld:           filepath.Join(tooldir, "link"),
+			as:           filepath.Join(tooldir, "asm"),
+			pack:         filepath.Join(tooldir, "pack"),
 		}
 		return nil
 	}
@@ -79,9 +86,10 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 }
 
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
+	odir := filepath.Join(filepath.Dir(ofile))
 	includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
-	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", filepath.Dir(filepath.Dir(ofile)), "-I", includedir, sfile}
-	if err := mkdir(filepath.Dir(ofile)); err != nil {
+	args := []string{"-o", ofile, "-D", "GOOS_" + t.gotargetos, "-D", "GOARCH_" + t.gotargetarch, "-I", odir, "-I", includedir, sfile}
+	if err := mkdir(odir); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
 	return run(srcdir, nil, t.as, args...)
@@ -102,9 +110,4 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 	return fmt.Errorf("gc15 does not support cc")
-}
-
-// shouldignore tests if the package should be ignored.
-func shouldignore(p string) bool {
-	return p == "C" || p == "unsafe"
 }
