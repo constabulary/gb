@@ -36,22 +36,26 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 
 	return func(c *Context) error {
 		goroot := runtime.GOROOT()
-		goos := options.goos
-		goarch := options.goarch
+		gohostos := runtime.GOOS
+		gohostarch := runtime.GOARCH
+		gotargetos := options.goos
+		gotargetarch := options.goarch
 
 		// cross-compliation is not supported yet #31
-		if goos != runtime.GOOS || goarch != runtime.GOARCH {
-			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", runtime.GOOS, runtime.GOARCH, goos, goarch)
+		if gohostos != gotargetos || gohostarch != gotargetarch {
+			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", gohostos, gohostarch, gotargetos, gotargetarch)
 		}
 
-		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
+		tooldir := filepath.Join(goroot, "pkg", "tool", gohostos+"_"+gohostarch)
 		c.tc = &gcToolchain{
-			goos:   goos,
-			goarch: goarch,
-			gc:     filepath.Join(tooldir, "compile"),
-			ld:     filepath.Join(tooldir, "link"),
-			as:     filepath.Join(tooldir, "asm"),
-			pack:   filepath.Join(tooldir, "pack"),
+			gohostos:     gohostos,
+			gohostarch:   gohostarch,
+			gotargetos:   gotargetos,
+			gotargetarch: gotargetarch,
+			gc:           filepath.Join(tooldir, "compile"),
+			ld:           filepath.Join(tooldir, "link"),
+			as:           filepath.Join(tooldir, "asm"),
+			pack:         filepath.Join(tooldir, "pack"),
 		}
 		return nil
 	}
@@ -81,7 +85,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
-	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", includedir, sfile}
+	args := []string{"-o", ofile, "-D", "GOOS_" + t.gotargetos, "-D", "GOARCH_" + t.gotargetos, "-I", includedir, sfile}
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
