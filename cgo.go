@@ -108,7 +108,7 @@ func gccBaseCmd() []string {
 
 // gccMachine returns the gcc -m flag to use, either "-m32", "-m64" or "-marm".
 func (t *gcToolchain) gccMachine() []string {
-	switch t.goarch {
+	switch t.gotargetarch {
 	case "amd64":
 		return []string{"-m64"}
 	case "386":

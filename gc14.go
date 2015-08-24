@@ -35,27 +35,31 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 
 	return func(c *Context) error {
 		goroot := runtime.GOROOT()
-		goos := options.goos
-		goarch := options.goarch
+		gohostos := runtime.GOOS
+		gohostarch := runtime.GOARCH
+		gotargetos := options.goos
+		gotargetarch := options.goarch
 
 		// cross-compliation is not supported yet #31
-		if goos != runtime.GOOS || goarch != runtime.GOARCH {
-			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", runtime.GOOS, runtime.GOARCH, goos, goarch)
+		if gohostos != gotargetos || gohostarch != gotargetarch {
+			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", gohostos, gohostarch, gotargetos, gotargetarch)
 		}
 
-		archchar, err := build.ArchChar(goarch)
+		archchar, err := build.ArchChar(gotargetos)
 		if err != nil {
 			return err
 		}
-		tooldir := filepath.Join(goroot, "pkg", "tool", goos+"_"+goarch)
+		tooldir := filepath.Join(goroot, "pkg", "tool", gohostos+"_"+gohostarch)
 		c.tc = &gcToolchain{
-			goos:   goos,
-			goarch: goarch,
-			gc:     filepath.Join(tooldir, archchar+"g"),
-			ld:     filepath.Join(tooldir, archchar+"l"),
-			as:     filepath.Join(tooldir, archchar+"a"),
-			cc:     filepath.Join(tooldir, archchar+"c"),
-			pack:   filepath.Join(tooldir, "pack"),
+			gohostos:     gohostos,
+			gohostarch:   gohostarch,
+			gotargetos:   gotargetos,
+			gotargetarch: gotargetarch,
+			gc:           filepath.Join(tooldir, archchar+"g"),
+			ld:           filepath.Join(tooldir, archchar+"l"),
+			as:           filepath.Join(tooldir, archchar+"a"),
+			cc:           filepath.Join(tooldir, archchar+"c"),
+			pack:         filepath.Join(tooldir, "pack"),
 		}
 		return nil
 	}
@@ -80,8 +84,8 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 }
 
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
-	includedir := filepath.Join(runtime.GOROOT(), "pkg", t.goos+"_"+t.goarch)
-	args := []string{"-o", ofile, "-D", "GOOS_" + t.goos, "-D", "GOARCH_" + t.goarch, "-I", includedir, sfile}
+	includedir := filepath.Join(runtime.GOROOT(), "pkg", t.gotargetos+"_"+t.gotargetarch)
+	args := []string{"-o", ofile, "-D", "GOOS_" + t.gotargetos, "-D", "GOARCH_" + t.gotargetarch, "-I", includedir, sfile}
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}

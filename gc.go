@@ -5,8 +5,9 @@ import "path/filepath"
 // gc toolchain
 
 type gcToolchain struct {
-	goos, goarch         string
-	gc, cc, ld, as, pack string
+	gohostos, gohostarch     string // goos and goarch for this host
+	gotargetos, gotargetarch string // goos and goarch for the target
+	gc, cc, ld, as, pack     string
 }
 
 type gcoption struct {
