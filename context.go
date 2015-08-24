@@ -83,13 +83,6 @@ func newContext(p *Project, bc *build.Context) *Context {
 	}
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // IncludePaths returns the include paths visible in this context.
 func (c *Context) IncludePaths() []string {
 	return []string{
