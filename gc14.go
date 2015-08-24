@@ -45,7 +45,7 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", gohostos, gohostarch, gotargetos, gotargetarch)
 		}
 
-		archchar, err := build.ArchChar(gotargetos)
+		archchar, err := build.ArchChar(gotargetarch)
 		if err != nil {
 			return err
 		}
