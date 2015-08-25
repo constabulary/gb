@@ -51,8 +51,6 @@ func main() {
 		return
 	}
 
-	verifyGoVersion()
-
 	command, ok := commands[name]
 	if (command != nil && !command.Runnable()) || !ok {
 		if _, err := lookupPlugin(name); err != nil {
@@ -110,21 +108,5 @@ func main() {
 	gb.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
 		gb.Fatalf("command %q failed: %v", name, err)
-	}
-}
-
-// verify that the version of Go that compiled this binary is still correct.
-func verifyGoVersion() {
-	want := runtime.Version()
-	filename := filepath.Join(runtime.GOROOT(), "VERSION")
-	if strings.Contains(want, "devel") {
-		filename += ".cache"
-	}
-	got, err := ioutil.ReadFile(filename)
-	if err != nil {
-		gb.Fatalf("cannot validate Go version: %v", err)
-	}
-	if want != string(got) {
-		gb.Fatalf("Go version does not match: gb was compiled with %q, installed Go version from %v is %q", want, runtime.GOROOT(), got)
 	}
 }
