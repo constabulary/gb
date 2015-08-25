@@ -22,7 +22,24 @@ You can create as many projects as you like and move between them simply by chan
 
 gb has its own site, [getgb.io](http://getgb.io/), head over there for more information.
 
-## Contributions
+## Contributing
+
+### Road map
+
+In rough order
+
+- [Cross Compilation](https://github.com/constabulary/gb/milestones/cross-compilation)
+- gb test improvements, test output, flag handling
+- gb vendor updates and bug fixes
+- new package resolver (replace go/build)
+
+### Big ticket items 
+
+Big ticket items that are not on the road map yet
+
+- [Race detector support](https://github.com/constabulary/gb/issues/96)
+- Tag handling, unify -tags, ENVVARS and GOOS/GOARCH into a single format for binary names and pkg cache
+- Package BuildID support (make stale detection work like the Go 1.5)
 
 We welcome pull requests, bug fixes and issue reports.
 
