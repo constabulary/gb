@@ -106,24 +106,6 @@ func gccBaseCmd() []string {
 	return strings.Fields(defaultCC)
 }
 
-// gccMachine returns the gcc -m flag to use, either "-m32", "-m64" or "-marm".
-func (t *gcToolchain) gccMachine() []string {
-	switch t.gotargetarch {
-	case "amd64":
-		return []string{"-m64"}
-	case "386":
-		return []string{"-m32"}
-	case "arm":
-		return []string{"-marm"} // not thumb
-	case "s390":
-		return []string{"-m31"}
-	case "s390x":
-		return []string{"-m64"}
-	default:
-		return nil
-	}
-}
-
 // envList returns the value of the given environment variable broken
 // into fields, using the default value when the variable is empty.
 func envList(key, def string) []string {

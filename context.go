@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +22,9 @@ type Context struct {
 	workdir string
 
 	tc Toolchain
+
+	gohostos, gohostarch     string // GOOS and GOARCH for this host
+	gotargetos, gotargetarch string // GOOS and GOARCH for the target
 
 	Statistics
 
@@ -44,6 +48,14 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	bc := build.Default
 	bc.GOPATH = togopath(p.Srcdirs())
 	defaults := []func(*Context) error{
+		// must come before gcToolchain()
+		func(c *Context) error {
+			c.gohostos = runtime.GOOS
+			c.gohostarch = runtime.GOARCH
+			c.gotargetos = c.gohostos
+			c.gotargetarch = c.gohostarch
+			return nil
+		},
 		GcToolchain(),
 	}
 	ctx := newContext(p, &bc)
@@ -238,10 +250,14 @@ func (c *Context) AllPackages(pattern string) []string {
 
 // shouldignore tests if the package should be ignored.
 func (c *Context) shouldignore(p string) bool {
-	if c.tc.isCrossCompile() {
+	if c.isCrossCompile() {
 		return p == "C" || p == "unsafe"
 	}
 	return stdlib[p]
+}
+
+func (c *Context) isCrossCompile() bool {
+	return c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch
 }
 
 func matchPackages(c *Context, pattern string) []string {

@@ -5,9 +5,7 @@ import "path/filepath"
 // gc toolchain
 
 type gcToolchain struct {
-	gohostos, gohostarch     string // goos and goarch for this host
-	gotargetos, gotargetarch string // goos and goarch for the target
-	gc, cc, ld, as, pack     string
+	gc, cc, ld, as, pack string
 }
 
 type gcoption struct {
@@ -23,7 +21,3 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 
 func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
-
-func (t *gcToolchain) isCrossCompile() bool {
-	return t.gohostos != t.gotargetos || t.gohostarch != t.gotargetarch
-}

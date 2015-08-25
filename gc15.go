@@ -36,20 +36,12 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 
 	return func(c *Context) error {
 		goroot := runtime.GOROOT()
-		gohostos := runtime.GOOS
-		gohostarch := runtime.GOARCH
-		gotargetos := options.goos
-		gotargetarch := options.goarch
-		tooldir := filepath.Join(goroot, "pkg", "tool", gohostos+"_"+gohostarch)
+		tooldir := filepath.Join(goroot, "pkg", "tool", c.gohostos+"_"+c.gohostarch)
 		c.tc = &gcToolchain{
-			gohostos:     gohostos,
-			gohostarch:   gohostarch,
-			gotargetos:   gotargetos,
-			gotargetarch: gotargetarch,
-			gc:           filepath.Join(tooldir, "compile"),
-			ld:           filepath.Join(tooldir, "link"),
-			as:           filepath.Join(tooldir, "asm"),
-			pack:         filepath.Join(tooldir, "pack"),
+			gc:   filepath.Join(tooldir, "compile"),
+			ld:   filepath.Join(tooldir, "link"),
+			as:   filepath.Join(tooldir, "asm"),
+			pack: filepath.Join(tooldir, "pack"),
 		}
 		return nil
 	}
@@ -84,7 +76,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	odir := filepath.Join(filepath.Dir(ofile))
 	includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
-	args := []string{"-o", ofile, "-D", "GOOS_" + t.gotargetos, "-D", "GOARCH_" + t.gotargetarch, "-I", odir, "-I", includedir, sfile}
+	args := []string{"-o", ofile, "-D", "GOOS_" + pkg.gotargetos, "-D", "GOARCH_" + pkg.gotargetarch, "-I", odir, "-I", includedir, sfile}
 	if err := mkdir(odir); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
