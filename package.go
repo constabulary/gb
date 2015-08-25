@@ -95,6 +95,13 @@ func (pkg *Package) Binfile() string {
 	default:
 		target = filepath.Join(pkg.Bindir(), binname(pkg))
 	}
+
+	// if this is a cross compile, add -$GOOS-$GOARCH
+	if pkg.tc.isCrossCompile() {
+		// TODO(dfc) fix this by elevating gotargetos and gotargetarch to the context
+		target += "-" + pkg.tc.(*gcToolchain).gotargetos + "-" + pkg.tc.(*gcToolchain).gotargetarch
+	}
+
 	if pkg.GOOS == "windows" {
 		target += ".exe"
 	}

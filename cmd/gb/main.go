@@ -19,7 +19,8 @@ var (
 )
 
 const (
-	noDestroyContext = true
+	// enable to keep working directory
+	noDestroyContext = false
 )
 
 func init() {
