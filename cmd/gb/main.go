@@ -19,6 +19,7 @@ var (
 )
 
 const (
+	// enable to keep working directory
 	noDestroyContext = false
 )
 

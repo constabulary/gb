@@ -23,3 +23,7 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 
 func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
+
+func (t *gcToolchain) isCrossCompile() bool {
+	return t.gohostos != t.gotargetos || t.gohostarch != t.gotargetarch
+}

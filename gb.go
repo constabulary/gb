@@ -27,6 +27,9 @@ type Toolchain interface {
 
 	// linker returns the location of the linker for this toolchain
 	linker() string
+
+	// is this a cross compilation toolchain ?
+	isCrossCompile() bool
 }
 
 // Actions and Tasks.

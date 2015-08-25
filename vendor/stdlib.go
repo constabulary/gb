@@ -1,4 +1,4 @@
-package gb
+package vendor
 
 // packages from the standard lib. They are excluded
 // from the package map.

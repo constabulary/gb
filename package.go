@@ -37,9 +37,10 @@ func (p *Package) isMain() bool {
 func (p *Package) Imports() []*Package {
 	pkgs := make([]*Package, 0, len(p.Package.Imports))
 	for _, i := range p.Package.Imports {
-		if shouldignore(i) {
+		if p.shouldignore(i) {
 			continue
 		}
+
 		pkg, ok := p.pkgs[i]
 		if !ok {
 			panic("could not locate package: " + i)
@@ -94,6 +95,13 @@ func (pkg *Package) Binfile() string {
 	default:
 		target = filepath.Join(pkg.Bindir(), binname(pkg))
 	}
+
+	// if this is a cross compile, add -$GOOS-$GOARCH
+	if pkg.tc.isCrossCompile() {
+		// TODO(dfc) fix this by elevating gotargetos and gotargetarch to the context
+		target += "-" + pkg.tc.(*gcToolchain).gotargetos + "-" + pkg.tc.(*gcToolchain).gotargetarch
+	}
+
 	if pkg.GOOS == "windows" {
 		target += ".exe"
 	}
@@ -131,11 +139,19 @@ func loadPackage(c *Context, stack []string, path string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// everything depends on runtime, except the runtime itself.
+	// TODO(dfc) see if this can be made more selective by adding
+	// runtime as a dependency of some select packages.
+	standard := p.Goroot && p.ImportPath != "" && !strings.Contains(p.ImportPath, ".")
+	if standard && p.ImportPath != "runtime" {
+		p.Imports = append(p.Imports, "runtime")
+	}
+
 	push(path)
 	var stale bool
 	for _, i := range p.Imports {
-
-		if shouldignore(i) {
+		if c.shouldignore(i) {
 			continue
 		}
 		if onStack(i) {
@@ -153,7 +169,7 @@ func loadPackage(c *Context, stack []string, path string) (*Package, error) {
 	pkg := Package{
 		Context:  c,
 		Package:  p,
-		Standard: p.Goroot && p.ImportPath != "" && !strings.Contains(p.ImportPath, "."),
+		Standard: standard,
 	}
 	pkg.Stale = stale || isStale(&pkg)
 	c.pkgs[path] = &pkg
