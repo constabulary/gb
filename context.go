@@ -50,10 +50,18 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	defaults := []func(*Context) error{
 		// must come before gcToolchain()
 		func(c *Context) error {
+			envor := func(key, def string) string {
+				if v := os.Getenv(key); v != "" {
+					return v
+				} else {
+					return def
+				}
+			}
+
 			c.gohostos = runtime.GOOS
 			c.gohostarch = runtime.GOARCH
-			c.gotargetos = c.gohostos
-			c.gotargetarch = c.gohostarch
+			c.gotargetos = envor("GOOS", runtime.GOOS)
+			c.gotargetarch = envor("GOARCH", runtime.GOARCH)
 			return nil
 		},
 		GcToolchain(),

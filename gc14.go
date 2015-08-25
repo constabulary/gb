@@ -11,28 +11,6 @@ import (
 )
 
 func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
-	envor := func(key, def string) string {
-		if v := os.Getenv(key); v != "" {
-			return v
-		} else {
-			return def
-		}
-	}
-
-	defaults := []func(*gcoption){
-		func(opt *gcoption) {
-			opt.goos = envor("GOOS", runtime.GOOS)
-		},
-		func(opt *gcoption) {
-			opt.goarch = envor("GOARCH", runtime.GOARCH)
-		},
-	}
-
-	var options gcoption
-	for _, opt := range append(defaults, opts...) {
-		opt(&options)
-	}
-
 	return func(c *Context) error {
 		goroot := runtime.GOROOT()
 
