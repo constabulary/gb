@@ -2,11 +2,8 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
-	"strings"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
