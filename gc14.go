@@ -17,7 +17,7 @@ func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 
 		// cross-compliation is not supported yet #31
 		if c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch {
-			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", c.gohostos, c.gohostarch, c.gotargetos, c.gotargetarch)
+			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported with Go 1.4", c.gohostos, c.gohostarch, c.gotargetos, c.gotargetarch)
 		}
 
 		archchar, err := build.ArchChar(c.gotargetarch)
