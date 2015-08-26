@@ -18,7 +18,7 @@ import (
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
-	*build.Context
+	Context *build.Context
 	workdir string
 
 	tc Toolchain
@@ -44,36 +44,51 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	if len(p.srcdirs) == 0 {
 		return nil, fmt.Errorf("no source directories supplied")
 	}
+	envOr := func(key, def string) string {
+		if v := os.Getenv(key); v != "" {
+			return v
+		} else {
+			return def
+		}
+	}
 
-	bc := build.Default
-	bc.GOPATH = togopath(p.Srcdirs())
+	bc := build.Context{
+		GOARCH:   envOr("GOARCH", runtime.GOARCH),
+		GOOS:     envOr("GOOS", runtime.GOOS),
+		GOROOT:   runtime.GOROOT(),
+		GOPATH:   togopath(p.Srcdirs()),
+		Compiler: runtime.Compiler, // TODO(dfc) probably unused
+
+		// Make sure we use the same set of release tags as go/build
+		ReleaseTags: build.Default.ReleaseTags,
+
+		CgoEnabled: build.Default.CgoEnabled,
+	}
 	defaults := []func(*Context) error{
-		// must come before gcToolchain()
+		// must come before GcToolchain()
 		func(c *Context) error {
-			envor := func(key, def string) string {
-				if v := os.Getenv(key); v != "" {
-					return v
-				} else {
-					return def
-				}
-			}
-
 			c.gohostos = runtime.GOOS
 			c.gohostarch = runtime.GOARCH
-			c.gotargetos = envor("GOOS", runtime.GOOS)
-			c.gotargetarch = envor("GOARCH", runtime.GOARCH)
+			c.gotargetos = c.Context.GOOS
+			c.gotargetarch = c.Context.GOARCH
 			return nil
 		},
 		GcToolchain(),
 	}
-	ctx := newContext(p, &bc)
+	ctx := Context{
+		Project: p,
+		Context: &bc,
+		workdir: mktmpdir(),
+		pkgs:    make(map[string]*Package),
+	}
+
 	for _, opt := range append(defaults, opts...) {
-		err := opt(ctx)
+		err := opt(&ctx)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return ctx, nil
+	return &ctx, nil
 }
 
 // Gcflags sets options passed to the compiler.
@@ -94,15 +109,6 @@ func Ldflags(flags string) func(*Context) error {
 	}
 }
 
-func newContext(p *Project, bc *build.Context) *Context {
-	return &Context{
-		Project: p,
-		Context: bc,
-		workdir: mktmpdir(),
-		pkgs:    make(map[string]*Package),
-	}
-}
-
 // IncludePaths returns the include paths visible in this context.
 func (c *Context) IncludePaths() []string {
 	return []string{
@@ -113,8 +119,7 @@ func (c *Context) IncludePaths() []string {
 
 // Pkgdir returns the path to precompiled packages.
 func (c *Context) Pkgdir() string {
-	// TODO(dfc) c.Context.{GOOS,GOARCH} may be out of date wrt. tc.{goos,goarch}
-	return filepath.Join(c.Project.Pkgdir(), c.Context.GOOS, c.Context.GOARCH)
+	return filepath.Join(c.Project.Pkgdir(), c.gotargetos, c.gotargetarch)
 }
 
 // Workdir returns the path to this Context's working directory.

@@ -101,7 +101,7 @@ func (pkg *Package) Binfile() string {
 		target += "-" + pkg.gotargetos + "-" + pkg.gotargetarch
 	}
 
-	if pkg.GOOS == "windows" {
+	if pkg.gotargetos == "windows" {
 		target += ".exe"
 	}
 	return target
