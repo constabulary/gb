@@ -22,7 +22,7 @@ func init() {
 			if len(args) == 0 {
 				args = append(args, ".")
 			}
-			args = append([]string{filepath.Join(ctx.GOROOT, "bin", "godoc")}, args...)
+			args = append([]string{filepath.Join(ctx.Context.GOROOT, "bin", "godoc")}, args...)
 
 			cmd := exec.Cmd{
 				Path: args[0],

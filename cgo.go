@@ -80,7 +80,8 @@ func libgcc(ctx *Context) (string, error) {
 }
 
 func cgotool(ctx *Context) string {
-	return filepath.Join(ctx.GOROOT, "pkg", "tool", ctx.GOOS+"_"+ctx.GOARCH, "cgo")
+	// TODO(dfc) need ctx.GOROOT method
+	return filepath.Join(ctx.Context.GOROOT, "pkg", "tool", ctx.gohostos+"_"+ctx.gohostarch, "cgo")
 }
 
 func gcc() string {

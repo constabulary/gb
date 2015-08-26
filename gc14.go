@@ -12,11 +12,12 @@ import (
 
 func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
 	return func(c *Context) error {
+		// TODO(dfc) this should come from the context, not the runtime.
 		goroot := runtime.GOROOT()
 
 		// cross-compliation is not supported yet #31
 		if c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch {
-			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported. See issue #31", c.gohostos, c.gohostarch, c.gotargetos, c.gotargetarch)
+			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported with Go 1.4", c.gohostos, c.gohostarch, c.gotargetos, c.gotargetarch)
 		}
 
 		archchar, err := build.ArchChar(c.gotargetarch)
@@ -54,7 +55,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 }
 
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
-	includedir := filepath.Join(runtime.GOROOT(), "pkg", pkg.gotargetos+"_"+pkg.gotargetarch)
+	includedir := filepath.Join(pkg.Context.Context.GOROOT, "pkg", pkg.gotargetos+"_"+pkg.gotargetarch)
 	args := []string{"-o", ofile, "-D", "GOOS_" + pkg.gotargetos, "-D", "GOARCH_" + pkg.gotargetarch, "-I", includedir, sfile}
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
@@ -80,10 +81,10 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 		"-F", "-V", "-w",
 		"-trimpath", pkg.Workdir(),
 		"-I", pkg.Objdir(),
-		"-I", filepath.Join(pkg.GOROOT, "pkg", pkg.GOOS+"_"+pkg.GOARCH), // for runtime.h
+		"-I", filepath.Join(pkg.Context.Context.GOROOT, "pkg", pkg.gohostos+"_"+pkg.gohostarch), // for runtime.h
 		"-o", ofile,
-		"-D", "GOOS_" + pkg.GOOS,
-		"-D", "GOARCH_" + pkg.GOARCH,
+		"-D", "GOOS_" + pkg.gotargetos,
+		"-D", "GOARCH_" + pkg.gotargetarch,
 		cfile,
 	}
 	return run(pkg.Dir, nil, t.cc, args...)
