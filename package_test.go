@@ -1,16 +1,12 @@
 package gb
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 )
 
 func testProject(t *testing.T) *Project {
-	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
+	cwd := getwd(t)
 	root := filepath.Join(cwd, "testdata")
 	return NewProject(root,
 		SourceDir(filepath.Join(root, "src")),
