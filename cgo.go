@@ -369,14 +369,14 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 	switch {
 	case gc14:
 		args = append(args,
-			"-importpath", pkg.ImportPath,
 			"--",
-			"-I", objdir,
 			"-I", pkg.Dir,
 		)
 	case gc15:
 		args = append(args,
+			"-importpath", pkg.ImportPath,
 			"--",
+			"-I", objdir,
 			"-I", pkg.Dir,
 		)
 	default:
