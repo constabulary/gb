@@ -248,14 +248,14 @@ func gc(pkg *Package, gofiles []string) error {
 			continue
 		}
 		fullpath := filepath.Join(pkg.Dir, gofiles[i])
-		path, err := filepath.Rel(pkg.Projectdir(), fullpath)
+		path, err := filepath.Rel(pkg.Dir, fullpath)
 		if err == nil {
 			gofiles[i] = path
 		} else {
 			gofiles[i] = fullpath
 		}
 	}
-	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Projectdir(), objfile(pkg), gofiles)
+	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Dir, objfile(pkg), gofiles)
 	pkg.Record("gc", time.Since(t0))
 	return err
 }

@@ -29,12 +29,15 @@ func TestStale(t *testing.T) {
 		},
 	}}
 
-	root := mktmpdir()
+	root := mktemp(t)
 	defer os.RemoveAll(root)
 
-	proj := NewProject(root,
-		SourceDir(filepath.Join(getwd(t), "testdata", "src")),
-	)
+	proj := Project{
+		rootdir: root,
+		srcdirs: []Srcdir{{
+			Root: filepath.Join(getwd(t), "testdata", "src"),
+		}},
+	}
 
 	newctx := func() *Context {
 		ctx, err := proj.NewContext(

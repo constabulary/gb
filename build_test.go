@@ -3,6 +3,7 @@ package gb
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -205,4 +206,16 @@ func getwd(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return cwd
+}
+
+func mktemp(t *testing.T) string {
+	s, err := mktmp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
+func mktmp() (string, error) {
+	return ioutil.TempDir("", "gb-test-")
 }
