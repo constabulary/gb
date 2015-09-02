@@ -63,6 +63,7 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	if err != nil {
 		return fmt.Errorf("unable to construct context: %v", err)
 	}
+	defer ctx.Destroy()
 
 	gb.Debugf("args: %v", args)
 	return cmd.Run(ctx, args)

@@ -80,6 +80,7 @@ func main() {
 			if err != nil {
 				gb.Fatalf("unable to construct context: %v", err)
 			}
+			defer ctx.Destroy()
 
 			if err := command.Run(ctx, args); err != nil {
 				gb.Fatalf("command %q failed: %v", command.Name, err)
