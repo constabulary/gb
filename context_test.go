@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"testing"
@@ -31,4 +32,26 @@ func TestSimpleCycleDetection(t *testing.T) {
 
 func TestLongCycleDetection(t *testing.T) {
 	testImportCycle("cycle2/a", t)
+}
+
+func TestContextCtxString(t *testing.T) {
+	tests := []struct {
+		opts []func(*Context) error
+		want string
+	}{
+		{nil, runtime.GOOS + "-" + runtime.GOARCH},
+	}
+
+	proj := testProject(t)
+	for _, tt := range tests {
+		ctx, err := proj.NewContext(tt.opts...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ctx.Destroy()
+		got := ctx.ctxString()
+		if got != tt.want {
+			t.Errorf("NewContext(%q).ctxString(): got %v, want %v", tt.opts, got, tt.want)
+		}
+	}
 }

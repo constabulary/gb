@@ -96,9 +96,9 @@ func (pkg *Package) Binfile() string {
 		target = filepath.Join(pkg.Bindir(), binname(pkg))
 	}
 
-	// if this is a cross compile, add -$GOOS-$GOARCH
+	// if this is a cross compile, add ctxString
 	if pkg.isCrossCompile() {
-		target += "-" + pkg.gotargetos + "-" + pkg.gotargetarch
+		target += "-" + pkg.ctxString()
 	}
 
 	if pkg.gotargetos == "windows" {
