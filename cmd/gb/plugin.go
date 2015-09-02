@@ -54,7 +54,13 @@ See gb help plugins.
 	ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
 
 	FlagParse: func(flags *flag.FlagSet, args []string) error {
+		if len(args) == 0 {
+			return nil
+		}
 		args = args[1:]
+		if len(args) == 0 {
+			return nil
+		}
 		if args[0] == "plugin" {
 			args = args[1:]
 		}
