@@ -119,7 +119,7 @@ func (c *Context) IncludePaths() []string {
 
 // Pkgdir returns the path to precompiled packages.
 func (c *Context) Pkgdir() string {
-	return filepath.Join(c.Project.Pkgdir(), c.gotargetos, c.gotargetarch)
+	return filepath.Join(c.Project.Pkgdir(), c.ctxString())
 }
 
 // Workdir returns the path to this Context's working directory.
@@ -154,6 +154,16 @@ func (c *Context) ResolvePackageWithTests(path string) (*Package, error) {
 func (c *Context) Destroy() error {
 	Debugf("removing work directory: %v", c.workdir)
 	return os.RemoveAll(c.workdir)
+}
+
+// ctxString returns a string representation of the unique properties
+// of the context.
+func (c *Context) ctxString() string {
+	v := []string{
+		c.gotargetos,
+		c.gotargetarch,
+	}
+	return strings.Join(v, "-")
 }
 
 func run(dir string, env []string, command string, args ...string) error {
