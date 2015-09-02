@@ -23,6 +23,7 @@ func TestResolvePackages(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
+		defer ctx.Destroy()
 		_, err := ResolvePackages(ctx, tt.paths...)
 		if !sameErr(err, tt.err) {
 			t.Errorf("ResolvePackage(%v): want: %v, got %v", tt.paths, tt.err, err)

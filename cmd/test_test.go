@@ -67,6 +67,7 @@ func TestTest(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t, gb.Ldflags(tt.ldflags))
+		defer ctx.Destroy()
 		// TODO(dfc) can we resolve the duplication here ?
 		pkg, err := ctx.ResolvePackageWithTests(tt.pkg)
 		if err != nil {
@@ -77,7 +78,6 @@ func TestTest(t *testing.T) {
 			t.Errorf("Test(%v): want %v, got %v", tt.pkg, tt.err, err)
 			time.Sleep(500 * time.Millisecond)
 		}
-		ctx.Destroy()
 	}
 }
 
@@ -119,6 +119,7 @@ func TestTestPackage(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
+		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != nil {
 			t.Errorf("ctx.ResolvePackage(%v):  %v", tt.pkg, err)
@@ -128,7 +129,6 @@ func TestTestPackage(t *testing.T) {
 		if _, err := TestPackage(targets, pkg, nil); !sameErr(err, tt.err) {
 			t.Errorf("TestPackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 		}
-		ctx.Destroy()
 	}
 }
 
@@ -147,6 +147,7 @@ func TestTestPackages(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
+		defer ctx.Destroy()
 		var pkgs []*gb.Package
 		for _, pkg := range tt.pkgs {
 			pkg, err := ctx.ResolvePackage(pkg)
@@ -172,6 +173,5 @@ func TestTestPackages(t *testing.T) {
 		if !reflect.DeepEqual(expected, actual) {
 			t.Errorf("TestBuildPackages(%v): want %v, got %v", pkgs, expected, actual)
 		}
-		ctx.Destroy()
 	}
 }

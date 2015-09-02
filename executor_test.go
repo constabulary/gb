@@ -35,6 +35,7 @@ func TestExecuteBuildAction(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
+		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if !sameErr(err, tt.err) {
 			t.Errorf("ctx.ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
@@ -51,7 +52,6 @@ func TestExecuteBuildAction(t *testing.T) {
 		if err := Execute(action); !sameErr(err, tt.err) {
 			t.Errorf("Execute(%v): want: %v, got %v", action.Name, tt.err, err)
 		}
-		ctx.Destroy()
 	}
 }
 

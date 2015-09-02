@@ -57,6 +57,7 @@ func TestBuild(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
+		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if !sameErr(err, tt.err) {
 			t.Errorf("ctx.ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
@@ -68,7 +69,6 @@ func TestBuild(t *testing.T) {
 		if err := Build(pkg); !sameErr(err, tt.err) {
 			t.Errorf("ctx.Build(%v): want %v, got %v", tt.pkg, tt.err, err)
 		}
-		ctx.Destroy()
 	}
 }
 
@@ -112,6 +112,7 @@ func TestBuildPackage(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
+		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != nil {
 			t.Errorf("ctx.ResolvePackage(%v):  %v", tt.pkg, err)
@@ -121,7 +122,6 @@ func TestBuildPackage(t *testing.T) {
 		if _, err := BuildPackage(targets, pkg); !sameErr(err, tt.err) {
 			t.Errorf("ctx.BuildPackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 		}
-		ctx.Destroy()
 	}
 }
 
@@ -142,6 +142,7 @@ func TestBuildPackages(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
+		defer ctx.Destroy()
 		var pkgs []*Package
 		for _, pkg := range tt.pkgs {
 			pkg, err := ctx.ResolvePackage(pkg)
@@ -163,7 +164,6 @@ func TestBuildPackages(t *testing.T) {
 		if !reflect.DeepEqual(tt.actions, names) {
 			t.Errorf("ctx.BuildPackages(%v): want %v, got %v", pkgs, tt.actions, names)
 		}
-		ctx.Destroy()
 	}
 }
 
@@ -180,6 +180,7 @@ func TestPkgname(t *testing.T) {
 	}}
 
 	ctx := testContext(t)
+	defer ctx.Destroy()
 	for _, tt := range tests {
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != nil {
@@ -190,7 +191,6 @@ func TestPkgname(t *testing.T) {
 			t.Errorf("pkgname(%v): want %v, got %v", want, got)
 		}
 	}
-	ctx.Destroy()
 }
 
 func sameErr(e1, e2 error) bool {

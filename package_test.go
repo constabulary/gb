@@ -28,6 +28,7 @@ func testContext(t *testing.T) *Context {
 
 func TestResolvePackage(t *testing.T) {
 	ctx := testContext(t)
+	defer ctx.Destroy()
 	_, err := ctx.ResolvePackage("a")
 	if err != nil {
 		t.Fatal(err)
@@ -36,6 +37,7 @@ func TestResolvePackage(t *testing.T) {
 
 func TestPackageName(t *testing.T) {
 	ctx := testContext(t)
+	defer ctx.Destroy()
 	pkg, err := ctx.ResolvePackage("aprime")
 	if err != nil {
 		t.Fatal(err)
