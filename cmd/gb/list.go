@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/constabulary/gb"
@@ -74,7 +75,10 @@ func list(ctx *gb.Context, args []string) error {
 			return fmt.Errorf("Error occurred during json encoding: %v", err)
 		}
 	} else {
-		tmpl, err := template.New("list").Parse(format)
+		fm := template.FuncMap{
+			"join": strings.Join,
+		}
+		tmpl, err := template.New("list").Funcs(fm).Parse(format)
 		if err != nil {
 			return fmt.Errorf("unable to parse template %q: %v", format, err)
 		}
