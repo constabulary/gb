@@ -28,10 +28,9 @@ See gb help plugins.
 			return fmt.Errorf("plugin: no command supplied")
 		}
 
-		plugin := "gb-" + args[0]
-		path, err := exec.LookPath(plugin)
+		path, err := lookupPlugin(args[0])
 		if err != nil {
-			return fmt.Errorf("plugin: unable to locate %q: %v", plugin, err)
+			return err
 		}
 		args[0] = path
 
@@ -48,21 +47,35 @@ See gb help plugins.
 			Stdout: os.Stdout,
 			Stderr: os.Stderr,
 		}
+
 		return cmd.Run()
 	},
 	// plugin should not interpret arguments
 	ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
 
 	FlagParse: func(flags *flag.FlagSet, args []string) error {
-		toStrip := []string{"gb", "plugin"}
-		for _, s := range toStrip {
-			if len(args) == 0 {
-				return nil
-			}
-			if args[0] == s {
-				args = args[1:]
-			}
+		if len(args) == 0 {
+			return nil
 		}
-		return flags.Parse(args)
+		args = args[1:]
+		if len(args) == 0 {
+			return nil
+		}
+		if args[0] == "plugin" {
+			args = args[1:]
+		}
+		if len(args) == 0 {
+			return nil
+		}
+		return flags.Parse(args[1:])
 	},
+}
+
+func lookupPlugin(arg string) (string, error) {
+	plugin := "gb-" + arg
+	path, err := exec.LookPath(plugin)
+	if err != nil {
+		return "", fmt.Errorf("plugin: unable to locate %q: %v", plugin, err)
+	}
+	return path, nil
 }
