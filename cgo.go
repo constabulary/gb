@@ -118,7 +118,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 
 // rungcc1 invokes gcc to compile cfile into ofile
 func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
-	args := []string{"-g", "-O2", "-fPIC", "-m64", "-pthread", "-fmessage-length=0",
+	args := []string{"-g", "-O2", "-fPIC", "-pthread", "-fmessage-length=0",
 		"-I", pkg.Dir,
 		"-I", filepath.Dir(ofile),
 	}
@@ -136,7 +136,7 @@ func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 // rungcc2 links the o files from rungcc1 into a single _cgo_.o.
 func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles []string) error {
 	args := []string{
-		"-fPIC", "-m64", "-fmessage-length=0",
+		"-fPIC", "-fmessage-length=0",
 	}
 	if !isClang() {
 		args = append(args, "-pthread")
@@ -153,7 +153,7 @@ func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.
 func rungcc3(ctx *Context, dir string, ofile string, ofiles []string) error {
 	args := []string{
-		"-fPIC", "-m64", "-fmessage-length=0",
+		"-fPIC", "-fmessage-length=0",
 	}
 	if !isClang() {
 		args = append(args, "-pthread")
