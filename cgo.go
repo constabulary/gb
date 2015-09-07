@@ -383,7 +383,6 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 		return fmt.Errorf("unsuppored Go version: %v", runtime.Version)
 	}
 	args = append(args, cflags...)
-	args = append(args, ldflags...)
 	args = append(args, pkg.CgoFiles...)
 
 	cgoenv := []string{
