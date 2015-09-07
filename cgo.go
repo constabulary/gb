@@ -29,7 +29,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 
 	// collect cflags and ldflags from the package
 	// the environment, and pkg-config.
-	_, cgoCFLAGS, _, cgoLDFLAGS := cflags(pkg, false)
+	cgoCPPFLAGS, cgoCFLAGS, cgoCXXFLAGS, cgoLDFLAGS := cflags(pkg, false)
 	pcCFLAGS, pcLDFLAGS, err := pkgconfig(pkg)
 	if err != nil {
 		return nil, nil, nil, err
@@ -68,21 +68,9 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 		cfiles = append(cfiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo2.c"))
 	}
 
-	var ofiles []string
-	var gcc1 []*Action
-	for _, cfile := range cfiles {
-		cfile := cfile
-		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cfile))+".o")
-		ofiles = append(ofiles, ofile)
-		gcc1 = append(gcc1, &Action{
-			Name: "rungcc1: " + pkg.ImportPath + ": " + cfile,
-			Deps: runcgo1,
-			Task: TaskFn(func() error {
-				return rungcc1(pkg, cgoCFLAGS, ofile, cfile)
-			}),
-		})
-	}
-
+	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
+	cxxflags := append(cgoCPPFLAGS, cgoCXXFLAGS...)
+	gcc1, ofiles := cgocc(pkg, cflags, cxxflags, cfiles, pkg.CXXFiles, runcgo1...)
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
 	gcc2 := Action{
 		Name: "rungcc2: " + pkg.ImportPath + ": _cgo_.o",
@@ -116,6 +104,112 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 	return &action, []string{defun, imports, allo}, cgofiles, nil
 }
 
+// cgo produces a an Action representing the cgo steps
+// an ofile representing the result of the cgo steps
+// a set of .go files for compilation, and an error.
+func cgo15(pkg *Package) (*Action, []string, []string, error) {
+
+	// collect cflags and ldflags from the package
+	// the environment, and pkg-config.
+	cgoCPPFLAGS, cgoCFLAGS, cgoCXXFLAGS, cgoLDFLAGS := cflags(pkg, false)
+	pcCFLAGS, pcLDFLAGS, err := pkgconfig(pkg)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	cgoCFLAGS = append(cgoCFLAGS, pcCFLAGS...)
+	cgoLDFLAGS = append(cgoLDFLAGS, pcLDFLAGS...)
+
+	runcgo1 := []*Action{
+		&Action{
+			Name: "runcgo1: " + pkg.ImportPath,
+			Task: TaskFn(func() error {
+				return runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS)
+			}),
+		},
+	}
+
+	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
+	for _, f := range pkg.CgoFiles {
+		cgofiles = append(cgofiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo1.go"))
+	}
+	cfiles := []string{
+		filepath.Join(pkg.Objdir(), "_cgo_main.c"),
+		filepath.Join(pkg.Objdir(), "_cgo_export.c"),
+	}
+	cfiles = append(cfiles, pkg.CFiles...)
+
+	for _, f := range pkg.CgoFiles {
+		cfiles = append(cfiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo2.c"))
+	}
+
+	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
+	cxxflags := append(cgoCPPFLAGS, cgoCXXFLAGS...)
+	gcc1, ofiles := cgocc(pkg, cflags, cxxflags, cfiles, pkg.CXXFiles, runcgo1...)
+	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
+	gcc2 := Action{
+		Name: "rungcc2: " + pkg.ImportPath + ": _cgo_.o",
+		Deps: gcc1,
+		Task: TaskFn(func() error {
+			return rungcc2(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
+		}),
+	}
+
+	dynout := filepath.Join(pkg.Objdir(), "_cgo_import.go")
+	runcgo2 := Action{
+		Name: "runcgo2: " + pkg.ImportPath,
+		Deps: []*Action{&gcc2},
+		Task: TaskFn(func() error {
+			return runcgo2(pkg, dynout, ofile)
+		}),
+	}
+	cgofiles = append(cgofiles, dynout)
+
+	allo := filepath.Join(filepath.Dir(ofiles[0]), "_all.o")
+	action := Action{
+		Name: "rungcc3: " + pkg.ImportPath,
+		Deps: []*Action{&runcgo2},
+		Task: TaskFn(func() error {
+			return rungcc3(pkg.Context, pkg.Dir, allo, ofiles[1:]) // skip _cgo_main.o
+		}),
+	}
+
+	return &action, []string{allo}, cgofiles, nil
+}
+
+// cgocc compiles all .c files.
+// TODO(dfc) cxx not done
+func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*Action) ([]*Action, []string) {
+	var cc []*Action
+	var ofiles []string
+	for _, cfile := range cfiles {
+		cfile := cfile
+		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cfile))+".o")
+		ofiles = append(ofiles, ofile)
+		cc = append(cc, &Action{
+			Name: "rungcc1: " + pkg.ImportPath + ": " + cfile,
+			Deps: deps,
+			Task: TaskFn(func() error {
+				return rungcc1(pkg, cflags, ofile, cfile)
+			}),
+		})
+	}
+
+	for _, cxxfile := range cxxfiles {
+		cxxfile := cxxfile
+		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cxxfile))+".o")
+		ofiles = append(ofiles, ofile)
+		cc = append(cc, &Action{
+			Name: "rung++1: " + pkg.ImportPath + ": " + cxxfile,
+			Deps: deps,
+			Task: TaskFn(func() error {
+				return rungpp1(pkg, cxxflags, ofile, cxxfile)
+			}),
+		})
+	}
+
+	return cc, ofiles
+}
+
 // rungcc1 invokes gcc to compile cfile into ofile
 func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 	args := []string{"-g", "-O2", "-fPIC", "-pthread", "-fmessage-length=0",
@@ -129,6 +223,23 @@ func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 	)
 	t0 := time.Now()
 	err := run(pkg.Dir, nil, gcc(), args...)
+	pkg.Record("gcc1", time.Since(t0))
+	return err
+}
+
+// rungpp1 invokes g++ to compile cfile into ofile
+func rungpp1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
+	args := []string{"-g", "-O2", "-fPIC", "-pthread", "-fmessage-length=0",
+		"-I", pkg.Dir,
+		"-I", filepath.Dir(ofile),
+	}
+	args = append(args, cgoCFLAGS...)
+	args = append(args,
+		"-o", ofile,
+		"-c", cfile,
+	)
+	t0 := time.Now()
+	err := run(pkg.Dir, nil, "g++", args...) // TODO(dfc) hack
 	pkg.Record("gcc1", time.Since(t0))
 	return err
 }
@@ -271,90 +382,6 @@ func quoteFlags(flags []string) []string {
 		quoted[i] = strconv.Quote(f)
 	}
 	return quoted
-}
-
-// cgo produces a an Action representing the cgo steps
-// an ofile representing the result of the cgo steps
-// a set of .go files for compilation, and an error.
-func cgo15(pkg *Package) (*Action, []string, []string, error) {
-
-	// collect cflags and ldflags from the package
-	// the environment, and pkg-config.
-	_, cgoCFLAGS, _, cgoLDFLAGS := cflags(pkg, false)
-	pcCFLAGS, pcLDFLAGS, err := pkgconfig(pkg)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	cgoCFLAGS = append(cgoCFLAGS, pcCFLAGS...)
-	cgoLDFLAGS = append(cgoLDFLAGS, pcLDFLAGS...)
-
-	runcgo1 := []*Action{
-		&Action{
-			Name: "runcgo1: " + pkg.ImportPath,
-			Task: TaskFn(func() error {
-				return runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS)
-			}),
-		},
-	}
-
-	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
-	for _, f := range pkg.CgoFiles {
-		cgofiles = append(cgofiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo1.go"))
-	}
-	cfiles := []string{
-		filepath.Join(pkg.Objdir(), "_cgo_main.c"),
-		filepath.Join(pkg.Objdir(), "_cgo_export.c"),
-	}
-	cfiles = append(cfiles, pkg.CFiles...)
-
-	for _, f := range pkg.CgoFiles {
-		cfiles = append(cfiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo2.c"))
-	}
-
-	var ofiles []string
-	var gcc1 []*Action
-	for _, cfile := range cfiles {
-		cfile := cfile
-		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cfile))+".o")
-		ofiles = append(ofiles, ofile)
-		gcc1 = append(gcc1, &Action{
-			Name: "rungcc1: " + pkg.ImportPath + ": " + cfile,
-			Deps: runcgo1,
-			Task: TaskFn(func() error {
-				return rungcc1(pkg, cgoCFLAGS, ofile, cfile)
-			}),
-		})
-	}
-
-	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
-	gcc2 := Action{
-		Name: "rungcc2: " + pkg.ImportPath + ": _cgo_.o",
-		Deps: gcc1,
-		Task: TaskFn(func() error {
-			return rungcc2(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
-		}),
-	}
-
-	dynout := filepath.Join(pkg.Objdir(), "_cgo_import.go")
-	runcgo2 := Action{
-		Name: "runcgo2: " + pkg.ImportPath,
-		Deps: []*Action{&gcc2},
-		Task: TaskFn(func() error {
-			return runcgo2(pkg, dynout, ofile)
-		}),
-	}
-	cgofiles = append(cgofiles, dynout)
-
-	allo := filepath.Join(filepath.Dir(ofiles[0]), "_all.o")
-	action := Action{
-		Name: "rungcc3: " + pkg.ImportPath,
-		Deps: []*Action{&runcgo2},
-		Task: TaskFn(func() error {
-			return rungcc3(pkg.Context, pkg.Dir, allo, ofiles[1:]) // skip _cgo_main.o
-		}),
-	}
-
-	return &action, []string{allo}, cgofiles, nil
 }
 
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.
