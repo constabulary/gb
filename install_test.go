@@ -57,8 +57,6 @@ func TestStale(t *testing.T) {
 		return p
 	}
 
-	Verbose = true
-	defer func() { Verbose = false }()
 	for _, tt := range tests {
 		ctx := newctx()
 		defer ctx.Destroy()

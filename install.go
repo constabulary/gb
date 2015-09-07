@@ -72,7 +72,7 @@ func isStale(pkg *Package) bool {
 
 	// if the main package is up to date but _newer_ than the binary (which
 	// could have been removed), then consider it stale.
-	if pkg.isMain() && newerThan(filepath.Join(pkg.Bindir(), pkgname(pkg))) {
+	if pkg.isMain() && newerThan(pkg.Binfile()) {
 		return true
 	}
 
