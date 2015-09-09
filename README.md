@@ -40,6 +40,7 @@ Big ticket items that are not on the road map yet
 - [Race detector support](https://github.com/constabulary/gb/issues/96)
 - Tag handling, unify -tags, ENVVARS and GOOS/GOARCH into a single format for binary names and pkg cache
 - Package BuildID support (make stale detection work like the Go 1.5)
+- `gccgo` toolchain support.
 
 We welcome pull requests, bug fixes and issue reports.
 

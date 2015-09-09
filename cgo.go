@@ -278,9 +278,6 @@ func rungcc3(ctx *Context, dir string, ofile string, ofiles []string) error {
 			return nil
 		}
 		args = append(args, libgcc)
-	} else {
-		// explicitly disable build-id when using clang
-		args = append(args, "-Wl,--build-id=none")
 	}
 	t0 := time.Now()
 	err := run(dir, nil, gcc(), args...)

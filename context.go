@@ -37,6 +37,28 @@ type Context struct {
 	ldflags []string // flags passed to the linker
 }
 
+// GOOS configures the Context to use goos as the target os.
+func GOOS(goos string) func(*Context) error {
+	return func(c *Context) error {
+		if goos == "" {
+			return fmt.Errorf("goos cannot be blank")
+		}
+		c.gotargetos = goos
+		return nil
+	}
+}
+
+// GOARCH configures the Context to use goarch as the target arch.
+func GOARCH(goarch string) func(*Context) error {
+	return func(c *Context) error {
+		if goarch == "" {
+			return fmt.Errorf("goarch cannot be blank")
+		}
+		c.gotargetarch = goarch
+		return nil
+	}
+}
+
 // NewContext returns a new build context from this project.
 // By default this context will use the gc toolchain with the
 // host's GOOS and GOARCH values.
@@ -52,32 +74,19 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		}
 	}
 
-	bc := build.Context{
-		GOARCH:   envOr("GOARCH", runtime.GOARCH),
-		GOOS:     envOr("GOOS", runtime.GOOS),
-		GOROOT:   runtime.GOROOT(),
-		GOPATH:   togopath(p.Srcdirs()),
-		Compiler: runtime.Compiler, // TODO(dfc) probably unused
-
-		// Make sure we use the same set of release tags as go/build
-		ReleaseTags: build.Default.ReleaseTags,
-
-		CgoEnabled: build.Default.CgoEnabled,
-	}
 	defaults := []func(*Context) error{
 		// must come before GcToolchain()
 		func(c *Context) error {
 			c.gohostos = runtime.GOOS
 			c.gohostarch = runtime.GOARCH
-			c.gotargetos = c.Context.GOOS
-			c.gotargetarch = c.Context.GOARCH
+			c.gotargetos = envOr("GOOS", runtime.GOOS)
+			c.gotargetarch = envOr("GOARCH", runtime.GOARCH)
 			return nil
 		},
 		GcToolchain(),
 	}
 	ctx := Context{
 		Project: p,
-		Context: &bc,
 		workdir: mktmpdir(),
 		pkgs:    make(map[string]*Package),
 	}
@@ -87,6 +96,20 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// backfill enbedded go/build.Context
+	ctx.Context = &build.Context{
+		GOARCH:   ctx.gotargetos,
+		GOOS:     ctx.gotargetarch,
+		GOROOT:   runtime.GOROOT(),
+		GOPATH:   togopath(p.Srcdirs()),
+		Compiler: runtime.Compiler, // TODO(dfc) probably unused
+
+		// Make sure we use the same set of release tags as go/build
+		ReleaseTags: build.Default.ReleaseTags,
+
+		CgoEnabled: build.Default.CgoEnabled,
 	}
 	return &ctx, nil
 }
