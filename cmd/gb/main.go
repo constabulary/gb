@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
@@ -50,12 +52,38 @@ func main() {
 
 	command, ok := commands[name]
 	if (command != nil && !command.Runnable()) || !ok {
-		if _, err := lookupPlugin(name); err != nil {
+		plugin, err := lookupPlugin(name)
+		if err != nil {
 			gb.Errorf("unknown command %q", name)
 			fs.Usage()
 			os.Exit(1)
 		}
-		command = commands["plugin"]
+		command = &cmd.Command{
+			Run: func(ctx *gb.Context, args []string) error {
+				if len(args) < 1 {
+					return fmt.Errorf("plugin: no command supplied")
+				}
+				args = append([]string{plugin}, args...)
+
+				env := cmd.MergeEnv(os.Environ(), map[string]string{
+					"GB_PROJECT_DIR": ctx.Projectdir(),
+				})
+
+				cmd := exec.Cmd{
+					Path: plugin,
+					Args: args,
+					Env:  env,
+
+					Stdin:  os.Stdin,
+					Stdout: os.Stdout,
+					Stderr: os.Stderr,
+				}
+
+				return cmd.Run()
+			},
+			// plugin should not interpret arguments
+			ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
+		}
 	}
 
 	// add extra flags if necessary
