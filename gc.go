@@ -14,11 +14,7 @@ type gcToolchain struct {
 	gc, cc, ld, as, pack string
 }
 
-type gcoption struct {
-	goos, goarch string
-}
-
-func GcToolchain(opts ...func(*gcoption)) func(c *Context) error {
+func GcToolchain() func(c *Context) error {
 	return func(c *Context) error {
 		// TODO(dfc) this should come from the context, not the runtime.
 		goroot := runtime.GOROOT()

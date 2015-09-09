@@ -15,9 +15,7 @@ func testProject(t *testing.T) *Project {
 
 func testContext(t *testing.T) *Context {
 	prj := testProject(t)
-	ctx, err := prj.NewContext(
-		GcToolchain(),
-	)
+	ctx, err := prj.NewContext()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,5 +42,29 @@ func TestPackageName(t *testing.T) {
 	}
 	if got, want := "a", pkg.Name; got != want {
 		t.Fatalf("Package.Name(): got %v, want %v", got, want)
+	}
+}
+
+func TestPackageBinfile(t *testing.T) {
+	var tests = []struct {
+		goos, goarch string // simulated GOOS and GOARCH values, "" == unset in environment
+		pkg          string // package name
+		want         string // binfile result
+	}{
+		{pkg: "b", want: "b"},
+	}
+
+	for _, tt := range tests {
+		ctx := testContext(t)
+		defer ctx.Destroy()
+		pkg, err := ctx.ResolvePackage(tt.pkg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := pkg.Binfile()
+		want := filepath.Join(ctx.Bindir(), tt.want)
+		if want != got {
+			t.Errorf("(%s).Binfile(): want %s, got %s", tt.pkg, want, got)
+		}
 	}
 }
