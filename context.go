@@ -100,8 +100,8 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 
 	// backfill enbedded go/build.Context
 	ctx.Context = &build.Context{
-		GOARCH:   ctx.gotargetos,
-		GOOS:     ctx.gotargetarch,
+		GOOS:     ctx.gotargetos,
+		GOARCH:   ctx.gotargetarch,
 		GOROOT:   runtime.GOROOT(),
 		GOPATH:   togopath(p.Srcdirs()),
 		Compiler: runtime.Compiler, // TODO(dfc) probably unused
