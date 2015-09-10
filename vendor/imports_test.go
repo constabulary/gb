@@ -87,11 +87,19 @@ go get gopkg.in/check.v1
 		path:     "any.inaccessible.server/the.project",
 		want:     `fail to access url "http://any.inaccessible.server/the.project?go-get=1"`,
 		insecure: true,
+	}, {
+		path:     "any.inaccessible.server/the.project",
+		want:     `fail to access url "http://any.inaccessible.server/the.project?go-get=1"`,
+		insecure: false,
 	}}
 
 	for _, ett := range errTests {
-		_, err := FetchMetadata(ett.path, ett.insecure)
+		r, err := FetchMetadata(ett.path, ett.insecure)
 		if err == nil {
+			t.Errorf("Access to url %q without any error, but the error should be happen.", ett.path)
+			if r != nil {
+				r.Close()
+			}
 			continue
 		}
 		got := err.Error()

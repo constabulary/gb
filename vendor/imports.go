@@ -83,11 +83,10 @@ func fetchMetadata(scheme, path string, insecure bool) (io.ReadCloser, error) {
 				return resp.Body, nil
 			}
 		}
+	default:
+		return nil, fmt.Errorf("unknown remote protocol scheme: %q", scheme)
 	}
-	if err != nil {
-		return nil, fmt.Errorf("fail to access url %q", url)
-	}
-	return nil, fmt.Errorf("unknown remote protocol scheme: %q", scheme)
+	return nil, fmt.Errorf("fail to access url %q", url)
 }
 
 // ParseMetadata fetchs and decodes remote metadata for path.
