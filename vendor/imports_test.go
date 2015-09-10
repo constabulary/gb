@@ -28,11 +28,12 @@ func TestFetchMetadata(t *testing.T) {
 	if testing.Short() {
 		t.Skipf("skipping network tests in -short mode")
 	}
-	tests := []struct {
+	type testParams struct {
 		path     string
 		want     string
 		insecure bool
-	}{{
+	}
+	tests := []testParams{{
 		path: "golang.org/x/tools/cmd/godoc",
 		want: `<!DOCTYPE html>
 <html>
@@ -78,6 +79,24 @@ go get gopkg.in/check.v1
 		got := buf.String()
 		if got != tt.want {
 			t.Errorf("FetchMetadata(%q): want %q, got %q", tt.path, tt.want, got)
+		}
+	}
+
+	// Test for error catch.
+	errTests := []testParams{{
+		path:     "any.inaccessible.server/the.project",
+		want:     `fail to access url "http://any.inaccessible.server/the.project?go-get=1"`,
+		insecure: true,
+	}}
+
+	for _, ett := range errTests {
+		_, err := FetchMetadata(ett.path, ett.insecure)
+		if err == nil {
+			continue
+		}
+		got := err.Error()
+		if got != ett.want {
+			t.Errorf("FetchMetadata(%q): want %q, got %q", ett.path, ett.want, got)
 		}
 	}
 }
