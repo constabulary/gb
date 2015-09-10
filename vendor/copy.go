@@ -61,6 +61,7 @@ func copyfile(dst, src string) error {
 	if err != nil {
 		return fmt.Errorf("copyfile: create(%q): %v", dst, err)
 	}
+	defer w.Close()
 	if debugCopyfile {
 		fmt.Printf("copyfile(dst: %v, src: %v)\n", dst, src)
 	}
