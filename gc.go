@@ -25,6 +25,10 @@ func GcToolchain() func(c *Context) error {
 		}
 
 		tooldir := filepath.Join(goroot, "pkg", "tool", c.gohostos+"_"+c.gohostarch)
+		exe := ""
+		if c.gohostos == "windows" {
+			exe += ".exe"
+		}
 		switch {
 		case gc14:
 			archchar, err := build.ArchChar(c.gotargetarch)
@@ -32,18 +36,18 @@ func GcToolchain() func(c *Context) error {
 				return err
 			}
 			c.tc = &gcToolchain{
-				gc:   filepath.Join(tooldir, archchar+"g"),
-				ld:   filepath.Join(tooldir, archchar+"l"),
-				as:   filepath.Join(tooldir, archchar+"a"),
-				cc:   filepath.Join(tooldir, archchar+"c"),
-				pack: filepath.Join(tooldir, "pack"),
+				gc:   filepath.Join(tooldir, archchar+"g"+exe),
+				ld:   filepath.Join(tooldir, archchar+"l"+exe),
+				as:   filepath.Join(tooldir, archchar+"a"+exe),
+				cc:   filepath.Join(tooldir, archchar+"c"+exe),
+				pack: filepath.Join(tooldir, "pack"+exe),
 			}
 		case gc15:
 			c.tc = &gcToolchain{
-				gc:   filepath.Join(tooldir, "compile"),
-				ld:   filepath.Join(tooldir, "link"),
-				as:   filepath.Join(tooldir, "asm"),
-				pack: filepath.Join(tooldir, "pack"),
+				gc:   filepath.Join(tooldir, "compile"+exe),
+				ld:   filepath.Join(tooldir, "link"+exe),
+				as:   filepath.Join(tooldir, "asm"+exe),
+				pack: filepath.Join(tooldir, "pack"+exe),
 			}
 		default:
 			return fmt.Errorf("unsupported Go version: %v", runtime.Version)
