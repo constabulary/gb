@@ -13,7 +13,8 @@ func init() {
 		UsageLine: `version`,
 		Short:     "show current version of gb",
 		Run: func(ctx *gb.Context, args []string) (err error) {
-			fmt.Println("0.1.1")
+			version := "0.1.1"
+			fmt.Println(version)
 			return
 		},
 		ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
