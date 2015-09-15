@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/constabulary/gb/log"
 )
 
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
@@ -43,14 +45,14 @@ func BuildPackages(pkgs ...*Package) (*Action, error) {
 	build := Action{
 		Name: fmt.Sprintf("build: %s", strings.Join(names(pkgs), ",")),
 		Task: TaskFn(func() error {
-			Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
+			log.Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		}),
 	}
 
 	for _, pkg := range pkgs {
 		if len(pkg.GoFiles)+len(pkg.CgoFiles) == 0 {
-			Debugf("skipping %v: no go files", pkg.ImportPath)
+			log.Debugf("skipping %v: no go files", pkg.ImportPath)
 			continue
 		}
 		a, err := BuildPackage(targets, pkg)
@@ -234,7 +236,7 @@ func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
 	if pkg.Scope != "test" {
 		// only log compilation message if not in test scope
-		Infof(pkg.ImportPath)
+		log.Infof(pkg.ImportPath)
 	}
 	includes := pkg.IncludePaths()
 	importpath := pkg.ImportPath

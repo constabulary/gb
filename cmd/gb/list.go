@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strings"
 	"text/template"
@@ -62,7 +63,7 @@ func list(ctx *gb.Context, args []string) error {
 	}
 	pkgs, err := cmd.ResolvePackages(ctx, args...)
 	if err != nil {
-		gb.Fatalf("unable to resolve: %v", err)
+		log.Fatalf("unable to resolve: %v", err)
 	}
 
 	if jsonOutput {

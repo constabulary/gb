@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/constabulary/gb/log"
 )
 
 // Toolchain represents a standardised set of command line tools
@@ -80,7 +82,7 @@ func (fn TaskFn) Run() error { return fn() }
 func mktmpdir() string {
 	d, err := ioutil.TempDir("", "gb")
 	if err != nil {
-		Fatalf("could not create temporary directory: %v", err)
+		log.Fatalf("could not create temporary directory: %v", err)
 	}
 	return d
 }
@@ -104,7 +106,7 @@ func copyfile(dst, src string) error {
 		return fmt.Errorf("copyfile: create(%q): %v", dst, err)
 	}
 	defer w.Close()
-	Debugf("copyfile(dst: %v, src: %v)", dst, src)
+	log.Debugf("copyfile(dst: %v, src: %v)", dst, src)
 	_, err = io.Copy(w, r)
 	return err
 }
