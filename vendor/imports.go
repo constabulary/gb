@@ -50,11 +50,16 @@ func ParseImports(root string) (map[string]bool, error) {
 
 // FetchMetadata fetchs the remote metadata for path.
 func FetchMetadata(path string, insecure bool) (io.ReadCloser, error) {
-	schemes := []string{"https", "http"}
+	schemes := []string{"https"}
+	if !insecure {
+		gb.Infof("skipping insecure protocol for %q", path)
+	} else {
+		schemes = append(schemes, "http")
+	}
 	var err error
 	var r io.ReadCloser
 	for _, s := range schemes {
-		if r, err = fetchMetadata(s, path, insecure); err == nil {
+		if r, err = fetchMetadata(s, path); err == nil {
 			return r, nil
 		}
 	}
@@ -64,24 +69,15 @@ func FetchMetadata(path string, insecure bool) (io.ReadCloser, error) {
 	return nil, fmt.Errorf("unable to determine remote metadata protocol")
 }
 
-func fetchMetadata(scheme, path string, insecure bool) (io.ReadCloser, error) {
+func fetchMetadata(scheme, path string) (io.ReadCloser, error) {
 	url := fmt.Sprintf("%s://%s?go-get=1", scheme, path)
 	var err error
 	var resp *http.Response
 	switch scheme {
-	case "https":
+	case "https", "http":
 		resp, err = http.Get(url)
 		if err == nil {
 			return resp.Body, nil
-		}
-	case "http":
-		if !insecure {
-			gb.Infof("skipping insecure protocol: %v", url)
-		} else {
-			resp, err = http.Get(url)
-			if err == nil {
-				return resp.Body, nil
-			}
 		}
 	default:
 		return nil, fmt.Errorf("unknown remote protocol scheme: %q", scheme)
