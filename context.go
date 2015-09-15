@@ -37,6 +37,8 @@ type Context struct {
 
 	gcflags []string // flags passed to the compiler
 	ldflags []string // flags passed to the linker
+
+	linkmode, buildmode string // link and build modes
 }
 
 // GOOS configures the Context to use goos as the target os.
@@ -88,9 +90,10 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		GcToolchain(),
 	}
 	ctx := Context{
-		Project: p,
-		workdir: mktmpdir(),
-		pkgs:    make(map[string]*Package),
+		Project:   p,
+		workdir:   mktmpdir(),
+		pkgs:      make(map[string]*Package),
+		buildmode: "exe",
 	}
 
 	for _, opt := range append(defaults, opts...) {

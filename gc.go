@@ -85,7 +85,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	}
 	args = append(args, "-extld="+gcc())
 	if gc15 {
-		args = append(args, "-buildmode=exe")
+		args = append(args, "-buildmode", pkg.buildmode)
 	}
 	args = append(args, afile)
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
