@@ -89,7 +89,7 @@ go get gopkg.in/check.v1
 		insecure: true,
 	}, {
 		path:     "any.inaccessible.server/the.project",
-		want:     `fail to access url "http://any.inaccessible.server/the.project?go-get=1"`,
+		want:     `fail to access url "https://any.inaccessible.server/the.project?go-get=1"`,
 		insecure: false,
 	}}
 
