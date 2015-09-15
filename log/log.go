@@ -18,10 +18,6 @@ func Fatalf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func Errorf(format string, args ...interface{}) {
-	fmt.Printf("ERROR "+format+"\n", args...)
-}
-
 func Warnf(format string, args ...interface{}) {
 	fmt.Printf("WARNING "+format+"\n", args...)
 }

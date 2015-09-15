@@ -55,7 +55,7 @@ func main() {
 	if (command != nil && !command.Runnable()) || !ok {
 		plugin, err := lookupPlugin(name)
 		if err != nil {
-			log.Errorf("unknown command %q", name)
+			fmt.Fprintf(os.Stderr, "FATAL: unknown command %q\n", name)
 			fs.Usage()
 			os.Exit(1)
 		}
