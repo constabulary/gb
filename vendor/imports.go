@@ -52,7 +52,7 @@ func ParseImports(root string) (map[string]bool, error) {
 func FetchMetadata(path string, insecure bool) (io.ReadCloser, error) {
 	schemes := []string{"https"}
 	if !insecure {
-		gb.Infof("skipping insecure protocol for %q", path)
+		log.Infof("skipping insecure protocol for %q", path)
 	} else {
 		schemes = append(schemes, "http")
 	}
