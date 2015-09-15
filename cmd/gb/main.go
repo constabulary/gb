@@ -9,6 +9,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/constabulary/gb/log"
 )
 
 var (
@@ -23,8 +24,8 @@ const (
 )
 
 func init() {
-	fs.BoolVar(&gb.Quiet, "q", gb.Quiet, "suppress log messages below ERROR level")
-	fs.BoolVar(&gb.Verbose, "v", gb.Verbose, "enable log levels below INFO level")
+	fs.BoolVar(&log.Quiet, "q", log.Quiet, "suppress log messages below ERROR level")
+	fs.BoolVar(&log.Verbose, "v", log.Verbose, "enable log levels below INFO level")
 	fs.StringVar(&cwd, "R", cmd.MustGetwd(), "set the project root") // actually the working directory to start the project root search
 
 	fs.Usage = usage
@@ -54,7 +55,7 @@ func main() {
 	if (command != nil && !command.Runnable()) || !ok {
 		plugin, err := lookupPlugin(name)
 		if err != nil {
-			gb.Errorf("unknown command %q", name)
+			fmt.Fprintf(os.Stderr, "FATAL: unknown command %q\n", name)
 			fs.Usage()
 			os.Exit(1)
 		}
@@ -98,7 +99,7 @@ func main() {
 		err = fs.Parse(args[2:])
 	}
 	if err != nil {
-		gb.Fatalf("could not parse flags: %v", err)
+		log.Fatalf("could not parse flags: %v", err)
 	}
 
 	args = fs.Args() // reset args to the leftovers from fs.Parse
@@ -107,7 +108,7 @@ func main() {
 	}
 	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
 	if err != nil {
-		gb.Fatalf("could not make project root absolute: %v", err)
+		log.Fatalf("could not make project root absolute: %v", err)
 	}
 
 	ctx, err := cmd.NewContext(
@@ -117,7 +118,7 @@ func main() {
 		gb.Ldflags(ldflags),
 	)
 	if err != nil {
-		gb.Fatalf("unable to construct context: %v", err)
+		log.Fatalf("unable to construct context: %v", err)
 	}
 
 	if !noDestroyContext {
@@ -130,8 +131,8 @@ func main() {
 		args = cmd.ImportPaths(ctx, cwd, args)
 	}
 
-	gb.Debugf("args: %v", args)
+	log.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
-		gb.Fatalf("command %q failed: %v", name, err)
+		log.Fatalf("command %q failed: %v", name, err)
 	}
 }

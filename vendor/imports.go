@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/constabulary/gb"
+	"github.com/constabulary/gb/log"
 )
 
 // ParseImports parses Go packages from a specific root returning a set of import paths.
@@ -76,7 +76,7 @@ func fetchMetadata(scheme, path string, insecure bool) (io.ReadCloser, error) {
 		}
 	case "http":
 		if !insecure {
-			gb.Infof("skipping insecure protocol: %v", url)
+			log.Infof("skipping insecure protocol: %v", url)
 		} else {
 			resp, err = http.Get(url)
 			if err == nil {

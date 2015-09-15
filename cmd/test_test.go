@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/constabulary/gb"
+	"github.com/constabulary/gb/log"
 )
 
 func TestTest(t *testing.T) {
-	gb.Verbose = false
-	defer func() { gb.Verbose = false }()
+	log.Verbose = false
+	defer func() { log.Verbose = false }()
 	tests := []struct {
 		pkg      string
 		testArgs []string

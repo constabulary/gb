@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/constabulary/gb/log"
 )
 
 // Context represents an execution of one or more Targets inside a Project.
@@ -175,7 +177,7 @@ func (c *Context) ResolvePackageWithTests(path string) (*Package, error) {
 
 // Destroy removes the temporary working files of this context.
 func (c *Context) Destroy() error {
-	Debugf("removing work directory: %v", c.workdir)
+	log.Debugf("removing work directory: %v", c.workdir)
 	return os.RemoveAll(c.workdir)
 }
 
@@ -204,7 +206,7 @@ func runOut(output io.Writer, dir string, env []string, command string, args ...
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
 	cmd.Env = mergeEnvLists(env, envForDir(cmd.Dir))
-	Debugf("cd %s; %s", cmd.Dir, cmd.Args)
+	log.Debugf("cd %s; %s", cmd.Dir, cmd.Args)
 	err := cmd.Run()
 	return err
 }
@@ -307,7 +309,7 @@ func (c *Context) isCrossCompile() bool {
 }
 
 func matchPackages(c *Context, pattern string) []string {
-	Debugf("matchPackages: %v %v", c.srcdirs[0].Root, pattern)
+	log.Debugf("matchPackages: %v %v", c.srcdirs[0].Root, pattern)
 	match := func(string) bool { return true }
 	treeCanMatch := func(string) bool { return true }
 	if pattern != "all" && pattern != "std" {

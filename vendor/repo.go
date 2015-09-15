@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/constabulary/gb"
+	"github.com/constabulary/gb/log"
 )
 
 // RemoteRepo describes a remote dvcs repository.
@@ -248,7 +248,7 @@ func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...str
 			}
 		case "http", "git":
 			if !insecure {
-				gb.Infof("skipping insecure protocol: %s", url.String())
+				log.Infof("skipping insecure protocol: %s", url.String())
 				continue
 			}
 			if err := vcs(&url); err == nil {

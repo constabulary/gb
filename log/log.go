@@ -1,4 +1,4 @@
-package gb
+package log
 
 import (
 	"fmt"
@@ -16,14 +16,6 @@ var (
 func Fatalf(format string, args ...interface{}) {
 	fmt.Printf("FATAL "+format+"\n", args...)
 	os.Exit(1)
-}
-
-func Errorf(format string, args ...interface{}) {
-	fmt.Printf("ERROR "+format+"\n", args...)
-}
-
-func Warnf(format string, args ...interface{}) {
-	fmt.Printf("WARNING "+format+"\n", args...)
 }
 
 func Infof(format string, args ...interface{}) {
