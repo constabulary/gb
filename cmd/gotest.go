@@ -24,6 +24,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/constabulary/gb"
+	"github.com/constabulary/gb/log"
 )
 
 type coverInfo struct {
@@ -91,7 +92,7 @@ func loadTestFuncs(ptest *build.Package) (*testFuncs, error) {
 	t := &testFuncs{
 		Package: ptest,
 	}
-	gb.Debugf("loadTestFuncs: %v, %v", ptest.TestGoFiles, ptest.XTestGoFiles)
+	log.Debugf("loadTestFuncs: %v, %v", ptest.TestGoFiles, ptest.XTestGoFiles)
 	for _, file := range ptest.TestGoFiles {
 		if err := t.load(filepath.Join(ptest.Dir, file), "_test", &t.ImportTest, &t.NeedTest); err != nil {
 			return nil, err

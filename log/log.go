@@ -1,4 +1,4 @@
-package gb
+package log
 
 import (
 	"fmt"
