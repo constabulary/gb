@@ -12,6 +12,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/constabulary/gb/log"
 	"github.com/constabulary/gb/vendor"
 )
 
@@ -189,7 +190,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 			keys := keys(missing)
 			sort.Strings(keys)
 			pkg := keys[0]
-			gb.Infof("fetching recursive dependency %s", pkg)
+			log.Infof("fetching recursive dependency %s", pkg)
 			if err := fetch(ctx, pkg, false); err != nil {
 				return err
 			}

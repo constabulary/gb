@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/constabulary/gb/log"
 )
 
 // gc toolchain
@@ -83,7 +85,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	}
 	args = append(args, "-extld="+gcc())
 	if gc15 {
-		args = append(args, "-buildmode=exe")
+		args = append(args, "-buildmode", pkg.buildmode)
 	}
 	args = append(args, afile)
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
@@ -120,7 +122,7 @@ func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
 func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error {
-	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
+	log.Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
 	args := append(pkg.gcflags, "-p", importpath, "-pack")
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {

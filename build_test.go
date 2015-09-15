@@ -9,11 +9,13 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/constabulary/gb/log"
 )
 
 func TestBuild(t *testing.T) {
-	Verbose = false
-	defer func() { Verbose = false }()
+	log.Verbose = false
+	defer func() { log.Verbose = false }()
 	tests := []struct {
 		pkg string
 		err error
@@ -73,8 +75,8 @@ func TestBuild(t *testing.T) {
 }
 
 func TestBuildPackage(t *testing.T) {
-	Verbose = false
-	defer func() { Verbose = false }()
+	log.Verbose = false
+	defer func() { log.Verbose = false }()
 	tests := []struct {
 		pkg string
 		err error
@@ -126,8 +128,8 @@ func TestBuildPackage(t *testing.T) {
 }
 
 func TestBuildPackages(t *testing.T) {
-	Verbose = false
-	defer func() { Verbose = false }()
+	log.Verbose = false
+	defer func() { log.Verbose = false }()
 	tests := []struct {
 		pkgs    []string
 		actions []string

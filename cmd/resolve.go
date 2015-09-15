@@ -5,6 +5,7 @@ import (
 	"go/build"
 
 	"github.com/constabulary/gb"
+	"github.com/constabulary/gb/log"
 )
 
 // Resolver resolves packages.
@@ -48,7 +49,7 @@ func ResolvePackagesWithTests(r Resolver, paths ...string) ([]*gb.Package, error
 		pkg, err := r.ResolvePackageWithTests(path)
 		if err != nil {
 			if _, ok := err.(*build.NoGoError); ok {
-				gb.Debugf("skipping %q", path)
+				log.Debugf("skipping %q", path)
 				continue
 			}
 			return pkgs, fmt.Errorf("failed to resolve package %q: %v", path, err)
