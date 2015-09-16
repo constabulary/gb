@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"github.com/constabulary/gb/log"
 )
 
 // gc toolchain
@@ -122,7 +120,6 @@ func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
 func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error {
-	log.Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
 	args := append(pkg.gcflags, "-p", importpath, "-pack")
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {

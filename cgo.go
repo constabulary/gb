@@ -54,18 +54,18 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 		}),
 	}
 
-	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
+	cgofiles := []string{filepath.Join(cgoobjdir(pkg), "_cgo_gotypes.go")}
 	for _, f := range pkg.CgoFiles {
-		cgofiles = append(cgofiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo1.go"))
+		cgofiles = append(cgofiles, filepath.Join(cgoobjdir(pkg), stripext(f)+".cgo1.go"))
 	}
 	cfiles := []string{
-		filepath.Join(pkg.Objdir(), "_cgo_main.c"),
-		filepath.Join(pkg.Objdir(), "_cgo_export.c"),
+		filepath.Join(cgoobjdir(pkg), "_cgo_main.c"),
+		filepath.Join(cgoobjdir(pkg), "_cgo_export.c"),
 	}
 	cfiles = append(cfiles, pkg.CFiles...)
 
 	for _, f := range pkg.CgoFiles {
-		cfiles = append(cfiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo2.c"))
+		cfiles = append(cfiles, filepath.Join(cgoobjdir(pkg), stripext(f)+".cgo2.c"))
 	}
 
 	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
@@ -80,7 +80,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 		}),
 	}
 
-	dynout := filepath.Join(pkg.Objdir(), "_cgo_import.c")
+	dynout := filepath.Join(cgoobjdir(pkg), "_cgo_import.c")
 	imports := stripext(dynout) + ".o"
 	runcgo2 := Action{
 		Name: "runcgo2: " + pkg.ImportPath,
@@ -128,18 +128,18 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 		},
 	}
 
-	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
+	cgofiles := []string{filepath.Join(cgoobjdir(pkg), "_cgo_gotypes.go")}
 	for _, f := range pkg.CgoFiles {
-		cgofiles = append(cgofiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo1.go"))
+		cgofiles = append(cgofiles, filepath.Join(cgoobjdir(pkg), stripext(f)+".cgo1.go"))
 	}
 	cfiles := []string{
-		filepath.Join(pkg.Objdir(), "_cgo_main.c"),
-		filepath.Join(pkg.Objdir(), "_cgo_export.c"),
+		filepath.Join(cgoobjdir(pkg), "_cgo_main.c"),
+		filepath.Join(cgoobjdir(pkg), "_cgo_export.c"),
 	}
 	cfiles = append(cfiles, pkg.CFiles...)
 
 	for _, f := range pkg.CgoFiles {
-		cfiles = append(cfiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo2.c"))
+		cfiles = append(cfiles, filepath.Join(cgoobjdir(pkg), stripext(f)+".cgo2.c"))
 	}
 
 	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
@@ -154,7 +154,7 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 		}),
 	}
 
-	dynout := filepath.Join(pkg.Objdir(), "_cgo_import.go")
+	dynout := filepath.Join(cgoobjdir(pkg), "_cgo_import.go")
 	runcgo2 := Action{
 		Name: "runcgo2: " + pkg.ImportPath,
 		Deps: []*Action{&gcc2},
@@ -183,7 +183,7 @@ func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*A
 	var ofiles []string
 	for _, cfile := range cfiles {
 		cfile := cfile
-		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cfile))+".o")
+		ofile := filepath.Join(cgoobjdir(pkg), stripext(filepath.Base(cfile))+".o")
 		ofiles = append(ofiles, ofile)
 		cc = append(cc, &Action{
 			Name: "rungcc1: " + pkg.ImportPath + ": " + cfile,
@@ -196,7 +196,7 @@ func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*A
 
 	for _, cxxfile := range cxxfiles {
 		cxxfile := cxxfile
-		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cxxfile))+".o")
+		ofile := filepath.Join(cgoobjdir(pkg), stripext(filepath.Base(cxxfile))+".o")
 		ofiles = append(ofiles, ofile)
 		cc = append(cc, &Action{
 			Name: "rung++1: " + pkg.ImportPath + ": " + cxxfile,
@@ -387,7 +387,7 @@ func quoteFlags(flags []string) []string {
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.
 func runcgo1(pkg *Package, cflags, ldflags []string) error {
 	cgo := cgotool(pkg.Context)
-	objdir := pkg.Objdir()
+	objdir := cgoobjdir(pkg)
 	if err := mkdir(objdir); err != nil {
 		return err
 	}
@@ -422,7 +422,7 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 // runcgo2 invokes the cgo tool to create _cgo_import.go
 func runcgo2(pkg *Package, dynout, ofile string) error {
 	cgo := cgotool(pkg.Context)
-	objdir := pkg.Objdir()
+	objdir := cgoobjdir(pkg)
 
 	args := []string{
 		"-objdir", objdir,
@@ -443,4 +443,8 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 		return fmt.Errorf("unsuppored Go version: %v", runtime.Version)
 	}
 	return run(pkg.Dir, nil, cgo, args...)
+}
+
+func cgoobjdir(pkg *Package) string {
+	return filepath.Join(pkg.Objdir(), pkg.Name, "_cgo")
 }

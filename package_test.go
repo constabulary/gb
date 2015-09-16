@@ -68,3 +68,28 @@ func TestPackageBinfile(t *testing.T) {
 		}
 	}
 }
+
+func TestPackageObjdir(t *testing.T) {
+	var tests = []struct {
+		pkg  string // package name
+		want string // objdir result
+	}{
+		{pkg: "b", want: ""},
+		{pkg: "nested/a", want: "nested"},
+		{pkg: "nested/b", want: "nested"},
+	}
+
+	for _, tt := range tests {
+		ctx := testContext(t)
+		defer ctx.Destroy()
+		pkg, err := ctx.ResolvePackage(tt.pkg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := pkg.Objdir()
+		want := filepath.Join(ctx.Workdir(), tt.want)
+		if want != got {
+			t.Errorf("(%s).Objdir(): want %s, got %s", tt.pkg, want, got)
+		}
+	}
+}
