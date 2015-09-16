@@ -155,7 +155,7 @@ func (c *Context) Pkgdir() string {
 func (c *Context) Suffix() string {
 	suffix := c.ctxString()
 	if suffix != "" {
-		suffix = "-"+suffix
+		suffix = "-" + suffix
 	}
 	return suffix
 }

@@ -171,6 +171,31 @@ func TestBuildPackages(t *testing.T) {
 	}
 }
 
+func TestObjfile(t *testing.T) {
+	var tests = []struct {
+		pkg  string // package name
+		want string // objfile result
+	}{
+		{pkg: "b", want: "b/main.a"},
+		{pkg: "nested/a", want: "nested/a.a"},
+		{pkg: "nested/b", want: "nested/b.a"},
+	}
+
+	for _, tt := range tests {
+		ctx := testContext(t)
+		defer ctx.Destroy()
+		pkg, err := ctx.ResolvePackage(tt.pkg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := objfile(pkg)
+		want := filepath.Join(ctx.Workdir(), tt.want)
+		if want != got {
+			t.Errorf("(%s).Objdir(): want %s, got %s", tt.pkg, want, got)
+		}
+	}
+}
+
 func TestPkgname(t *testing.T) {
 	tests := []struct {
 		pkg  string
@@ -193,6 +218,31 @@ func TestPkgname(t *testing.T) {
 		}
 		if got, want := pkgname(pkg), tt.name; got != want {
 			t.Errorf("pkgname(%v): want %v, got %v", want, got)
+		}
+	}
+}
+
+func TestCgoobjdir(t *testing.T) {
+	var tests = []struct {
+		pkg  string // package name
+		want string // objdir result
+	}{
+		{pkg: "b", want: "main/_cgo"},
+		{pkg: "nested/a", want: "nested/a/_cgo"},
+		{pkg: "nested/b", want: "nested/b/_cgo"},
+	}
+
+	for _, tt := range tests {
+		ctx := testContext(t)
+		defer ctx.Destroy()
+		pkg, err := ctx.ResolvePackage(tt.pkg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := cgoobjdir(pkg)
+		want := filepath.Join(ctx.Workdir(), tt.want)
+		if want != got {
+			t.Errorf("(%s).cgoobjdir(): want %s, got %s", tt.pkg, want, got)
 		}
 	}
 }

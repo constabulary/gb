@@ -133,6 +133,9 @@ func main() {
 
 	log.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
+		if !noDestroyContext {
+			ctx.Destroy()
+		}
 		log.Fatalf("command %q failed: %v", name, err)
 	}
 }
