@@ -48,4 +48,13 @@ build:
           bash -x setup.bash
           gb vendor -v restore
           gb build
-	  
+
+    - script:
+        name: intergration test/service.v1
+        code: |
+          cd integration-tests/service.v1
+          bash -x setup.bash
+          gb vendor -v restore
+          cd vendor
+          gb build
+          gb test
