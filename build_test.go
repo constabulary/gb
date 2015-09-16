@@ -55,6 +55,8 @@ func TestBuild(t *testing.T) {
 	}, {
 		pkg: "h", // imports "blank", which is blank, see issue #131
 		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "blank")),
+	}, {
+		pkg: "cppmain",
 	}}
 
 	for _, tt := range tests {
