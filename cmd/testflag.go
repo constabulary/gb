@@ -21,6 +21,14 @@ var testFlagDefn = map[string]*testFlagSpec{
 	"cover":     {boolVar: true},
 	"coverpkg":  {},
 	"covermode": {},
+	"a":         {boolVar: true},
+	"r":         {boolVar: true},
+	"f":         {boolVar: true},
+	"F":         {boolVar: true},
+	"P":         {},
+	"ldflags":   {},
+	"gcflags":   {},
+	"dotfile":   {},
 
 	// Passed to the test binary
 	"q":                {boolVar: true, passToTest: true},
