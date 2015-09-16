@@ -150,6 +150,16 @@ func (c *Context) Pkgdir() string {
 	return filepath.Join(c.Project.Pkgdir(), c.ctxString())
 }
 
+// Suffix returns the suffix (if any) for binaries produced
+// by this context.
+func (c *Context) Suffix() string {
+	suffix := c.ctxString()
+	if suffix != "" {
+		suffix = "-"+suffix
+	}
+	return suffix
+}
+
 // Workdir returns the path to this Context's working directory.
 func (c *Context) Workdir() string { return c.workdir }
 
