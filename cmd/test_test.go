@@ -12,7 +12,7 @@ import (
 )
 
 func TestTest(t *testing.T) {
-	log.Verbose = true
+	log.Verbose = false
 	defer func() { log.Verbose = false }()
 	tests := []struct {
 		pkg      string
