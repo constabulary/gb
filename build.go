@@ -304,10 +304,15 @@ func objname(pkg *Package) string {
 }
 
 func pkgname(pkg *Package) string {
-	if pkg.isMain() {
+	switch pkg.Scope {
+	case "test":
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
+	default:
+		if pkg.Name == "main" {
+			return filepath.Base(filepath.FromSlash(pkg.ImportPath))
+		}
+		return pkg.Name
 	}
-	return pkg.Name
 }
 
 func binname(pkg *Package) string {

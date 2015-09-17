@@ -3,6 +3,7 @@ package gb
 import (
 	"errors"
 	"fmt"
+	"go/build"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -196,32 +197,6 @@ func TestObjfile(t *testing.T) {
 	}
 }
 
-func TestPkgname(t *testing.T) {
-	tests := []struct {
-		pkg  string
-		name string
-	}{{
-		pkg:  "a",
-		name: "a",
-	}, {
-		pkg:  "b",
-		name: "b",
-	}}
-
-	ctx := testContext(t)
-	defer ctx.Destroy()
-	for _, tt := range tests {
-		pkg, err := ctx.ResolvePackage(tt.pkg)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-		if got, want := pkgname(pkg), tt.name; got != want {
-			t.Errorf("pkgname(%v): want %v, got %v", want, got)
-		}
-	}
-}
-
 func TestCgoobjdir(t *testing.T) {
 	var tests = []struct {
 		pkg  string // package name
@@ -269,6 +244,97 @@ func TestWorkdir(t *testing.T) {
 		want := filepath.Join(ctx.Workdir(), tt.want)
 		if want != got {
 			t.Errorf("Workdir(Package{Name: %v, ImportPath: %v, Scope: %v}): want %s, got %s", pkg.Name, pkg.ImportPath, pkg.Scope, want, got)
+		}
+	}
+}
+
+func TestPkgname(t *testing.T) {
+	var tests = []struct {
+		pkg  *Package
+		want string
+	}{{
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "main",
+			},
+		},
+		want: "main",
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "a",
+				ImportPath: "main",
+			},
+		},
+		want: "a",
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "a",
+			},
+		},
+		want: "a",
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "testmain",
+			},
+		},
+		want: "testmain",
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "main",
+			},
+			Scope: "test",
+		},
+		want: "main",
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "a",
+				ImportPath: "main",
+			},
+			Scope: "test",
+		},
+		want: "main",
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "a",
+			},
+			Scope: "test",
+		},
+		want: "a",
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "a/a",
+			},
+			Scope: "test",
+		},
+		want: "a",
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "testmain",
+			},
+			Scope: "test",
+		},
+		want: "testmain",
+	}}
+
+	for _, tt := range tests {
+		got := pkgname(tt.pkg)
+		if got != tt.want {
+			t.Errorf("pkgname(Package{Name:%q, ImportPath: %q, Scope:%q}): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.Scope, got, tt.want)
 		}
 	}
 }
