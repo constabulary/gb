@@ -1,5 +1,5 @@
-box: wercker/golang
 build:
+  box: wercker/golang
   steps:
     # Sets the go workspace and places you package
     # at the right place in the workspace tree
@@ -41,11 +41,11 @@ build:
 #          gb vendor -v restore
 #          gb build
 
-    - script:
-        name: intergration test/goczmq
-        code: |
-          cd integration-tests/goczmq
-          bash -x setup.bash
-          gb vendor -v restore
-          gb build
-	  
+# disabled, too slow on wercker
+#    - script:
+#        name: intergration test/goczmq
+#        code: |
+#          cd integration-tests/goczmq
+#          bash -x setup.bash
+#          gb vendor -v restore
+#          gb build
