@@ -280,9 +280,20 @@ func link(pkg *Package) error {
 	return err
 }
 
+// Workdir returns the working directory for a package.
+func Workdir(pkg *Package) string {
+	switch pkg.Scope {
+	case "test":
+		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
+		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	default:
+		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	}
+}
+
 // objfile returns the name of the object file for this package
 func objfile(pkg *Package) string {
-	return filepath.Join(pkg.Objdir(), objname(pkg))
+	return filepath.Join(Workdir(pkg), objname(pkg))
 }
 
 func objname(pkg *Package) string {

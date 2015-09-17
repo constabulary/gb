@@ -227,14 +227,14 @@ func TestCgoobjdir(t *testing.T) {
 		pkg  string // package name
 		want string // objdir result
 	}{
-		{pkg: "b", want: "main/_cgo"},
+		{pkg: "b", want: "b/_cgo"},
 		{pkg: "nested/a", want: "nested/a/_cgo"},
 		{pkg: "nested/b", want: "nested/b/_cgo"},
 	}
 
+	ctx := testContext(t)
+	defer ctx.Destroy()
 	for _, tt := range tests {
-		ctx := testContext(t)
-		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != nil {
 			t.Fatal(err)
@@ -243,6 +243,32 @@ func TestCgoobjdir(t *testing.T) {
 		want := filepath.Join(ctx.Workdir(), tt.want)
 		if want != got {
 			t.Errorf("(%s).cgoobjdir(): want %s, got %s", tt.pkg, want, got)
+		}
+	}
+}
+
+func TestWorkdir(t *testing.T) {
+	var tests = []struct {
+		pkg  string // package name
+		want string // objdir result
+	}{
+		{pkg: "b", want: ""},
+		{pkg: "nested/a", want: "nested"},
+		{pkg: "nested/b", want: "nested"},
+	}
+
+	ctx := testContext(t)
+	defer ctx.Destroy()
+	for _, tt := range tests {
+		pkg, err := ctx.ResolvePackage(tt.pkg)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		got := Workdir(pkg)
+		want := filepath.Join(ctx.Workdir(), tt.want)
+		if want != got {
+			t.Errorf("Workdir(Package{Name: %v, ImportPath: %v, Scope: %v}): want %s, got %s", pkg.Name, pkg.ImportPath, pkg.Scope, want, got)
 		}
 	}
 }

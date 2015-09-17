@@ -182,7 +182,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if pkg.Scope != "test" {
 		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name)
 	}
-	dir := pkg.Objdir()
+	dir := gb.Workdir(pkg)
 	if err := mkdir(dir); err != nil {
 		return nil, fmt.Errorf("buildTestmain: %v", err)
 	}

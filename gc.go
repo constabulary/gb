@@ -98,7 +98,7 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 	args := []string{
 		"-F", "-V", "-w",
 		"-trimpath", pkg.Workdir(),
-		"-I", pkg.Objdir(),
+		"-I", Workdir(pkg),
 		"-I", filepath.Join(pkg.Context.Context.GOROOT, "pkg", pkg.gohostos+"_"+pkg.gohostarch), // for runtime.h
 		"-o", ofile,
 		"-D", "GOOS_" + pkg.gotargetos,
