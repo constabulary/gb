@@ -1,0 +1,41 @@
+version: build-{build}.{branch}
+
+clone_folder: C:\gopath\src\github.com\constabulary\gb
+shallow_clone: true # for startup speed
+
+environment:
+  GOPATH: C:\gopath
+
+platform:
+  - x64
+  #- x86
+# the "x86" platform still gives us GOARCH=amd64 :/
+# TODO(tianon) we have 32bit Go installed at C:\go-x86 and 32bit mingw at both C:\msys64\mingw32 and C:\MinGW, so we could do something
+
+# http://www.appveyor.com/docs/installed-software
+install:
+  # some helpful output for debugging builds
+  - go version
+  - go env
+  # pre-installed MinGW at C:\MinGW is 32bit only
+  # but MSYS2 at C:\msys64 has mingw64
+  - set PATH=C:\msys64\mingw64\bin;%PATH%
+  - gcc --version
+  - g++ --version
+  # need bzr for several tests
+  - choco install bzr
+  - set PATH=C:\Program Files (x86)\Bazaar;%PATH%
+  - bzr --version
+  # TODO(tianon) - git clone --depth 1 https://github.com/constabulary/integration-tests.git
+
+build_script:
+  - go install -v ./...
+
+test_script:
+  - set PATH=C:\gopath\bin;%PATH%
+  - gb help
+  - go test -v ./...
+
+#artifacts:
+#  - path: '%GOPATH%\bin\*.exe'
+deploy: off
