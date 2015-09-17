@@ -45,7 +45,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 			}),
 		}}
 
-	defun := filepath.Join(pkg.Objdir(), "_cgo_defun.o")
+	defun := filepath.Join(cgoobjdir(pkg), "_cgo_defun.o")
 	rundefun := Action{
 		Name: "cc: " + pkg.ImportPath + ": _cgo_defun_c",
 		Deps: runcgo1,
@@ -429,7 +429,7 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 }
 
 func cgoobjdir(pkg *Package) string {
-	return filepath.Join(pkg.Objdir(), pkg.Name, "_cgo")
+	return filepath.Join(Workdir(pkg), pkgname(pkg), "_cgo")
 }
 
 // gccCmd returns a gcc command line prefix.
