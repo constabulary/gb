@@ -45,27 +45,28 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 			}),
 		}}
 
-	defun := filepath.Join(cgoobjdir(pkg), "_cgo_defun.o")
+	workdir := cgoworkdir(pkg)
+	defun := filepath.Join(workdir, "_cgo_defun.o")
 	rundefun := Action{
 		Name: "cc: " + pkg.ImportPath + ": _cgo_defun_c",
 		Deps: runcgo1,
 		Task: TaskFn(func() error {
-			return pkg.tc.Cc(pkg, defun, filepath.Join(cgoobjdir(pkg), "_cgo_defun.c"))
+			return pkg.tc.Cc(pkg, defun, filepath.Join(workdir, "_cgo_defun.c"))
 		}),
 	}
 
-	cgofiles := []string{filepath.Join(cgoobjdir(pkg), "_cgo_gotypes.go")}
+	cgofiles := []string{filepath.Join(workdir, "_cgo_gotypes.go")}
 	for _, f := range pkg.CgoFiles {
-		cgofiles = append(cgofiles, filepath.Join(cgoobjdir(pkg), stripext(f)+".cgo1.go"))
+		cgofiles = append(cgofiles, filepath.Join(workdir, stripext(f)+".cgo1.go"))
 	}
 	cfiles := []string{
-		filepath.Join(cgoobjdir(pkg), "_cgo_main.c"),
-		filepath.Join(cgoobjdir(pkg), "_cgo_export.c"),
+		filepath.Join(workdir, "_cgo_main.c"),
+		filepath.Join(workdir, "_cgo_export.c"),
 	}
 	cfiles = append(cfiles, pkg.CFiles...)
 
 	for _, f := range pkg.CgoFiles {
-		cfiles = append(cfiles, filepath.Join(cgoobjdir(pkg), stripext(f)+".cgo2.c"))
+		cfiles = append(cfiles, filepath.Join(workdir, stripext(f)+".cgo2.c"))
 	}
 
 	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
@@ -80,7 +81,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 		}),
 	}
 
-	dynout := filepath.Join(cgoobjdir(pkg), "_cgo_import.c")
+	dynout := filepath.Join(workdir, "_cgo_import.c")
 	imports := stripext(dynout) + ".o"
 	runcgo2 := Action{
 		Name: "runcgo2: " + pkg.ImportPath,
@@ -128,18 +129,19 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 		},
 	}
 
-	cgofiles := []string{filepath.Join(cgoobjdir(pkg), "_cgo_gotypes.go")}
+	workdir := cgoworkdir(pkg)
+	cgofiles := []string{filepath.Join(workdir, "_cgo_gotypes.go")}
 	for _, f := range pkg.CgoFiles {
-		cgofiles = append(cgofiles, filepath.Join(cgoobjdir(pkg), stripext(f)+".cgo1.go"))
+		cgofiles = append(cgofiles, filepath.Join(workdir, stripext(f)+".cgo1.go"))
 	}
 	cfiles := []string{
-		filepath.Join(cgoobjdir(pkg), "_cgo_main.c"),
-		filepath.Join(cgoobjdir(pkg), "_cgo_export.c"),
+		filepath.Join(workdir, "_cgo_main.c"),
+		filepath.Join(workdir, "_cgo_export.c"),
 	}
 	cfiles = append(cfiles, pkg.CFiles...)
 
 	for _, f := range pkg.CgoFiles {
-		cfiles = append(cfiles, filepath.Join(cgoobjdir(pkg), stripext(f)+".cgo2.c"))
+		cfiles = append(cfiles, filepath.Join(workdir, stripext(f)+".cgo2.c"))
 	}
 
 	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
@@ -154,7 +156,7 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 		}),
 	}
 
-	dynout := filepath.Join(cgoobjdir(pkg), "_cgo_import.go")
+	dynout := filepath.Join(workdir, "_cgo_import.go")
 	runcgo2 := Action{
 		Name: "runcgo2: " + pkg.ImportPath,
 		Deps: []*Action{&gcc2},
@@ -179,11 +181,12 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 // cgocc compiles all .c files.
 // TODO(dfc) cxx not done
 func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*Action) ([]*Action, []string) {
+	workdir := cgoworkdir(pkg)
 	var cc []*Action
 	var ofiles []string
 	for _, cfile := range cfiles {
 		cfile := cfile
-		ofile := filepath.Join(cgoobjdir(pkg), stripext(filepath.Base(cfile))+".o")
+		ofile := filepath.Join(workdir, stripext(filepath.Base(cfile))+".o")
 		ofiles = append(ofiles, ofile)
 		cc = append(cc, &Action{
 			Name: "rungcc1: " + pkg.ImportPath + ": " + cfile,
@@ -196,7 +199,7 @@ func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*A
 
 	for _, cxxfile := range cxxfiles {
 		cxxfile := cxxfile
-		ofile := filepath.Join(cgoobjdir(pkg), stripext(filepath.Base(cxxfile))+".o")
+		ofile := filepath.Join(workdir, stripext(filepath.Base(cxxfile))+".o")
 		ofiles = append(ofiles, ofile)
 		cc = append(cc, &Action{
 			Name: "rung++1: " + pkg.ImportPath + ": " + cxxfile,
@@ -370,12 +373,12 @@ func quoteFlags(flags []string) []string {
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.
 func runcgo1(pkg *Package, cflags, ldflags []string) error {
 	cgo := cgotool(pkg.Context)
-	objdir := cgoobjdir(pkg)
-	if err := mkdir(objdir); err != nil {
+	workdir := cgoworkdir(pkg)
+	if err := mkdir(workdir); err != nil {
 		return err
 	}
 
-	args := []string{"-objdir", objdir}
+	args := []string{"-objdir", workdir}
 	switch {
 	case gc14:
 		args = append(args,
@@ -386,7 +389,7 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 		args = append(args,
 			"-importpath", pkg.ImportPath,
 			"--",
-			"-I", objdir,
+			"-I", workdir,
 			"-I", pkg.Dir,
 		)
 	default:
@@ -405,10 +408,10 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 // runcgo2 invokes the cgo tool to create _cgo_import.go
 func runcgo2(pkg *Package, dynout, ofile string) error {
 	cgo := cgotool(pkg.Context)
-	objdir := cgoobjdir(pkg)
+	workdir := cgoworkdir(pkg)
 
 	args := []string{
-		"-objdir", objdir,
+		"-objdir", workdir,
 	}
 	switch {
 	case gc14:
@@ -428,7 +431,8 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 	return run(pkg.Dir, nil, cgo, args...)
 }
 
-func cgoobjdir(pkg *Package) string {
+// cgoworkdir returns the cgo working directory for this package.
+func cgoworkdir(pkg *Package) string {
 	return filepath.Join(Workdir(pkg), pkgname(pkg), "_cgo")
 }
 

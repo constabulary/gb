@@ -239,7 +239,7 @@ func TestCgoobjdir(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		got := cgoobjdir(pkg)
+		got := cgoworkdir(pkg)
 		want := filepath.Join(ctx.Workdir(), tt.want)
 		if want != got {
 			t.Errorf("(%s).cgoobjdir(): want %s, got %s", tt.pkg, want, got)
