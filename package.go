@@ -96,6 +96,11 @@ func (pkg *Package) Binfile() string {
 		target += "-" + pkg.ctxString()
 	}
 
+	// append build tags
+	if len(pkg.buildtags) > 0 {
+		target += "-" + strings.Join(pkg.buildtags, "-")
+	}
+
 	if pkg.gotargetos == "windows" {
 		target += ".exe"
 	}
