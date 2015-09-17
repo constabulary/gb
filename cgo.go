@@ -50,7 +50,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 		Name: "cc: " + pkg.ImportPath + ": _cgo_defun_c",
 		Deps: runcgo1,
 		Task: TaskFn(func() error {
-			return pkg.tc.Cc(pkg, defun, filepath.Join(pkg.Objdir(), "_cgo_defun.c"))
+			return pkg.tc.Cc(pkg, defun, filepath.Join(cgoobjdir(pkg), "_cgo_defun.c"))
 		}),
 	}
 
