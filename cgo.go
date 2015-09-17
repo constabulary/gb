@@ -73,10 +73,10 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 	gcc1, ofiles := cgocc(pkg, cflags, cxxflags, cfiles, pkg.CXXFiles, runcgo1...)
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
 	gcc2 := Action{
-		Name: "rungcc2: " + pkg.ImportPath + ": _cgo_.o",
+		Name: "gccld: " + pkg.ImportPath + ": _cgo_.o",
 		Deps: gcc1,
 		Task: TaskFn(func() error {
-			return rungcc2(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
+			return gccld(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
 		}),
 	}
 
@@ -147,10 +147,10 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 	gcc1, ofiles := cgocc(pkg, cflags, cxxflags, cfiles, pkg.CXXFiles, runcgo1...)
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
 	gcc2 := Action{
-		Name: "rungcc2: " + pkg.ImportPath + ": _cgo_.o",
+		Name: "gccld: " + pkg.ImportPath + ": _cgo_.o",
 		Deps: gcc1,
 		Task: TaskFn(func() error {
-			return rungcc2(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
+			return gccld(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
 		}),
 	}
 
@@ -244,8 +244,8 @@ func rungpp1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 	return err
 }
 
-// rungcc2 links the o files from rungcc1 into a single _cgo_.o.
-func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles []string) error {
+// gccld links the o files from rungcc1 into a single _cgo_.o.
+func gccld(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles []string) error {
 	args := []string{
 		"-fPIC", "-fmessage-length=0",
 	}
@@ -257,7 +257,7 @@ func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles 
 	args = append(args, cgoLDFLAGS...) // this has to go at the end, because reasons!
 	t0 := time.Now()
 	err := run(pkg.Dir, nil, gcc(), args...)
-	pkg.Record("gcc2", time.Since(t0))
+	pkg.Record("gccld", time.Since(t0))
 	return err
 }
 
