@@ -1,6 +1,6 @@
 # gb
 
-[![wercker status](https://app.wercker.com/status/494a8ac6b836f39cc7e67036d957a43e/m "wercker status")](https://app.wercker.com/project/bykey/494a8ac6b836f39cc7e67036d957a43e)
+[![wercker status](https://app.wercker.com/status/494a8ac6b836f39cc7e67036d957a43e/m/master "wercker status")](https://app.wercker.com/project/bykey/494a8ac6b836f39cc7e67036d957a43e)
 
 `gb` is a proof of concept replacement build tool for the [Go programming language](https://golang.org).
 
