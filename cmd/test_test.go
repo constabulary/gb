@@ -12,7 +12,7 @@ import (
 )
 
 func TestTest(t *testing.T) {
-	log.Verbose = false
+	log.Verbose = true
 	defer func() { log.Verbose = false }()
 	tests := []struct {
 		pkg      string
@@ -64,6 +64,8 @@ func TestTest(t *testing.T) {
 		}, {
 			pkg:      "testflags",
 			testArgs: []string{"-debug"},
+		}, {
+			pkg: "main", // issue 375, a package called main
 		}}
 
 	for _, tt := range tests {
