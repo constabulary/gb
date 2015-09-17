@@ -15,12 +15,6 @@ build:
         code: |
           go install -v ./...
 
-    # Temporarily force install g++
-    # See https://github.com/docker-library/golang/pull/66
-    # And https://github.com/docker-library/official-images/pull/1060
-    - install-packages:
-        packages: g++
-
     # Test the project
     - script:
         name: go test
@@ -33,10 +27,5 @@ build:
     - script:
         name: integration tests
         code: |
-          git clone --quiet https://github.com/constabulary/integration-tests
-          for script in integration-tests/*/run.bash; do
-            pushd "$(dirname "$script")"
-            [ -x setup.bash ] && ./setup.bash
-            ./run.bash
-            popd
-          done
+          git clone --quiet --depth 1 https://github.com/constabulary/integration-tests.git
+          ./integration-tests/run-all.bash
