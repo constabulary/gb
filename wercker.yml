@@ -1,4 +1,4 @@
-box: wercker/golang
+box: wercker/golang@1.3.3
 build:
   steps:
     # Sets the go workspace and places you package
