@@ -1,51 +1,42 @@
-box: wercker/golang@1.3.3
+box: golang:1.4
 build:
   steps:
     # Sets the go workspace and places you package
     # at the right place in the workspace tree
-    - setup-go-workspace
+    - setup-go-workspace:
+        package-dir: github.com/constabulary/gb
 
     # golint step!
-    # - wercker/golint
+    #- golint
 
     # Build the project
     - script:
         name: go install
         code: |
-          go install -v github.com/constabulary/gb/...
+          go install -v ./...
+
+    # Temporarily force install g++
+    # See https://github.com/docker-library/golang/pull/66
+    # And https://github.com/docker-library/official-images/pull/1060
+    - install-packages:
+        packages: g++
 
     # Test the project
     - script:
         name: go test
         code: |
-          go test github.com/constabulary/gb/...
+          go test ./...
 
     # Integration tests
+    - install-packages:
+        packages: sudo
     - script:
-        name: integation test/setup
-        code:
-          git clone --quiet https://github.com/constabulary/integration-tests 
-
-    - script:
-        name: integration test/sqlite3
-        code: | 
-          gb vendor -R integration-tests/sqlite3 restore
-          gb build -R integration-tests/sqlite3
-
-# disabled, no access to libsdl2-dev on wercker
-#    - script:
-#        name: integration test/go-sdl2
-#        code: |
-#          cd integration-tests/go-sdl2
-#          bash -x setup.bash
-#          gb vendor -v restore
-#          gb build
-
-    - script:
-        name: intergration test/goczmq
+        name: integration tests
         code: |
-          cd integration-tests/goczmq
-          bash -x setup.bash
-          gb vendor -v restore
-          gb build
-	  
+          git clone --quiet https://github.com/constabulary/integration-tests
+          for script in integration-tests/*/run.bash; do
+            pushd "$(dirname "$script")"
+            [ -x setup.bash ] && ./setup.bash
+            ./run.bash
+            popd
+          done
