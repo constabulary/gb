@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -171,7 +172,7 @@ func TestTestPackages(t *testing.T) {
 		sort.Strings(actual)
 		var expected []string
 		for _, s := range tt.actions {
-			expected = append(expected, strings.Replace(s, "$WORKDIR", ctx.Workdir(), -1))
+			expected = append(expected, strings.Replace(filepath.FromSlash(s), "$WORKDIR", ctx.Workdir(), -1))
 		}
 		if !reflect.DeepEqual(expected, actual) {
 			t.Errorf("TestBuildPackages(%v): want %v, got %v", pkgs, expected, actual)
