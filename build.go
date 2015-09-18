@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/constabulary/gb/log"
 )
 
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
@@ -43,14 +45,14 @@ func BuildPackages(pkgs ...*Package) (*Action, error) {
 	build := Action{
 		Name: fmt.Sprintf("build: %s", strings.Join(names(pkgs), ",")),
 		Task: TaskFn(func() error {
-			Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
+			log.Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		}),
 	}
 
 	for _, pkg := range pkgs {
 		if len(pkg.GoFiles)+len(pkg.CgoFiles) == 0 {
-			Debugf("skipping %v: no go files", pkg.ImportPath)
+			log.Debugf("skipping %v: no go files", pkg.ImportPath)
 			continue
 		}
 		a, err := BuildPackage(targets, pkg)
@@ -234,7 +236,7 @@ func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
 	if pkg.Scope != "test" {
 		// only log compilation message if not in test scope
-		Infof(pkg.ImportPath)
+		log.Infof(pkg.ImportPath)
 	}
 	includes := pkg.IncludePaths()
 	importpath := pkg.ImportPath
@@ -278,18 +280,27 @@ func link(pkg *Package) error {
 	return err
 }
 
+// Workdir returns the working directory for a package.
+func Workdir(pkg *Package) string {
+	switch pkg.Scope {
+	case "test":
+		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
+		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	default:
+		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	}
+}
+
 // objfile returns the name of the object file for this package
 func objfile(pkg *Package) string {
-	return filepath.Join(pkg.Objdir(), objname(pkg))
+	return filepath.Join(Workdir(pkg), objname(pkg))
 }
 
 func objname(pkg *Package) string {
-	switch pkg.Name {
-	case "main":
+	if pkg.isMain() {
 		return filepath.Join(filepath.Base(filepath.FromSlash(pkg.ImportPath)), "main.a")
-	default:
-		return filepath.Base(filepath.FromSlash(pkg.ImportPath)) + ".a"
 	}
+	return filepath.Base(filepath.FromSlash(pkg.ImportPath)) + ".a"
 }
 
 func pkgname(pkg *Package) string {
@@ -301,10 +312,10 @@ func pkgname(pkg *Package) string {
 
 func binname(pkg *Package) string {
 	switch {
-	case pkg.Name == "main":
-		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 	case pkg.Scope == "test":
 		return pkg.Name
+	case pkg.Name == "main":
+		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 	default:
 		panic("binname called with non main package: " + pkg.ImportPath)
 	}

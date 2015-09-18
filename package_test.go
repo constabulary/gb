@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"go/build"
 	"path/filepath"
 	"testing"
 )
@@ -65,6 +66,88 @@ func TestPackageBinfile(t *testing.T) {
 		want := filepath.Join(ctx.Bindir(), tt.want)
 		if want != got {
 			t.Errorf("(%s).Binfile(): want %s, got %s", tt.pkg, want, got)
+		}
+	}
+}
+
+func TestPackageIsMain(t *testing.T) {
+	var tests = []struct {
+		pkg  *Package
+		want bool
+	}{{
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "main",
+			},
+		},
+		want: true,
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "a",
+				ImportPath: "main",
+			},
+		},
+		want: false,
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "a",
+			},
+		},
+		want: true,
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "testmain",
+			},
+		},
+		want: true,
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "main",
+			},
+			Scope: "test",
+		},
+		want: false,
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "a",
+				ImportPath: "main",
+			},
+			Scope: "test",
+		},
+		want: false,
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "a",
+			},
+			Scope: "test",
+		},
+		want: false,
+	}, {
+		pkg: &Package{
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "testmain",
+			},
+			Scope: "test",
+		},
+		want: true,
+	}}
+
+	for _, tt := range tests {
+		got := tt.pkg.isMain()
+		if got != tt.want {
+			t.Errorf("Package{Name:%q, ImportPath: %q, Scope:%q}.isMain(): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.Scope, got, tt.want)
 		}
 	}
 }

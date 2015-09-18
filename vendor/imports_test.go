@@ -85,11 +85,11 @@ go get gopkg.in/check.v1
 	// Test for error catch.
 	errTests := []testParams{{
 		path:     "any.inaccessible.server/the.project",
-		want:     `fail to access url "http://any.inaccessible.server/the.project?go-get=1"`,
+		want:     `failed to access url "http://any.inaccessible.server/the.project?go-get=1"`,
 		insecure: true,
 	}, {
 		path:     "any.inaccessible.server/the.project",
-		want:     `fail to access url "http://any.inaccessible.server/the.project?go-get=1"`,
+		want:     `unable to determine remote metadata protocol`,
 		insecure: false,
 	}}
 

@@ -81,9 +81,8 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}
-	args = append(args, "-extld="+gcc())
 	if gc15 {
-		args = append(args, "-buildmode=exe")
+		args = append(args, "-buildmode", pkg.buildmode)
 	}
 	args = append(args, afile)
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
@@ -99,7 +98,7 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 	args := []string{
 		"-F", "-V", "-w",
 		"-trimpath", pkg.Workdir(),
-		"-I", pkg.Objdir(),
+		"-I", Workdir(pkg),
 		"-I", filepath.Join(pkg.Context.Context.GOROOT, "pkg", pkg.gohostos+"_"+pkg.gohostarch), // for runtime.h
 		"-o", ofile,
 		"-D", "GOOS_" + pkg.gotargetos,
@@ -120,7 +119,6 @@ func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
 func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error {
-	Debugf("gc:gc %v %v %v %v", importpath, srcdir, outfile, files)
 	args := append(pkg.gcflags, "-p", importpath, "-pack")
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {

@@ -45,27 +45,28 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 			}),
 		}}
 
-	defun := filepath.Join(pkg.Objdir(), "_cgo_defun.o")
+	workdir := cgoworkdir(pkg)
+	defun := filepath.Join(workdir, "_cgo_defun.o")
 	rundefun := Action{
 		Name: "cc: " + pkg.ImportPath + ": _cgo_defun_c",
 		Deps: runcgo1,
 		Task: TaskFn(func() error {
-			return pkg.tc.Cc(pkg, defun, filepath.Join(pkg.Objdir(), "_cgo_defun.c"))
+			return pkg.tc.Cc(pkg, defun, filepath.Join(workdir, "_cgo_defun.c"))
 		}),
 	}
 
-	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
+	cgofiles := []string{filepath.Join(workdir, "_cgo_gotypes.go")}
 	for _, f := range pkg.CgoFiles {
-		cgofiles = append(cgofiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo1.go"))
+		cgofiles = append(cgofiles, filepath.Join(workdir, stripext(f)+".cgo1.go"))
 	}
 	cfiles := []string{
-		filepath.Join(pkg.Objdir(), "_cgo_main.c"),
-		filepath.Join(pkg.Objdir(), "_cgo_export.c"),
+		filepath.Join(workdir, "_cgo_main.c"),
+		filepath.Join(workdir, "_cgo_export.c"),
 	}
 	cfiles = append(cfiles, pkg.CFiles...)
 
 	for _, f := range pkg.CgoFiles {
-		cfiles = append(cfiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo2.c"))
+		cfiles = append(cfiles, filepath.Join(workdir, stripext(f)+".cgo2.c"))
 	}
 
 	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
@@ -73,14 +74,14 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 	gcc1, ofiles := cgocc(pkg, cflags, cxxflags, cfiles, pkg.CXXFiles, runcgo1...)
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
 	gcc2 := Action{
-		Name: "rungcc2: " + pkg.ImportPath + ": _cgo_.o",
+		Name: "gccld: " + pkg.ImportPath + ": _cgo_.o",
 		Deps: gcc1,
 		Task: TaskFn(func() error {
-			return rungcc2(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
+			return gccld(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
 		}),
 	}
 
-	dynout := filepath.Join(pkg.Objdir(), "_cgo_import.c")
+	dynout := filepath.Join(workdir, "_cgo_import.c")
 	imports := stripext(dynout) + ".o"
 	runcgo2 := Action{
 		Name: "runcgo2: " + pkg.ImportPath,
@@ -98,7 +99,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 		Name: "rungcc3: " + pkg.ImportPath,
 		Deps: []*Action{&runcgo2, &rundefun},
 		Task: TaskFn(func() error {
-			return rungcc3(pkg.Context, pkg.Dir, allo, ofiles[1:]) // skip _cgo_main.o
+			return rungcc3(pkg, pkg.Dir, allo, ofiles[1:]) // skip _cgo_main.o
 		}),
 	}
 	return &action, []string{defun, imports, allo}, cgofiles, nil
@@ -128,18 +129,19 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 		},
 	}
 
-	cgofiles := []string{filepath.Join(pkg.Objdir(), "_cgo_gotypes.go")}
+	workdir := cgoworkdir(pkg)
+	cgofiles := []string{filepath.Join(workdir, "_cgo_gotypes.go")}
 	for _, f := range pkg.CgoFiles {
-		cgofiles = append(cgofiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo1.go"))
+		cgofiles = append(cgofiles, filepath.Join(workdir, stripext(f)+".cgo1.go"))
 	}
 	cfiles := []string{
-		filepath.Join(pkg.Objdir(), "_cgo_main.c"),
-		filepath.Join(pkg.Objdir(), "_cgo_export.c"),
+		filepath.Join(workdir, "_cgo_main.c"),
+		filepath.Join(workdir, "_cgo_export.c"),
 	}
 	cfiles = append(cfiles, pkg.CFiles...)
 
 	for _, f := range pkg.CgoFiles {
-		cfiles = append(cfiles, filepath.Join(pkg.Objdir(), stripext(f)+".cgo2.c"))
+		cfiles = append(cfiles, filepath.Join(workdir, stripext(f)+".cgo2.c"))
 	}
 
 	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
@@ -147,14 +149,14 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 	gcc1, ofiles := cgocc(pkg, cflags, cxxflags, cfiles, pkg.CXXFiles, runcgo1...)
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
 	gcc2 := Action{
-		Name: "rungcc2: " + pkg.ImportPath + ": _cgo_.o",
+		Name: "gccld: " + pkg.ImportPath + ": _cgo_.o",
 		Deps: gcc1,
 		Task: TaskFn(func() error {
-			return rungcc2(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
+			return gccld(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
 		}),
 	}
 
-	dynout := filepath.Join(pkg.Objdir(), "_cgo_import.go")
+	dynout := filepath.Join(workdir, "_cgo_import.go")
 	runcgo2 := Action{
 		Name: "runcgo2: " + pkg.ImportPath,
 		Deps: []*Action{&gcc2},
@@ -169,7 +171,7 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 		Name: "rungcc3: " + pkg.ImportPath,
 		Deps: []*Action{&runcgo2},
 		Task: TaskFn(func() error {
-			return rungcc3(pkg.Context, pkg.Dir, allo, ofiles[1:]) // skip _cgo_main.o
+			return rungcc3(pkg, pkg.Dir, allo, ofiles[1:]) // skip _cgo_main.o
 		}),
 	}
 
@@ -179,11 +181,12 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 // cgocc compiles all .c files.
 // TODO(dfc) cxx not done
 func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*Action) ([]*Action, []string) {
+	workdir := cgoworkdir(pkg)
 	var cc []*Action
 	var ofiles []string
 	for _, cfile := range cfiles {
 		cfile := cfile
-		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cfile))+".o")
+		ofile := filepath.Join(workdir, stripext(filepath.Base(cfile))+".o")
 		ofiles = append(ofiles, ofile)
 		cc = append(cc, &Action{
 			Name: "rungcc1: " + pkg.ImportPath + ": " + cfile,
@@ -196,7 +199,7 @@ func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*A
 
 	for _, cxxfile := range cxxfiles {
 		cxxfile := cxxfile
-		ofile := filepath.Join(pkg.Objdir(), stripext(filepath.Base(cxxfile))+".o")
+		ofile := filepath.Join(workdir, stripext(filepath.Base(cxxfile))+".o")
 		ofiles = append(ofiles, ofile)
 		cc = append(cc, &Action{
 			Name: "rung++1: " + pkg.ImportPath + ": " + cxxfile,
@@ -212,7 +215,7 @@ func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*A
 
 // rungcc1 invokes gcc to compile cfile into ofile
 func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
-	args := []string{"-g", "-O2", "-fPIC", "-pthread", "-fmessage-length=0",
+	args := []string{"-g", "-O2",
 		"-I", pkg.Dir,
 		"-I", filepath.Dir(ofile),
 	}
@@ -222,14 +225,15 @@ func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 		"-c", cfile,
 	)
 	t0 := time.Now()
-	err := run(pkg.Dir, nil, gcc(), args...)
-	pkg.Record("gcc1", time.Since(t0))
+	gcc := gccCmd(pkg, pkg.Dir)
+	err := run(pkg.Dir, nil, gcc[0], append(gcc[1:], args...)...)
+	pkg.Record(gcc[0], time.Since(t0))
 	return err
 }
 
 // rungpp1 invokes g++ to compile cfile into ofile
 func rungpp1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
-	args := []string{"-g", "-O2", "-fPIC", "-pthread", "-fmessage-length=0",
+	args := []string{"-g", "-O2",
 		"-I", pkg.Dir,
 		"-I", filepath.Dir(ofile),
 	}
@@ -239,49 +243,53 @@ func rungpp1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 		"-c", cfile,
 	)
 	t0 := time.Now()
-	err := run(pkg.Dir, nil, "g++", args...) // TODO(dfc) hack
-	pkg.Record("gcc1", time.Since(t0))
+	gxx := gxxCmd(pkg, pkg.Dir)
+	err := run(pkg.Dir, nil, gxx[0], append(gxx[1:], args...)...)
+	pkg.Record(gxx[0], time.Since(t0))
 	return err
 }
 
-// rungcc2 links the o files from rungcc1 into a single _cgo_.o.
-func rungcc2(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles []string) error {
-	args := []string{
-		"-fPIC", "-fmessage-length=0",
-	}
-	if !isClang() {
-		args = append(args, "-pthread")
-	}
+// gccld links the o files from rungcc1 into a single _cgo_.o.
+func gccld(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles []string) error {
+	args := []string{}
 	args = append(args, "-o", ofile)
 	args = append(args, ofiles...)
 	args = append(args, cgoLDFLAGS...) // this has to go at the end, because reasons!
 	t0 := time.Now()
-	err := run(pkg.Dir, nil, gcc(), args...)
-	pkg.Record("gcc2", time.Since(t0))
+
+	var cmd []string
+	if len(pkg.CXXFiles) > 0 || len(pkg.SwigCXXFiles) > 0 {
+		cmd = gxxCmd(pkg, pkg.Dir)
+	} else {
+		cmd = gccCmd(pkg, pkg.Dir)
+	}
+	err := run(pkg.Dir, nil, cmd[0], append(cmd[1:], args...)...)
+	pkg.Record("gccld", time.Since(t0))
 	return err
 }
 
 // rungcc3 links all previous ofiles together with libgcc into a single _all.o.
-func rungcc3(ctx *Context, dir string, ofile string, ofiles []string) error {
-	args := []string{
-		"-fPIC", "-fmessage-length=0",
-	}
-	if !isClang() {
-		args = append(args, "-pthread")
-	}
-	args = append(args, "-g", "-O2", "-o", ofile)
+func rungcc3(pkg *Package, dir string, ofile string, ofiles []string) error {
+	args := []string{}
+	args = append(args, "-o", ofile)
 	args = append(args, ofiles...)
 	args = append(args, "-Wl,-r", "-nostdlib")
-	if !isClang() {
-		libgcc, err := libgcc(ctx)
+	var cmd []string
+	if len(pkg.CXXFiles) > 0 || len(pkg.SwigCXXFiles) > 0 {
+		cmd = gxxCmd(pkg, dir)
+	} else {
+		cmd = gccCmd(pkg, dir)
+	}
+	if !strings.HasPrefix(cmd[0], "clang") {
+		libgcc, err := libgcc(pkg.Context)
 		if err != nil {
 			return nil
 		}
 		args = append(args, libgcc)
 	}
 	t0 := time.Now()
-	err := run(dir, nil, gcc(), args...)
-	ctx.Record("gcc3", time.Since(t0))
+	err := run(dir, nil, cmd[0], append(cmd[1:], args...)...)
+	pkg.Record("gcc3", time.Since(t0))
 	return err
 }
 
@@ -291,36 +299,14 @@ func libgcc(ctx *Context) (string, error) {
 		"-print-libgcc-file-name",
 	}
 	var buf bytes.Buffer
-	err := runOut(&buf, ".", nil, gcc(), args...)
+	cmd := gccCmd(&Package{Context: ctx}, "") // TODO(dfc) hack
+	err := runOut(&buf, ".", nil, cmd[0], args...)
 	return strings.TrimSpace(buf.String()), err
 }
 
 func cgotool(ctx *Context) string {
 	// TODO(dfc) need ctx.GOROOT method
 	return filepath.Join(ctx.Context.GOROOT, "pkg", "tool", ctx.gohostos+"_"+ctx.gohostarch, "cgo")
-}
-
-func gcc() string {
-	return gccBaseCmd()[0] // TODO(dfc) handle gcc wrappers properly
-}
-
-func isClang() bool {
-	return strings.HasPrefix(gcc(), "clang")
-}
-
-// gccBaseCmd returns the start of the compiler command line.
-// It uses $CC if set, or else $GCC, or else the default
-// compiler for the operating system is used.
-func gccBaseCmd() []string {
-	// Use $CC if set, since that's what the build uses.
-	if ret := strings.Fields(os.Getenv("CC")); len(ret) > 0 {
-		return ret
-	}
-	// Try $GCC if set, since that's what we used to use.
-	if ret := strings.Fields(os.Getenv("GCC")); len(ret) > 0 {
-		return ret
-	}
-	return strings.Fields(defaultCC)
 }
 
 // envList returns the value of the given environment variable broken
@@ -387,12 +373,12 @@ func quoteFlags(flags []string) []string {
 // runcgo1 invokes the cgo tool to process pkg.CgoFiles.
 func runcgo1(pkg *Package, cflags, ldflags []string) error {
 	cgo := cgotool(pkg.Context)
-	objdir := pkg.Objdir()
-	if err := mkdir(objdir); err != nil {
+	workdir := cgoworkdir(pkg)
+	if err := mkdir(workdir); err != nil {
 		return err
 	}
 
-	args := []string{"-objdir", objdir}
+	args := []string{"-objdir", workdir}
 	switch {
 	case gc14:
 		args = append(args,
@@ -403,11 +389,11 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 		args = append(args,
 			"-importpath", pkg.ImportPath,
 			"--",
-			"-I", objdir,
+			"-I", workdir,
 			"-I", pkg.Dir,
 		)
 	default:
-		return fmt.Errorf("unsuppored Go version: %v", runtime.Version)
+		return fmt.Errorf("unsupported Go version: %v", runtime.Version)
 	}
 	args = append(args, cflags...)
 	args = append(args, pkg.CgoFiles...)
@@ -422,10 +408,10 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 // runcgo2 invokes the cgo tool to create _cgo_import.go
 func runcgo2(pkg *Package, dynout, ofile string) error {
 	cgo := cgotool(pkg.Context)
-	objdir := pkg.Objdir()
+	workdir := cgoworkdir(pkg)
 
 	args := []string{
-		"-objdir", objdir,
+		"-objdir", workdir,
 	}
 	switch {
 	case gc14:
@@ -443,4 +429,77 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 		return fmt.Errorf("unsuppored Go version: %v", runtime.Version)
 	}
 	return run(pkg.Dir, nil, cgo, args...)
+}
+
+// cgoworkdir returns the cgo working directory for this package.
+func cgoworkdir(pkg *Package) string {
+	return filepath.Join(Workdir(pkg), pkgname(pkg), "_cgo")
+}
+
+// gccCmd returns a gcc command line prefix.
+func gccCmd(pkg *Package, objdir string) []string {
+	return ccompilerCmd(pkg, "CC", defaultCC, objdir)
+}
+
+// gxxCmd returns a g++ command line prefix.
+func gxxCmd(pkg *Package, objdir string) []string {
+	return ccompilerCmd(pkg, "CXX", defaultCXX, objdir)
+}
+
+// ccompilerCmd returns a command line prefix for the given environment
+// variable and using the default command when the variable is empty.
+func ccompilerCmd(pkg *Package, envvar, defcmd, objdir string) []string {
+	compiler := envList(envvar, defcmd)
+	a := []string{compiler[0]}
+	if objdir != "" {
+		a = append(a, "-I", objdir)
+	}
+	a = append(a, compiler[1:]...)
+
+	// Definitely want -fPIC but on Windows gcc complains
+	// "-fPIC ignored for target (all code is position independent)"
+	if pkg.gotargetos != "windows" {
+		a = append(a, "-fPIC")
+	}
+	a = append(a, gccArchArgs(pkg.gotargetarch)...)
+	// gcc-4.5 and beyond require explicit "-pthread" flag
+	// for multithreading with pthread library.
+	switch pkg.gotargetos {
+	case "windows":
+		a = append(a, "-mthreads")
+	default:
+		a = append(a, "-pthread")
+	}
+
+	if strings.Contains(a[0], "clang") {
+		// disable ASCII art in clang errors, if possible
+		a = append(a, "-fno-caret-diagnostics")
+		// clang is too smart about command-line arguments
+		a = append(a, "-Qunused-arguments")
+	}
+
+	// disable word wrapping in error messages
+	a = append(a, "-fmessage-length=0")
+
+	// On OS X, some of the compilers behave as if -fno-common
+	// is always set, and the Mach-O linker in 6l/8l assumes this.
+	// See https://golang.org/issue/3253.
+	if pkg.gotargetos == "darwin" {
+		a = append(a, "-fno-common")
+	}
+
+	return a
+}
+
+// gccArchArgs returns arguments to pass to gcc based on the architecture.
+func gccArchArgs(goarch string) []string {
+	switch goarch {
+	case "386":
+		return []string{"-m32"}
+	case "amd64", "amd64p32":
+		return []string{"-m64"}
+	case "arm":
+		return []string{"-marm"} // not thumb
+	}
+	return nil
 }

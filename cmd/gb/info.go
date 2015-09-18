@@ -25,6 +25,8 @@ info returns 0 if the project is well formed, and non zero otherwise.
 func info(ctx *gb.Context, args []string) error {
 	fmt.Printf("GB_PROJECT_DIR=%q\n", ctx.Projectdir())
 	fmt.Printf("GB_SRC_PATH=%q\n", joinlist(ctx.Srcdirs()...))
+	fmt.Printf("GB_PKG_DIR=%q\n", ctx.Pkgdir())
+	fmt.Printf("GB_BIN_SUFFIX=%q\n", ctx.Suffix())
 	return nil
 }
 

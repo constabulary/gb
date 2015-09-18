@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/constabulary/gb"
+	"github.com/constabulary/gb/log"
 )
 
 // Test returns a Target representing the result of compiling the
@@ -45,7 +46,7 @@ func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
 	test := gb.Action{
 		Name: fmt.Sprintf("test: %s", strings.Join(names(pkgs), ",")),
 		Task: gb.TaskFn(func() error {
-			gb.Debugf("test duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
+			log.Debugf("test duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		}),
 	}
@@ -167,7 +168,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	gb.Debugf("scheduling run of %v", cmd.Args)
+	log.Debugf("scheduling run of %v", cmd.Args)
 	return &gb.Action{
 		Name: fmt.Sprintf("run: %s", cmd.Args),
 		Deps: []*gb.Action{testmain},
@@ -181,7 +182,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if pkg.Scope != "test" {
 		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name)
 	}
-	dir := pkg.Objdir()
+	dir := gb.Workdir(pkg)
 	if err := mkdir(dir); err != nil {
 		return nil, fmt.Errorf("buildTestmain: %v", err)
 	}

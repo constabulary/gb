@@ -28,9 +28,15 @@ func NewPackage(ctx *Context, p *build.Package) *Package {
 	return &pkg
 }
 
-// isMain returns true if this is a command, a main package.
+// isMain returns true if this is a command, not being built in test scope, and
+// not the testmain itself.
 func (p *Package) isMain() bool {
-	return p.Name == "main" || strings.HasSuffix(p.ImportPath, "testmain") && p.Scope == "test"
+	switch p.Scope {
+	case "test":
+		return strings.HasSuffix(p.ImportPath, "testmain")
+	default:
+		return p.Name == "main"
+	}
 }
 
 // Imports returns the Pacakges that this Package depends on.
@@ -72,17 +78,6 @@ func (p *Package) Complete() bool {
 		}
 	}
 	return extFiles == 0
-}
-
-// Objdir returns the destination for object files compiled for this Package.
-func (pkg *Package) Objdir() string {
-	switch pkg.Scope {
-	case "test":
-		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
-		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
-	default:
-		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
-	}
 }
 
 // Binfile returns the destination of the compiled target of this command.
