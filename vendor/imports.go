@@ -49,23 +49,25 @@ func ParseImports(root string) (map[string]bool, error) {
 }
 
 // FetchMetadata fetchs the remote metadata for path.
-func FetchMetadata(path string, insecure bool) (io.ReadCloser, error) {
+func FetchMetadata(path string, insecure bool) (rc io.ReadCloser, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("unable to determine remote metadata protocol: %s", err)
+		}
+	}()
 	// try https first
-	r, err := fetchMetadata("https", path)
+	rc, err = fetchMetadata("https", path)
 	if err == nil {
-		return r, nil
+		return
 	}
 	// try http if supported
 	if insecure {
-		r, err := fetchMetadata("http", path)
-		if err != nil {
-			return nil, err
-		}
-		return r, nil
+		rc, err = fetchMetadata("http", path)
+		return
 	} else {
 		log.Infof("skipping insecure protocol: %v", "http")
 	}
-	return nil, fmt.Errorf("unable to determine remote metadata protocol")
+	return
 }
 
 func fetchMetadata(scheme, path string) (io.ReadCloser, error) {
