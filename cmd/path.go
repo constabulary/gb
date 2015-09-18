@@ -16,7 +16,7 @@ func FindProjectroot(path string) (string, error) {
 		return "", fmt.Errorf("project root is blank")
 	}
 	start := path
-	for path != "/" {
+	for path != filepath.Dir(path) {
 		root := filepath.Join(path, "src")
 		if _, err := os.Stat(root); err != nil {
 			if os.IsNotExist(err) {
