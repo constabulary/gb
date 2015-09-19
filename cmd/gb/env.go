@@ -15,8 +15,8 @@ var EnvCmd = &cmd.Command{
 	Name:      "env",
 	UsageLine: `env`,
 	Short:     "print project environment variables",
-	Long: `Env prints project environment variables.
-
+	Long: `
+Env prints project environment variables.
 `,
 	Run: env,
 }

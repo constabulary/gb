@@ -27,9 +27,10 @@ func init() {
 		Name:      "list",
 		UsageLine: `list [-s] [-f format] [-json] [packages]`,
 		Short:     "list the packages named by the importpaths",
-		Long: `list lists packages.
+		Long: `
+List lists packages imported by the project.
 
-The default output shows the package import path:
+The default output shows the package import paths:
 
 	% gb list github.com/constabulary/...
 	github.com/constabulary/gb
@@ -43,8 +44,13 @@ Flags:
 		alternate format for the list, using the syntax of package template.
 		The default output is equivalent to -f '{{.ImportPath}}'. The struct
 		being passed to the template is currently an instance of gb.Package.
-		This structure is under active development and it'As contents are not
-		guarenteed to be stable.
+		This structure is under active development and it's contents are not
+		guaranteed to be stable.
+	-s
+		read format template from STDIN.
+	-json
+		prints output in structured JSON format. WARNING: gb.Package
+		structure is not stable and will change in the future!
 `,
 		Run: list,
 		AddFlags: func(fs *flag.FlagSet) {

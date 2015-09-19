@@ -33,13 +33,12 @@ var TestCmd = &cmd.Command{
 	UsageLine: "test [build flags] [packages] [flags for test binary]",
 	Short:     "test packages",
 	Long: `
-'gb test' automates testing the packages named by the import paths.
+Test automates testing the packages named by the import paths.
 
 'gb test' recompiles each package along with any files with names matching
 the file pattern "*_test.go".
 
-See 'go help test'
-
+See 'go help test'.
 `,
 	Run: func(ctx *gb.Context, args []string) error {
 		ctx.Force = F

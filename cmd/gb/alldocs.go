@@ -16,13 +16,13 @@ The commands are:
         generate    generate Go files by processing source
         info        info returns information about this project
         list        list the packages named by the importpaths
-        plugin      run a plugin
         test        test packages
 
 Use "gb help [command]" for more information about a command.
 
 Additional help topics:
 
+        plugin      plugin information
         project     gb project layout
 
 Use "gb help [topic]" for more information about that topic.
@@ -135,15 +135,19 @@ Flags:
 		guarenteed to be stable.
 
 
-Run a plugin
+Plugin information
 
-Usage:
+gb supports git style plugins.
 
-        gb plugin command
+A gb plugin is anything in the $PATH with the prefix gb-. In other words
+gb-something, becomes gb something.
 
-gb supports git style plugins
+gb plugins are executed from the parent gb process with the environment
+variable, GB_PROJECT_DIR set to the root of the current project.
 
-See gb help plugins.
+gb plugins can be executed directly but this is rarely useful, so authors
+should attempt to diagnose this by looking for the presence of the 
+GB_PROJECT_DIR environment key.
 
 
 Gb project layout

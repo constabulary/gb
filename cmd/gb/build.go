@@ -41,7 +41,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	// TODO(dfc) this should accept a *gb.Context
 	fs.BoolVar(&A, "a", false, "build all packages in this project")
 	fs.BoolVar(&R, "r", false, "perform a release build")
-	fs.BoolVar(&F, "f", false, "rebuild up to date packages")
+	fs.BoolVar(&F, "f", false, "rebuild up-to-date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
 	fs.IntVar(&P, "P", runtime.NumCPU(), "number of parallel jobs")
 	fs.Var((*stringsFlag)(&ldflags), "ldflags", "flags passed to the linker")
@@ -53,16 +53,20 @@ var BuildCmd = &cmd.Command{
 	Name:      "build",
 	Short:     "build a package",
 	UsageLine: "build [build flags] [packages]",
-	Long: `Build compiles the packages named by the import paths, along with their dependencies.
+	Long: `
+Build compiles the packages named by the import paths, along with their
+dependencies.
 
-The build flags are
+Flags:
 
 	-f
-		ignore cached packages if present, new packages built will overwrite any cached packages.
-		This effectively disables incremental compilation.
+		ignore cached packages if present, new packages built will overwrite
+		any cached packages. This effectively disables incremental
+		compilation.
 	-F
-		do not cache packages, cached packages will still be used for incremental compilation.
-		-f -F is advised to disable the package caching system.
+		do not cache packages, cached packages will still be used for
+		incremental compilation. -f -F is advised to disable the package
+		caching system.
 	-q
 		decreases verbosity, effectively raising the output level to ERROR.
 		In a successful build, no output will be displayed.
@@ -70,20 +74,26 @@ The build flags are
 		The number of build jobs to run in parallel, including test execution.
 		By default this is the number of CPUs visible to gb.
 	-R
-		sets the base of the project root search path from the current working directory to the value supplied.
-		Effectively gb changes working directory to this path before searching for the project root.
+		sets the base of the project root search path from the current working
+		directory to the value supplied. Effectively gb changes working
+		directory to this path before searching for the project root.
 	-v
-		increases verbosity, effectively lowering the output level from INFO to DEBUG.
+		increases verbosity, effectively lowering the output level from INFO
+		to DEBUG.
 	-dotfile
-		if provided, gb will output a dot formatted file of the build steps to be performed.
+		if provided, gb will output a dot formatted file of the build steps to
+		be performed.
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'
 		arguments to pass on each go tool compile invocation.
 
-The list flags accept a space-separated list of strings. To embed spaces in an element in the list, surround it with either single or double quotes.
+The list flags accept a space-separated list of strings. To embed spaces in an
+element in the list, surround it with either single or double quotes.
 
-For more about specifying packages, see 'gb help packages'. For more about where packages and binaries are installed, run 'gb help project'.`,
+For more about specifying packages, see 'gb help packages'. For more about
+where packages and binaries are installed, run 'gb help project'.
+`,
 	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
 		ctx.Force = F
