@@ -114,8 +114,8 @@ func main() {
 	ctx, err := cmd.NewContext(
 		cwd, // project root
 		gb.GcToolchain(),
-		gb.Gcflags(gcflags),
-		gb.Ldflags(ldflags),
+		gb.Gcflags(gcflags...),
+		gb.Ldflags(ldflags...),
 	)
 	if err != nil {
 		log.Fatalf("unable to construct context: %v", err)

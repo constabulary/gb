@@ -30,7 +30,7 @@ var (
 	// skip caching of packages
 	FF bool
 
-	ldflags, gcflags string
+	ldflags, gcflags []string
 
 	P int // number of executors to run in parallel
 
@@ -44,8 +44,8 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&F, "f", false, "rebuild up to date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
 	fs.IntVar(&P, "P", runtime.NumCPU(), "number of parallel jobs")
-	fs.StringVar(&ldflags, "ldflags", "", "flags passed to the linker")
-	fs.StringVar(&gcflags, "gcflags", "", "flags passed to the compiler")
+	fs.Var((*stringsFlag)(&ldflags), "ldflags", "flags passed to the linker")
+	fs.Var((*stringsFlag)(&gcflags), "gcflags", "flags passed to the compiler")
 	fs.StringVar(&dotfile, "dotfile", "", "path to dot output file")
 }
 

@@ -18,7 +18,7 @@ func TestTest(t *testing.T) {
 	tests := []struct {
 		pkg      string
 		testArgs []string
-		ldflags  string
+		ldflags  []string
 		err      error
 	}{
 		{
@@ -59,7 +59,7 @@ func TestTest(t *testing.T) {
 			err: nil,
 		}, {
 			pkg:     "ldflags",
-			ldflags: "-X ldflags.gitTagInfo banana -X ldflags.gitRevision f7926af2",
+			ldflags: []string{"-X", "ldflags.gitTagInfo", "banana", "-X", "ldflags.gitRevision", "f7926af2"},
 		}, {
 			pkg: "cgotest",
 		}, {
@@ -70,7 +70,7 @@ func TestTest(t *testing.T) {
 		}}
 
 	for _, tt := range tests {
-		ctx := testContext(t, gb.Ldflags(tt.ldflags))
+		ctx := testContext(t, gb.Ldflags(tt.ldflags...))
 		defer ctx.Destroy()
 		// TODO(dfc) can we resolve the duplication here ?
 		pkg, err := ctx.ResolvePackageWithTests(tt.pkg)

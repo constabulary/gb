@@ -53,6 +53,10 @@ func splitQuotedFields(s string) ([]string, error) {
 	return f, nil
 }
 
+func (v *stringsFlag) String() string {
+	return "<stringsFlag>"
+}
+
 func isSpaceByte(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
 }
