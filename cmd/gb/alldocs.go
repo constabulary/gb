@@ -60,7 +60,9 @@ The build flags are
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'
-		arguments to pass on each go tool compile invocation.
+		arguments to pass on each compile invocation.
+	-tags 'tag list'
+		additional build tags.
 
 The list flags accept a space-separated list of strings. To embed spaces in an element in the list, surround it with either single or double quotes.
 
