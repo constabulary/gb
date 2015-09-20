@@ -120,20 +120,18 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 }
 
 // Gcflags sets options passed to the compiler.
-func Gcflags(flags string) func(*Context) error {
+func Gcflags(flags ...string) func(*Context) error {
 	return func(c *Context) error {
-		var err error
-		c.gcflags, err = splitQuotedFields(flags)
-		return err
+		c.gcflags = flags
+		return nil
 	}
 }
 
 // Ldflags sets options passed to the linker.
-func Ldflags(flags string) func(*Context) error {
+func Ldflags(flags ...string) func(*Context) error {
 	return func(c *Context) error {
-		var err error
-		c.ldflags, err = splitQuotedFields(flags)
-		return err
+		c.ldflags = flags
+		return nil
 	}
 }
 
