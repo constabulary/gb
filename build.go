@@ -20,9 +20,9 @@ func Build(pkgs ...*Package) error {
 	return ExecuteConcurrent(build, runtime.NumCPU())
 }
 
-// BuildAction produces a tree of *Actions that can be executed to build
+// BuildPackages produces a tree of *Actions that can be executed to build
 // a *Package.
-// BuildAction walks the tree of *Packages and returns a corresponding
+// BuildPackages walks the tree of *Packages and returns a corresponding
 // tree of *Actions representing the steps required to build *Package
 // and any of its dependencies
 func BuildPackages(pkgs ...*Package) (*Action, error) {
