@@ -3,7 +3,6 @@ package gb
 import (
 	"fmt"
 	"go/build"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -13,9 +12,6 @@ import (
 
 type gcToolchain struct {
 	gc, cc, ld, as, pack string
-
-	run    func(string, []string, string, ...string) error
-	runOut func(io.Writer, string, []string, string, ...string) error
 }
 
 func GcToolchain() func(c *Context) error {
@@ -40,22 +36,18 @@ func GcToolchain() func(c *Context) error {
 				return err
 			}
 			c.tc = &gcToolchain{
-				gc:     filepath.Join(tooldir, archchar+"g"+exe),
-				ld:     filepath.Join(tooldir, archchar+"l"+exe),
-				as:     filepath.Join(tooldir, archchar+"a"+exe),
-				cc:     filepath.Join(tooldir, archchar+"c"+exe),
-				pack:   filepath.Join(tooldir, "pack"+exe),
-				run:    run,
-				runOut: runOut,
+				gc:   filepath.Join(tooldir, archchar+"g"+exe),
+				ld:   filepath.Join(tooldir, archchar+"l"+exe),
+				as:   filepath.Join(tooldir, archchar+"a"+exe),
+				cc:   filepath.Join(tooldir, archchar+"c"+exe),
+				pack: filepath.Join(tooldir, "pack"+exe),
 			}
 		case gc15:
 			c.tc = &gcToolchain{
-				gc:     filepath.Join(tooldir, "compile"+exe),
-				ld:     filepath.Join(tooldir, "link"+exe),
-				as:     filepath.Join(tooldir, "asm"+exe),
-				pack:   filepath.Join(tooldir, "pack"+exe),
-				run:    run,
-				runOut: runOut,
+				gc:   filepath.Join(tooldir, "compile"+exe),
+				ld:   filepath.Join(tooldir, "link"+exe),
+				as:   filepath.Join(tooldir, "asm"+exe),
+				pack: filepath.Join(tooldir, "pack"+exe),
 			}
 		default:
 			return fmt.Errorf("unsupported Go version: %v", runtime.Version)
@@ -81,7 +73,7 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
-	return t.run(srcdir, nil, t.as, args...)
+	return run(srcdir, nil, t.as, args...)
 }
 
 func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
@@ -96,7 +88,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:ld: %v", err)
 	}
-	return t.run(".", nil, t.ld, args...)
+	return run(".", nil, t.ld, args...)
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
@@ -113,14 +105,14 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 		"-D", "GOARCH_" + pkg.gotargetarch,
 		cfile,
 	}
-	return t.run(pkg.Dir, nil, t.cc, args...)
+	return run(pkg.Dir, nil, t.cc, args...)
 }
 
 func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 	args := []string{"r"}
 	args = append(args, afiles...)
 	dir := filepath.Dir(afiles[0])
-	return t.run(dir, nil, t.pack, args...)
+	return run(dir, nil, t.pack, args...)
 }
 
 func (t *gcToolchain) compiler() string { return t.gc }
@@ -145,44 +137,9 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 		args = append(args, "-asmhdr", asmhdr)
 	}
 
-	relativeFiles, err := relativizePaths(srcdir, files)
-	if err != nil {
-		return err
-	}
-
-	args = append(args, relativeFiles...)
+	args = append(args, files...)
 	if err := mkdir(filepath.Join(filepath.Dir(outfile), pkg.Name)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
 	}
-	return t.runOut(os.Stdout, ".", nil, t.gc, args...)
-}
-
-// relativizePaths takes a base path and set of paths relative to that base path
-// and returns an equivalent slice of paths that are relative to the current
-// working directory
-//
-// e.g.
-// basePath = /x/y
-// paths = q.go z.go
-// cwd = /x
-// returns: [y/q.go, y/z.go]
-func relativizePaths(basePath string, paths []string) ([]string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	relativePaths := make([]string, len(paths))
-	for i, p := range paths {
-		// don't muck with absolute paths
-		if filepath.IsAbs(p) {
-			relativePaths[i] = p
-			continue
-		}
-
-		relativePaths[i], err = filepath.Rel(cwd, filepath.Join(basePath, p))
-		if err != nil {
-			return nil, err
-		}
-	}
-	return relativePaths, nil
+	return runOut(os.Stdout, srcdir, nil, t.gc, args...)
 }
