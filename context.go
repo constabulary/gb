@@ -155,6 +155,9 @@ func (c *Context) Suffix() string {
 	if suffix != "" {
 		suffix = "-" + suffix
 	}
+	if c.gotargetos == "windows" {
+		suffix += ".exe"
+	}
 	return suffix
 }
 

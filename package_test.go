@@ -51,10 +51,7 @@ func TestPackageBinfile(t *testing.T) {
 			t.Fatal(err)
 		}
 		got := pkg.Binfile()
-		want := filepath.Join(ctx.Bindir(), tt.want)
-		if pkg.gotargetos == "windows" {
-			want += ".exe"
-		}
+		want := filepath.Join(ctx.Bindir(), tt.want+ctx.Suffix())
 		if want != got {
 			t.Errorf("(%s).Binfile(): want %s, got %s", tt.pkg, want, got)
 		}

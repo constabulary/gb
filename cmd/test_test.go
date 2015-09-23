@@ -143,10 +143,10 @@ func TestTestPackages(t *testing.T) {
 		err     error
 	}{{
 		pkgs:    []string{"a", "b", "c"},
-		actions: []string{"run: [$WORKDIR/a/testmain/_test/a$EXE.test]", "run: [$WORKDIR/b/testmain/_test/b$EXE.test]", "run: [$WORKDIR/c/testmain/_test/c$EXE.test]"},
+		actions: []string{"run: [$WORKDIR/a/testmain/_test/a$SUFFIX.test]", "run: [$WORKDIR/b/testmain/_test/b$SUFFIX.test]", "run: [$WORKDIR/c/testmain/_test/c$SUFFIX.test]"},
 	}, {
 		pkgs:    []string{"cgotest", "cgomain", "notestfiles", "cgoonlynotest", "testonly", "extestonly"},
-		actions: []string{"run: [$WORKDIR/cgomain/testmain/_test/cgomain$EXE.test]", "run: [$WORKDIR/cgoonlynotest/testmain/_test/cgoonly$EXE.test]", "run: [$WORKDIR/cgotest/testmain/_test/cgotest$EXE.test]", "run: [$WORKDIR/extestonly/testmain/_test/extestonly$EXE.test]", "run: [$WORKDIR/notestfiles/testmain/_test/notest$EXE.test]", "run: [$WORKDIR/testonly/testmain/_test/testonly$EXE.test]"},
+		actions: []string{"run: [$WORKDIR/cgomain/testmain/_test/cgomain$SUFFIX.test]", "run: [$WORKDIR/cgoonlynotest/testmain/_test/cgoonly$SUFFIX.test]", "run: [$WORKDIR/cgotest/testmain/_test/cgotest$SUFFIX.test]", "run: [$WORKDIR/extestonly/testmain/_test/extestonly$SUFFIX.test]", "run: [$WORKDIR/notestfiles/testmain/_test/notest$SUFFIX.test]", "run: [$WORKDIR/testonly/testmain/_test/testonly$SUFFIX.test]"},
 	}}
 
 	for _, tt := range tests {
@@ -171,14 +171,10 @@ func TestTestPackages(t *testing.T) {
 		}
 		sort.Strings(actual)
 		var expected []string
-		exe := ""
-		if ctx.Context.GOOS == "windows" {
-			exe = ".exe"
-		}
 		for _, s := range tt.actions {
 			s = filepath.FromSlash(s)
 			s = strings.Replace(s, "$WORKDIR", ctx.Workdir(), -1)
-			s = strings.Replace(s, "$EXE", exe, -1)
+			s = strings.Replace(s, "$SUFFIX", ctx.Suffix(), -1)
 			expected = append(expected, s)
 		}
 		if !reflect.DeepEqual(expected, actual) {
