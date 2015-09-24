@@ -34,16 +34,19 @@ Usage:
 
         gb build [build flags] [packages]
 
-Build compiles the packages named by the import paths, along with their dependencies.
+Build compiles the packages named by the import paths, along with their
+dependencies.
 
-The build flags are
+Flags:
 
 	-f
-		ignore cached packages if present, new packages built will overwrite any cached packages.
-		This effectively disables incremental compilation.
+		ignore cached packages if present, new packages built will overwrite
+		any cached packages. This effectively disables incremental
+		compilation.
 	-F
-		do not cache packages, cached packages will still be used for incremental compilation.
-		-f -F is advised to disable the package caching system.
+		do not cache packages, cached packages will still be used for
+		incremental compilation. -f -F is advised to disable the package
+		caching system.
 	-q
 		decreases verbosity, effectively raising the output level to ERROR.
 		In a successful build, no output will be displayed.
@@ -51,12 +54,15 @@ The build flags are
 		The number of build jobs to run in parallel, including test execution.
 		By default this is the number of CPUs visible to gb.
 	-R
-		sets the base of the project root search path from the current working directory to the value supplied.
-		Effectively gb changes working directory to this path before searching for the project root.
+		sets the base of the project root search path from the current working
+		directory to the value supplied. Effectively gb changes working
+		directory to this path before searching for the project root.
 	-v
-		increases verbosity, effectively lowering the output level from INFO to DEBUG.
+		increases verbosity, effectively lowering the output level from INFO
+		to DEBUG.
 	-dotfile
-		if provided, gb will output a dot formatted file of the build steps to be performed.
+		if provided, gb will output a dot formatted file of the build steps to
+		be performed.
 	-ldflags 'flag list'
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'
@@ -64,9 +70,11 @@ The build flags are
 	-tags 'tag list'
 		additional build tags.
 
-The list flags accept a space-separated list of strings. To embed spaces in an element in the list, surround it with either single or double quotes.
+The list flags accept a space-separated list of strings. To embed spaces in an
+element in the list, surround it with either single or double quotes.
 
-For more about specifying packages, see 'gb help packages'. For more about where packages and binaries are installed, run 'gb help project'.
+For more about specifying packages, see 'gb help packages'. For more about
+where packages and binaries are installed, run 'gb help project'.
 
 
 Show documentation for a package or symbol
@@ -75,7 +83,9 @@ Usage:
 
         gb doc <pkg> <sym>[.<method>]
 
+Doc shows documentation for a package or symbol.
 
+See 'go help doc'.
 
 
 Print project environment variables
@@ -91,13 +101,14 @@ Generate Go files by processing source
 
 Usage:
 
-        gb generate
+        gb generate [-run regexp] [file.go... | packages]
 
 Generate runs commands described by directives within existing files.
-Those commands can run any process but the intent is to create or update Go
+
+Those commands can run any process, but the intent is to create or update Go
 source files, for instance by running yacc.
 
-See 'go help generate'
+See 'go help generate'.
 
 
 Info returns information about this project
@@ -117,9 +128,9 @@ Usage:
 
         gb list [-s] [-f format] [-json] [packages]
 
-list lists packages.
+List lists packages imported by the project.
 
-The default output shows the package import path:
+The default output shows the package import paths:
 
 	% gb list github.com/constabulary/...
 	github.com/constabulary/gb
@@ -133,8 +144,13 @@ Flags:
 		alternate format for the list, using the syntax of package template.
 		The default output is equivalent to -f '{{.ImportPath}}'. The struct
 		being passed to the template is currently an instance of gb.Package.
-		This structure is under active development and it'As contents are not
-		guarenteed to be stable.
+		This structure is under active development and it's contents are not
+		guaranteed to be stable.
+	-s
+		read format template from STDIN.
+	-json
+		prints output in structured JSON format. WARNING: gb.Package
+		structure is not stable and will change in the future!
 
 
 Plugin information
@@ -168,12 +184,12 @@ Usage:
 
         gb test [build flags] [packages] [flags for test binary]
 
-'gb test' automates testing the packages named by the import paths.
+Test automates testing the packages named by the import paths.
 
 'gb test' recompiles each package along with any files with names matching
 the file pattern "*_test.go".
 
-See 'go help test'
+See 'go help test'.
 
 
 */
