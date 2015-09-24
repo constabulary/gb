@@ -35,11 +35,19 @@ func TestLongCycleDetection(t *testing.T) {
 }
 
 func TestContextCtxString(t *testing.T) {
+	opts := func(o ...func(*Context) error) []func(*Context) error { return o }
+	join := func(s ...string) string { return strings.Join(s, "-") }
 	tests := []struct {
 		opts []func(*Context) error
 		want string
 	}{
-		{nil, runtime.GOOS + "-" + runtime.GOARCH},
+		{nil, join(runtime.GOOS, runtime.GOARCH)},
+		{opts(GOOS("windows")), join("windows", runtime.GOARCH)},
+		{opts(GOARCH("arm64")), join(runtime.GOOS, "arm64")},
+		{opts(GOARCH("arm64"), GOOS("plan9")), join("plan9", "arm64")},
+		{opts(Tags()), join(runtime.GOOS, runtime.GOARCH)},
+		{opts(Tags("sphinx", "leon")), join(runtime.GOOS, runtime.GOARCH, "leon", "sphinx")},
+		{opts(Tags("sphinx", "leon"), GOARCH("ppc64le")), join(runtime.GOOS, "ppc64le", "leon", "sphinx")},
 	}
 
 	proj := testProject(t)

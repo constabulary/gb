@@ -18,7 +18,8 @@ func init() {
 
 info returns 0 if the project is well formed, and non zero otherwise.
 `,
-		Run: info,
+		Run:      info,
+		AddFlags: addBuildFlags,
 	})
 }
 

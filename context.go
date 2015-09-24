@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -39,6 +40,8 @@ type Context struct {
 	ldflags []string // flags passed to the linker
 
 	linkmode, buildmode string // link and build modes
+
+	buildtags []string // build tags
 }
 
 // GOOS configures the Context to use goos as the target os.
@@ -59,6 +62,15 @@ func GOARCH(goarch string) func(*Context) error {
 			return fmt.Errorf("goarch cannot be blank")
 		}
 		c.gotargetarch = goarch
+		return nil
+	}
+}
+
+// Tags configured the context to use these additional build tags
+func Tags(tags ...string) func(*Context) error {
+	return func(c *Context) error {
+		c.buildtags = make([]string, len(tags))
+		copy(c.buildtags, tags)
 		return nil
 	}
 }
@@ -103,6 +115,9 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		}
 	}
 
+	// sort build tags to ensure the ctxSring and Suffix is stable
+	sort.Strings(ctx.buildtags)
+
 	// backfill enbedded go/build.Context
 	ctx.Context = &build.Context{
 		GOOS:     ctx.gotargetos,
@@ -113,6 +128,7 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 
 		// Make sure we use the same set of release tags as go/build
 		ReleaseTags: build.Default.ReleaseTags,
+		BuildTags:   ctx.buildtags,
 
 		CgoEnabled: build.Default.CgoEnabled,
 	}
@@ -199,6 +215,7 @@ func (c *Context) ctxString() string {
 		c.gotargetos,
 		c.gotargetarch,
 	}
+	v = append(v, c.buildtags...)
 	return strings.Join(v, "-")
 }
 
