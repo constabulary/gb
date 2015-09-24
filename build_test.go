@@ -17,8 +17,11 @@ import (
 func TestBuild(t *testing.T) {
 	log.Verbose = false
 	defer func() { log.Verbose = false }()
+
+	opts := func(o ...func(*Context) error) []func(*Context) error { return o }
 	tests := []struct {
 		pkg string
+		opts []func(*Context) error
 		err error
 	}{{
 		pkg: "a",
@@ -58,10 +61,21 @@ func TestBuild(t *testing.T) {
 		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "blank")),
 	}, {
 		pkg: "cppmain",
+	}, {
+		pkg: "tags1",
+		opts: opts(Tags("x")), // excludes the test file in package
+		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "tags1")),
+	}, {
+		pkg: "tags2",
+		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "tags2")),
+	}, {
+		pkg: "tags2",
+		opts: opts(Tags("x")),
 	}}
 
-	for _, tt := range tests {
-		ctx := testContext(t)
+        proj := testProject(t)
+        for _, tt := range tests {
+                ctx, err := proj.NewContext(tt.opts...)
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if !sameErr(err, tt.err) {

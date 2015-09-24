@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -113,6 +114,9 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 			return nil, err
 		}
 	}
+
+	// sort build tags to ensure the ctxSring and Suffix is stable
+	sort.Strings(ctx.buildtags)
 
 	// backfill enbedded go/build.Context
 	ctx.Context = &build.Context{
