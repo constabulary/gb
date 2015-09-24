@@ -142,11 +142,22 @@ func TestTestPackages(t *testing.T) {
 		actions []string
 		err     error
 	}{{
-		pkgs:    []string{"a", "b", "c"},
-		actions: []string{"run: [$WORKDIR/a/testmain/_test/a$EXE.test]", "run: [$WORKDIR/b/testmain/_test/b$EXE.test]", "run: [$WORKDIR/c/testmain/_test/c$EXE.test]"},
+		pkgs: []string{"a", "b", "c"},
+		actions: []string{
+			"run: [$WORKDIR/a/testmain/_test/a.test$EXE]",
+			"run: [$WORKDIR/b/testmain/_test/b.test$EXE]",
+			"run: [$WORKDIR/c/testmain/_test/c.test$EXE]",
+		},
 	}, {
-		pkgs:    []string{"cgotest", "cgomain", "notestfiles", "cgoonlynotest", "testonly", "extestonly"},
-		actions: []string{"run: [$WORKDIR/cgomain/testmain/_test/cgomain$EXE.test]", "run: [$WORKDIR/cgoonlynotest/testmain/_test/cgoonly$EXE.test]", "run: [$WORKDIR/cgotest/testmain/_test/cgotest$EXE.test]", "run: [$WORKDIR/extestonly/testmain/_test/extestonly$EXE.test]", "run: [$WORKDIR/notestfiles/testmain/_test/notest$EXE.test]", "run: [$WORKDIR/testonly/testmain/_test/testonly$EXE.test]"},
+		pkgs: []string{"cgotest", "cgomain", "notestfiles", "cgoonlynotest", "testonly", "extestonly"},
+		actions: []string{
+			"run: [$WORKDIR/cgomain/testmain/_test/cgomain.test$EXE]",
+			"run: [$WORKDIR/cgoonlynotest/testmain/_test/cgoonly.test$EXE]",
+			"run: [$WORKDIR/cgotest/testmain/_test/cgotest.test$EXE]",
+			"run: [$WORKDIR/extestonly/testmain/_test/extestonly.test$EXE]",
+			"run: [$WORKDIR/notestfiles/testmain/_test/notest.test$EXE]",
+			"run: [$WORKDIR/testonly/testmain/_test/testonly.test$EXE]",
+		},
 	}}
 
 	for _, tt := range tests {
