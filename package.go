@@ -91,14 +91,8 @@ func (pkg *Package) Binfile() string {
 		target = filepath.Join(pkg.Bindir(), binname(pkg))
 	}
 
-	// if this is a cross compile, add ctxString
-	if pkg.isCrossCompile() {
-		target += "-" + pkg.ctxString()
-	}
+	target += pkg.Context.Suffix()
 
-	if pkg.gotargetos == "windows" {
-		target += ".exe"
-	}
 	return target
 }
 
