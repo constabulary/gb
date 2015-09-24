@@ -99,14 +99,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 		return fmt.Errorf("%s is already vendored", path)
 	}
 
-	var wc vendor.WorkingCopy
-
-	// if we are not recursing, then always fetch the HEAD of the master
-	if recurse {
-		wc, err = repo.Checkout(branch, tag, revision)
-	} else {
-		wc, err = repo.Checkout("", "", "")
-	}
+	wc, err := repo.Checkout(branch, tag, revision)
 
 	if err != nil {
 		return err
@@ -152,6 +145,12 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 	if !recurse {
 		return nil
 	}
+
+	// if we are recursing, overwrite branch, tag and revision
+	// values so recursive fetching checks out from HEAD.
+	branch = ""
+	tag = ""
+	revision = ""
 
 	for done := false; !done; {
 
