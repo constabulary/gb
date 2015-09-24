@@ -273,7 +273,6 @@ func link(pkg *Package) error {
 	if pkg.Scope == "test" && pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
-		target += ".test"
 	}
 	err := pkg.tc.Ld(pkg, includes, target, objfile(pkg))
 	pkg.Record("link", time.Since(t0))
@@ -318,7 +317,7 @@ func pkgname(pkg *Package) string {
 func binname(pkg *Package) string {
 	switch {
 	case pkg.Scope == "test":
-		return pkg.Name
+		return pkg.Name+".test"
 	case pkg.Name == "main":
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 	default:

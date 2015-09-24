@@ -163,7 +163,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		return nil, err
 	}
 
-	cmd := exec.Command(testmainpkg.Binfile()+".test", flags...)
+	cmd := exec.Command(testmainpkg.Binfile(), flags...)
 	cmd.Dir = pkg.Dir // tests run in the original source directory
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
