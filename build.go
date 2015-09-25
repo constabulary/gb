@@ -317,7 +317,7 @@ func pkgname(pkg *Package) string {
 func binname(pkg *Package) string {
 	switch {
 	case pkg.Scope == "test":
-		return pkg.Name+".test"
+		return pkg.Name + ".test"
 	case pkg.Name == "main":
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 	default:
