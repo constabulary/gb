@@ -1,8 +1,10 @@
 package gb
 
 import (
+	"fmt"
 	"go/build"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -35,16 +37,47 @@ func TestResolvePackage(t *testing.T) {
 }
 
 func TestPackageBinfile(t *testing.T) {
-	var tests = []struct {
-		goos, goarch string // simulated GOOS and GOARCH values, "" == unset in environment
-		pkg          string // package name
-		want         string // binfile result
-	}{
-		{pkg: "b", want: "b"},
+	opts := func(o ...func(*Context) error) []func(*Context) error { return o }
+	gotargetos := "windows"
+	if runtime.GOOS == "windows" {
+		gotargetos = "linux"
 	}
+	gotargetarch := "386"
+	if runtime.GOARCH == "386" {
+		gotargetarch = "amd64"
+	}
+	var tests = []struct {
+		pkg  string // package name
+		opts []func(*Context) error
+		want string // binfile result
+	}{{
+		pkg:  "b",
+		want: "b",
+	}, {
+		pkg:  "b",
+		opts: opts(GOOS(gotargetos)),
+		want: fmt.Sprintf("b-%v-%v", gotargetos, runtime.GOARCH),
+	}, {
+		pkg:  "b",
+		opts: opts(GOARCH(gotargetarch)),
+		want: fmt.Sprintf("b-%v-%v", runtime.GOOS, gotargetarch),
+	}, {
+		pkg:  "b",
+		opts: opts(GOARCH(gotargetarch), GOOS(gotargetos)),
+		want: fmt.Sprintf("b-%v-%v", gotargetos, gotargetarch),
+	}, {
+		pkg:  "b",
+		opts: opts(Tags("lol")),
+		want: "b-lol",
+	}, {
+		pkg:  "b",
+		opts: opts(GOARCH(gotargetarch), GOOS(gotargetos), Tags("lol")),
+		want: fmt.Sprintf("b-%v-%v-lol", gotargetos, gotargetarch),
+	}}
 
-	for _, tt := range tests {
-		ctx := testContext(t)
+	proj := testProject(t)
+	for i, tt := range tests {
+		ctx, err := proj.NewContext(tt.opts...)
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != nil {
@@ -56,7 +89,7 @@ func TestPackageBinfile(t *testing.T) {
 			want += ".exe"
 		}
 		if want != got {
-			t.Errorf("(%s).Binfile(): want %s, got %s", tt.pkg, want, got)
+			t.Errorf("test %v: (%s).Binfile(): want %s, got %s", i+1, tt.pkg, want, got)
 		}
 	}
 }

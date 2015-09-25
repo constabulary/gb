@@ -91,13 +91,10 @@ func (pkg *Package) Binfile() string {
 		target = filepath.Join(pkg.Bindir(), binname(pkg))
 	}
 
-	// if this is a cross compile, add ctxString
+	// if this is a cross compile or there are build tags, add ctxString.
 	if pkg.isCrossCompile() {
 		target += "-" + pkg.ctxString()
-	}
-
-	// append build tags
-	if len(pkg.buildtags) > 0 {
+	} else if len(pkg.buildtags) > 0 {
 		target += "-" + strings.Join(pkg.buildtags, "-")
 	}
 
