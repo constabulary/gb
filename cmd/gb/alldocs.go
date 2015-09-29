@@ -73,8 +73,7 @@ Flags:
 The list flags accept a space-separated list of strings. To embed spaces in an
 element in the list, surround it with either single or double quotes.
 
-For more about specifying packages, see 'gb help packages'. For more about
-where packages and binaries are installed, run 'gb help project'.
+For more about where packages and binaries are installed, run 'gb help project'.
 
 
 Show documentation for a package or symbol
@@ -164,16 +163,19 @@ gb plugins are executed from the parent gb process with the environment
 variable, GB_PROJECT_DIR set to the root of the current project.
 
 gb plugins can be executed directly but this is rarely useful, so authors
-should attempt to diagnose this by looking for the presence of the
+should attempt to diagnose this by looking for the presence of the 
 GB_PROJECT_DIR environment key.
 
 
 Gb project layout
 
 A gb project is defined as any directory that contains a src/ subdirectory.
-gb automatically detects the root of the project by looking at the current working directory and walking backwards until it finds a directory that contains a src/ subdirectory.
+gb automatically detects the root of the project by looking at the current
+working directory and walking backwards until it finds a directory that
+contains a src/ subdirectory.
 
-In the event you wish to override this auto detection mechanism, the -R flag can be used to supply a project root.
+In the event you wish to override this auto detection mechanism, the -R flag
+can be used to supply a project root.
 
 See http://getgb.io/docs/project for details
 

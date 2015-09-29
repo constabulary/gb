@@ -96,8 +96,7 @@ Flags:
 The list flags accept a space-separated list of strings. To embed spaces in an
 element in the list, surround it with either single or double quotes.
 
-For more about specifying packages, see 'gb help packages'. For more about
-where packages and binaries are installed, run 'gb help project'.
+For more about where packages and binaries are installed, run 'gb help project'.
 `,
 	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project

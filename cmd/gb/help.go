@@ -23,9 +23,12 @@ var helpProject = &cmd.Command{
 	Name:  "project",
 	Short: "gb project layout",
 	Long: `A gb project is defined as any directory that contains a src/ subdirectory.
-gb automatically detects the root of the project by looking at the current working directory and walking backwards until it finds a directory that contains a src/ subdirectory.
+gb automatically detects the root of the project by looking at the current
+working directory and walking backwards until it finds a directory that
+contains a src/ subdirectory.
 
-In the event you wish to override this auto detection mechanism, the -R flag can be used to supply a project root.
+In the event you wish to override this auto detection mechanism, the -R flag
+can be used to supply a project root.
 
 See http://getgb.io/docs/project for details`,
 }
