@@ -21,6 +21,7 @@ var cmdRestore = &cmd.Command{
 	Long: `Restore vendor dependecies.
 
 Flags:
+	-precaire
 		allow the use of insecure protocols.
 
 `,
