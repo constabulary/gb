@@ -122,6 +122,7 @@ Usage:
 Restore vendor dependecies.
 
 Flags:
+	-precaire
 		allow the use of insecure protocols.
 
 
