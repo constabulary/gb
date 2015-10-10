@@ -44,10 +44,10 @@ func BuildPackages(pkgs ...*Package) (*Action, error) {
 	t0 := time.Now()
 	build := Action{
 		Name: fmt.Sprintf("build: %s", strings.Join(names(pkgs), ",")),
-		Task: TaskFn(func() error {
+		Run: func() error {
 			log.Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
-		}),
+		},
 	}
 
 	for _, pkg := range pkgs {
@@ -133,9 +133,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	compile := Action{
 		Name: fmt.Sprintf("compile: %s", pkg.ImportPath),
 		Deps: deps,
-		Task: TaskFn(func() error {
-			return gc(pkg, gofiles)
-		}),
+		Run:  func() error { return gc(pkg, gofiles) },
 	}
 
 	// step 3. are there any .s files to assemble.
@@ -145,12 +143,12 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		ofile := filepath.Join(pkg.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
 		assemble = append(assemble, &Action{
 			Name: fmt.Sprintf("asm: %s/%s", pkg.ImportPath, sfile),
-			Task: TaskFn(func() error {
+			Run: func() error {
 				t0 := time.Now()
 				err := pkg.tc.Asm(pkg, pkg.Dir, ofile, filepath.Join(pkg.Dir, sfile))
 				pkg.Record("asm", time.Since(t0))
 				return err
-			}),
+			},
 			// asm depends on compile because compile will generate the local go_asm.h
 			Deps: []*Action{&compile},
 		})
@@ -166,7 +164,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 			Deps: []*Action{
 				&compile,
 			},
-			Task: TaskFn(func() error {
+			Run: func() error {
 				// collect .o files, ofiles always starts with the gc compiled object.
 				// TODO(dfc) objfile(pkg) should already be at the top of this set
 				ofiles = append(
@@ -179,7 +177,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 				err := pkg.tc.Pack(pkg, ofiles...)
 				pkg.Record("pack", time.Since(t0))
 				return err
-			}),
+			},
 		}
 		pack.Deps = append(pack.Deps, assemble...)
 		build = &pack
@@ -193,9 +191,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 			Deps: []*Action{
 				build,
 			},
-			Task: TaskFn(func() error {
-				return copyfile(pkgfile(pkg), objfile(pkg))
-			}),
+			Run: func() error { return copyfile(pkgfile(pkg), objfile(pkg)) },
 		}
 		build = &install
 	}
@@ -205,9 +201,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		link := Action{
 			Name: fmt.Sprintf("link: %s", pkg.ImportPath),
 			Deps: []*Action{build},
-			Task: TaskFn(func() error {
-				return link(pkg)
-			}),
+			Run:  func() error { return link(pkg) },
 		}
 		build = &link
 	}

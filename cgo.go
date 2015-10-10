@@ -40,9 +40,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 	runcgo1 := []*Action{
 		&Action{
 			Name: "runcgo1: " + pkg.ImportPath,
-			Task: TaskFn(func() error {
-				return runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS)
-			}),
+			Run:  func() error { return runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS) },
 		}}
 
 	workdir := cgoworkdir(pkg)
@@ -50,9 +48,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 	rundefun := Action{
 		Name: "cc: " + pkg.ImportPath + ": _cgo_defun_c",
 		Deps: runcgo1,
-		Task: TaskFn(func() error {
-			return pkg.tc.Cc(pkg, defun, filepath.Join(workdir, "_cgo_defun.c"))
-		}),
+		Run:  func() error { return pkg.tc.Cc(pkg, defun, filepath.Join(workdir, "_cgo_defun.c")) },
 	}
 
 	cgofiles := []string{filepath.Join(workdir, "_cgo_gotypes.go")}
@@ -76,9 +72,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 	gcc2 := Action{
 		Name: "gccld: " + pkg.ImportPath + ": _cgo_.o",
 		Deps: gcc1,
-		Task: TaskFn(func() error {
-			return gccld(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
-		}),
+		Run:  func() error { return gccld(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles) },
 	}
 
 	dynout := filepath.Join(workdir, "_cgo_import.c")
@@ -86,21 +80,21 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 	runcgo2 := Action{
 		Name: "runcgo2: " + pkg.ImportPath,
 		Deps: []*Action{&gcc2},
-		Task: TaskFn(func() error {
+		Run: func() error {
 			if err := runcgo2(pkg, dynout, ofile); err != nil {
 				return err
 			}
 			return pkg.tc.Cc(pkg, imports, dynout)
-		}),
+		},
 	}
 
 	allo := filepath.Join(filepath.Dir(ofiles[0]), "_all.o")
 	action := Action{
 		Name: "rungcc3: " + pkg.ImportPath,
 		Deps: []*Action{&runcgo2, &rundefun},
-		Task: TaskFn(func() error {
+		Run: func() error {
 			return rungcc3(pkg, pkg.Dir, allo, ofiles[1:]) // skip _cgo_main.o
-		}),
+		},
 	}
 	return &action, []string{defun, imports, allo}, cgofiles, nil
 }
@@ -123,9 +117,7 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 	runcgo1 := []*Action{
 		&Action{
 			Name: "runcgo1: " + pkg.ImportPath,
-			Task: TaskFn(func() error {
-				return runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS)
-			}),
+			Run:  func() error { return runcgo1(pkg, cgoCFLAGS, cgoLDFLAGS) },
 		},
 	}
 
@@ -151,18 +143,14 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 	gcc2 := Action{
 		Name: "gccld: " + pkg.ImportPath + ": _cgo_.o",
 		Deps: gcc1,
-		Task: TaskFn(func() error {
-			return gccld(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles)
-		}),
+		Run:  func() error { return gccld(pkg, cgoCFLAGS, cgoLDFLAGS, ofile, ofiles) },
 	}
 
 	dynout := filepath.Join(workdir, "_cgo_import.go")
 	runcgo2 := Action{
 		Name: "runcgo2: " + pkg.ImportPath,
 		Deps: []*Action{&gcc2},
-		Task: TaskFn(func() error {
-			return runcgo2(pkg, dynout, ofile)
-		}),
+		Run:  func() error { return runcgo2(pkg, dynout, ofile) },
 	}
 	cgofiles = append(cgofiles, dynout)
 
@@ -170,9 +158,9 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 	action := Action{
 		Name: "rungcc3: " + pkg.ImportPath,
 		Deps: []*Action{&runcgo2},
-		Task: TaskFn(func() error {
+		Run: func() error {
 			return rungcc3(pkg, pkg.Dir, allo, ofiles[1:]) // skip _cgo_main.o
-		}),
+		},
 	}
 
 	return &action, []string{allo}, cgofiles, nil
@@ -191,9 +179,7 @@ func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*A
 		cc = append(cc, &Action{
 			Name: "rungcc1: " + pkg.ImportPath + ": " + cfile,
 			Deps: deps,
-			Task: TaskFn(func() error {
-				return rungcc1(pkg, cflags, ofile, cfile)
-			}),
+			Run:  func() error { return rungcc1(pkg, cflags, ofile, cfile) },
 		})
 	}
 
@@ -204,9 +190,7 @@ func cgocc(pkg *Package, cflags, cxxflags, cfiles, cxxfiles []string, deps ...*A
 		cc = append(cc, &Action{
 			Name: "rung++1: " + pkg.ImportPath + ": " + cxxfile,
 			Deps: deps,
-			Task: TaskFn(func() error {
-				return rungpp1(pkg, cxxflags, ofile, cxxfile)
-			}),
+			Run:  func() error { return rungpp1(pkg, cxxflags, ofile, cxxfile) },
 		})
 	}
 
