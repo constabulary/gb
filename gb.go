@@ -61,8 +61,8 @@ type Action struct {
 	// Deps identifies the Actions that this Action depends.
 	Deps []*Action
 
-	// Task identifies the work that this action represents.
-	Task func() error
+	// Run identifies the task that this action represents.
+	Run func() error
 }
 
 func mktmpdir() string {

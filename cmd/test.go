@@ -45,7 +45,7 @@ func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
 	t0 := time.Now()
 	test := gb.Action{
 		Name: fmt.Sprintf("test: %s", strings.Join(names(pkgs), ",")),
-		Task: func() error {
+		Run: func() error {
 			log.Debugf("test duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		},
@@ -172,7 +172,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	return &gb.Action{
 		Name: fmt.Sprintf("run: %s", cmd.Args),
 		Deps: []*gb.Action{testmain},
-		Task: cmd.Run,
+		Run:  cmd.Run,
 	}, nil
 }
 

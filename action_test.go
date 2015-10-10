@@ -117,5 +117,5 @@ func deleteTasks(a *Action) {
 	for _, d := range a.Deps {
 		deleteTasks(d)
 	}
-	a.Task = nil
+	a.Run = nil
 }

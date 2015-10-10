@@ -63,24 +63,24 @@ var executorTests = []struct {
 }{{
 	action: &Action{
 		Name: "no error",
-		Task: niltask,
+		Run:  niltask,
 	},
 }, {
 	action: &Action{
 		Name: "root error",
-		Task: func() error { return io.EOF },
+		Run:  func() error { return io.EOF },
 	},
 	err: io.EOF,
 }, {
 	action: &Action{
 		Name: "child, child, error",
-		Task: func() error { return fmt.Errorf("I should not have been called") },
+		Run:  func() error { return fmt.Errorf("I should not have been called") },
 		Deps: []*Action{&Action{
 			Name: "child, error",
-			Task: niltask,
+			Run:  niltask,
 			Deps: []*Action{&Action{
 				Name: "error",
-				Task: func() error { return io.EOF },
+				Run:  func() error { return io.EOF },
 			}},
 		}},
 	},
@@ -88,7 +88,7 @@ var executorTests = []struct {
 }, {
 	action: &Action{
 		Name: "once only",
-		Task: func() error {
+		Run: func() error {
 			if c1 != 1 || c2 != 1 || c3 != 1 {
 				return fmt.Errorf("unexpected count, c1: %v, c2: %v, c3: %v", c1, c2, c3)
 			}
@@ -99,7 +99,7 @@ var executorTests = []struct {
 }, {
 	action: &Action{
 		Name: "failure count",
-		Task: func() error { return fmt.Errorf("I should not have been called") },
+		Run:  func() error { return fmt.Errorf("I should not have been called") },
 		Deps: []*Action{createFailDag()},
 	},
 	err: fmt.Errorf("task3 called 1 time"),
@@ -110,9 +110,9 @@ func createDag() *Action {
 	task2 := func() error { c2++; return nil }
 	task3 := func() error { c3++; return nil }
 
-	action1 := Action{Name: "c1", Task: task1}
-	action2 := Action{Name: "c2", Task: task2}
-	action3 := Action{Name: "c3", Task: task3}
+	action1 := Action{Name: "c1", Run: task1}
+	action2 := Action{Name: "c2", Run: task2}
+	action3 := Action{Name: "c3", Run: task3}
 
 	action1.Deps = append(action1.Deps, &action2, &action3)
 	action2.Deps = append(action2.Deps, &action3)
@@ -124,9 +124,9 @@ func createFailDag() *Action {
 	task2 := func() error { c2++; return fmt.Errorf("task2 called %v time", c2) }
 	task3 := func() error { c3++; return fmt.Errorf("task3 called %v time", c3) }
 
-	action1 := Action{Name: "c1", Task: task1}
-	action2 := Action{Name: "c2", Task: task2}
-	action3 := Action{Name: "c3", Task: task3}
+	action1 := Action{Name: "c1", Run: task1}
+	action2 := Action{Name: "c2", Run: task2}
+	action3 := Action{Name: "c3", Run: task3}
 
 	action1.Deps = append(action1.Deps, &action2, &action3)
 	action2.Deps = append(action2.Deps, &action3)
