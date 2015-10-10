@@ -57,6 +57,9 @@ func TestBuild(t *testing.T) {
 		pkg: "extestonly",
 		err: nil,
 	}, {
+		pkg: "mainnoruntime",
+		err: nil,
+	}, {
 		pkg: "h", // imports "blank", which is blank, see issue #131
 		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "blank")),
 	}, {
@@ -76,6 +79,8 @@ func TestBuild(t *testing.T) {
 	proj := testProject(t)
 	for _, tt := range tests {
 		ctx, err := proj.NewContext(tt.opts...)
+		ctx.Force = true
+		ctx.SkipInstall = true
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if !sameErr(err, tt.err) {
