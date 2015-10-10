@@ -6,14 +6,6 @@ import (
 	"testing"
 )
 
-// assert that anonymous and named functions can be
-// converted to a Task via TaskFn
-
-func f() error { return nil }
-
-var _ Task = TaskFn(func() error { return nil })
-var _ Task = TaskFn(f)
-
 func TestBuildAction(t *testing.T) {
 	actions := func(a ...*Action) []*Action {
 		return a

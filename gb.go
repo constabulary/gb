@@ -61,23 +61,9 @@ type Action struct {
 	// Deps identifies the Actions that this Action depends.
 	Deps []*Action
 
-	// Task identifies the that this action represents.
-	Task
+	// Task identifies the work that this action represents.
+	Task func() error
 }
-
-// Task represents some work to be performed. It contains a single method
-// Run, which is expected to be executed at most once.
-type Task interface {
-
-	// Run will initiate the work that this task represents and
-	// block until the work is complete.
-	Run() error
-}
-
-// TaskFn is a Task that can execute itself.
-type TaskFn func() error
-
-func (fn TaskFn) Run() error { return fn() }
 
 func mktmpdir() string {
 	d, err := ioutil.TempDir("", "gb")

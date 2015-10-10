@@ -24,7 +24,7 @@ func execute(seen map[*Action]error, a *Action) error {
 	}
 
 	// step 2, now execute ourselves
-	err := a.Run()
+	err := a.Task()
 	seen[a] = err
 	return err
 }
@@ -84,7 +84,7 @@ func ExecuteConcurrent(a *Action, n int) error {
 			}
 			// wait for a permit and execute our action
 			<-permits
-			result <- a.Run()
+			result <- a.Task()
 			permits <- true
 		}()
 
