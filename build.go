@@ -212,7 +212,26 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 // to build all dependant packages of this package.
 func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, error) {
 	var deps []*Action
-	for _, i := range pkg.Imports() {
+	pkgs := pkg.Imports()
+
+	if pkg.isMain() {
+		extra := []string{
+			// all binaries depend on runtime, even if they do not
+			// explicitly import it.
+			"runtime",
+		}
+		for _, i := range extra {
+			if pkg.shouldignore(i) {
+				continue
+			}
+			p, err := pkg.ResolvePackage(i)
+			if err != nil {
+				return nil, err
+			}
+			pkgs = append(pkgs, p)
+		}
+	}
+	for _, i := range pkgs {
 		a, err := BuildPackage(targets, i)
 		if err != nil {
 			return nil, err

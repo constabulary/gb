@@ -132,6 +132,7 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 
 		CgoEnabled: build.Default.CgoEnabled,
 	}
+
 	return &ctx, nil
 }
 
