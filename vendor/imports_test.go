@@ -2,6 +2,7 @@ package vendor
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -134,10 +135,9 @@ func TestParseMetadata(t *testing.T) {
 		importpath: "gopkg.in/mgo.v2",
 		vcs:        "git",
 		reporoot:   "https://gopkg.in/mgo.v2",
-		//	disabled: certificate has expired
-		//	}, {
-		//		path: "speter.net/go/exp",
-		//		err:  fmt.Errorf("go-import metadata not found"),
+	}, {
+		path: "speter.net/go/exp",
+		err:  fmt.Errorf("go-import metadata not found"),
 	}}
 
 	for _, tt := range tests {
