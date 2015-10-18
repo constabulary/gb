@@ -186,26 +186,35 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	// should this package be cached
 	// TODO(dfc) pkg.SkipInstall should become Install
 	if !pkg.SkipInstall && pkg.Scope != "test" {
-		install := Action{
+		build = &Action{
 			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
-			Deps: []*Action{
-				build,
-			},
-			Run: func() error { return copyfile(pkgfile(pkg), objfile(pkg)) },
+			Deps: []*Action{build},
+			Run:  func() error { return copyfile(pkgfile(pkg), objfile(pkg)) },
 		}
-		build = &install
 	}
 
 	// if this is a main package, add a link stage
 	if pkg.isMain() {
-		link := Action{
+		build = &Action{
 			Name: fmt.Sprintf("link: %s", pkg.ImportPath),
 			Deps: []*Action{build},
 			Run:  func() error { return link(pkg) },
 		}
-		build = &link
+	}
+	if pkg.Scope != "test" {
+		// if this package is not compiled in test scope, then
+		// log the name of the package when complete.
+		build.Run = logInfoFn(build.Run, pkg.ImportPath)
 	}
 	return build, nil
+}
+
+func logInfoFn(fn func() error, format string, args ...interface{}) func() error {
+	return func() error {
+		err := fn()
+		log.Infof(format, args...)
+		return err
+	}
 }
 
 // BuildDependencies returns a slice of Actions representing the steps required
@@ -247,10 +256,6 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 
 func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
-	if pkg.Scope != "test" {
-		// only log compilation message if not in test scope
-		log.Infof(pkg.ImportPath)
-	}
 	includes := pkg.IncludePaths()
 	importpath := pkg.ImportPath
 	if pkg.Scope == "test" && pkg.ExtraIncludes != "" {
