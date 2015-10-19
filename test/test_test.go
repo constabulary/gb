@@ -1,6 +1,7 @@
-package cmd
+package test
 
 import (
+	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -196,4 +197,39 @@ func TestTestPackages(t *testing.T) {
 			t.Errorf("TestBuildPackages(%v): want %v, got %v", pkgs, expected, actual)
 		}
 	}
+}
+
+func getwd(t *testing.T) string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cwd
+}
+
+func testProject(t *testing.T) *gb.Project {
+	cwd := getwd(t)
+	root := filepath.Join(cwd, "..", "testdata")
+	return gb.NewProject(root,
+		gb.SourceDir(filepath.Join(root, "src")),
+	)
+}
+
+func testContext(t *testing.T, opts ...func(*gb.Context) error) *gb.Context {
+	prj := testProject(t)
+	opts = append([]func(*gb.Context) error{gb.GcToolchain()}, opts...)
+	ctx, err := prj.NewContext(opts...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx.Force = true
+	ctx.SkipInstall = true
+	return ctx
+}
+
+func sameErr(e1, e2 error) bool {
+	if e1 != nil && e2 != nil {
+		return e1.Error() == e2.Error()
+	}
+	return e1 == e2
 }

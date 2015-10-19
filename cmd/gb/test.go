@@ -7,6 +7,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/constabulary/gb/test"
 )
 
 func init() {
@@ -43,12 +44,12 @@ See 'go help test'.
 	Run: func(ctx *gb.Context, args []string) error {
 		ctx.Force = F
 		ctx.SkipInstall = FF
-		pkgs, err := cmd.ResolvePackagesWithTests(ctx, args...)
+		pkgs, err := ResolvePackagesWithTests(ctx, args...)
 		if err != nil {
 			return err
 		}
 
-		test, err := cmd.TestPackages(cmd.TestFlags(tfs), pkgs...)
+		test, err := test.TestPackages(TestFlags(tfs), pkgs...)
 		if err != nil {
 			return err
 		}
@@ -67,7 +68,7 @@ See 'go help test'.
 	AddFlags: addTestFlags,
 	FlagParse: func(flags *flag.FlagSet, args []string) error {
 		var err error
-		args, tfs, err = cmd.TestFlagsExtraParse(args[2:])
+		args, tfs, err = TestFlagsExtraParse(args[2:])
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "gb test: %s\n", err)
 			fmt.Fprintf(os.Stderr, `run "go help test" or "go help testflag" for more information`+"\n")

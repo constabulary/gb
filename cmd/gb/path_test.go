@@ -1,7 +1,6 @@
-package cmd
+package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -40,31 +39,38 @@ func makeTestdata(t *testing.T) string {
 	return root
 }
 
-func TestFindProjectroot(t *testing.T) {
-	root := makeTestdata(t)
-	defer os.RemoveAll(root)
+func TestRelImportPath(t *testing.T) {
 	tests := []struct {
-		path string
-		want string
-		err  error
+		root, path, want string
 	}{
-		{path: root, want: root},
-		{path: join(root, "src"), want: root},
-		{path: join(join(root, "src"), "a"), want: root},
-		{path: join(root, ".."), err: fmt.Errorf("could not find project root in %q or its parents", join(root, ".."))},
+		{"/project/src", "a", "a"},
+		// { "/project/src", "./a", "a"}, // TODO(dfc) this is relative
+		// { "/project/src", "a/../b", "a"}, // TODO(dfc) so is this
 	}
 
 	for _, tt := range tests {
-		got, err := FindProjectroot(tt.path)
-		if got != tt.want || !sameErr(err, tt.err) {
-			t.Errorf("FindProjectroot(%v): want: %v, %v, got %v, %v", tt.path, tt.want, tt.err, got, err)
+
+		got := relImportPath(tt.root, tt.path)
+		if got != tt.want {
+			t.Errorf("relImportPath(%q, %q): want: %v, got: %v", tt.root, tt.path, tt.want, got)
 		}
 	}
 }
 
-func sameErr(e1, e2 error) bool {
-	if e1 != nil && e2 != nil {
-		return e1.Error() == e2.Error()
+func TestIsRel(t *testing.T) {
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{".", true},
+		{"..", false},     // TODO(dfc) this is relative
+		{"a/../b", false}, // TODO(dfc) this too
 	}
-	return e1 == e2
+
+	for _, tt := range tests {
+		got := isRel(tt.path)
+		if got != tt.want {
+			t.Errorf("isRel(%q): want: %v, got: %v", tt.want, got)
+		}
+	}
 }

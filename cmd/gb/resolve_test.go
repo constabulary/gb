@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 func TestResolvePackages(t *testing.T) {
 	cwd := getwd(t)
-	root := filepath.Join(cwd, "..", "testdata", "src")
+	root := filepath.Join(cwd, "..", "..", "testdata", "src")
 	tests := []struct {
 		paths []string
 		err   error
@@ -41,7 +41,7 @@ func getwd(t *testing.T) string {
 
 func testProject(t *testing.T) *gb.Project {
 	cwd := getwd(t)
-	root := filepath.Join(cwd, "..", "testdata")
+	root := filepath.Join(cwd, "..", "..", "testdata")
 	return gb.NewProject(root,
 		gb.SourceDir(filepath.Join(root, "src")),
 	)
@@ -57,4 +57,11 @@ func testContext(t *testing.T, opts ...func(*gb.Context) error) *gb.Context {
 	ctx.Force = true
 	ctx.SkipInstall = true
 	return ctx
+}
+
+func sameErr(e1, e2 error) bool {
+	if e1 != nil && e2 != nil {
+		return e1.Error() == e2.Error()
+	}
+	return e1 == e2
 }

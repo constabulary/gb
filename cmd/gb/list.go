@@ -67,7 +67,7 @@ func list(ctx *gb.Context, args []string) error {
 		io.Copy(&formatBuffer, os.Stdin)
 		format = formatBuffer.String()
 	}
-	pkgs, err := cmd.ResolvePackages(ctx, args...)
+	pkgs, err := ResolvePackages(ctx, args...)
 	if err != nil {
 		log.Fatalf("unable to resolve: %v", err)
 	}
