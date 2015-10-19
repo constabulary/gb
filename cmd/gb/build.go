@@ -103,7 +103,7 @@ For more about where packages and binaries are installed, run 'gb help project'.
 		ctx.Force = F
 		ctx.SkipInstall = FF
 
-		pkgs, err := cmd.ResolvePackages(ctx, args...)
+		pkgs, err := ResolvePackages(ctx, args...)
 		if err != nil {
 			return err
 		}

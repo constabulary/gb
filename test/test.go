@@ -1,4 +1,4 @@
-package cmd
+package test
 
 import (
 	"bytes"
@@ -222,4 +222,8 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	testmain.Scope = "test"
 	testmain.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 	return testmain, nil
+}
+
+func mkdir(path string) error {
+	return os.MkdirAll(path, 0755)
 }
