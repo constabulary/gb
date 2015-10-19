@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"go/build"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -165,14 +167,25 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 	cmd := exec.Command(testmainpkg.Binfile(), flags...)
 	cmd.Dir = pkg.Dir // tests run in the original source directory
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	var output bytes.Buffer
+	cmd.Stdout = &output
+	cmd.Stderr = &output
 
-	log.Debugf("scheduling run of %v", cmd.Args)
+	logInfoFn := func(fn func() error, format string, args ...interface{}) func() error {
+		return func() error {
+			err := fn()
+			log.Infof(format, args...)
+			if err != nil || output.Len() > 0 {
+				io.Copy(os.Stdout, &output)
+			}
+			return err
+		}
+	}
+
 	return &gb.Action{
 		Name: fmt.Sprintf("run: %s", cmd.Args),
 		Deps: []*gb.Action{testmain},
-		Run:  cmd.Run,
+		Run:  logInfoFn(cmd.Run, pkg.ImportPath),
 	}, nil
 }
 
