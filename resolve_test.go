@@ -1,11 +1,34 @@
-package main
+package gb
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+func TestResolvePackages(t *testing.T) {
+	cwd := getwd(t)
+	root := filepath.Join(cwd, "testdata", "src")
+	tests := []struct {
+		paths []string
+		err   error
+	}{
+		{paths: []string{"a"}},
+		{paths: []string{"."}, err: fmt.Errorf("%q is not a package", root)},
+		{paths: []string{"h"}, err: fmt.Errorf("failed to resolve import path %q: no buildable Go source files in %s", "h", filepath.Join(root, "blank"))},
+	}
+
+	for _, tt := range tests {
+		ctx := testContext(t)
+		defer ctx.Destroy()
+		_, err := ResolvePackages(ctx, tt.paths...)
+		if !sameErr(err, tt.err) {
+			t.Errorf("ResolvePackage(%v): want: %v, got %v", tt.paths, tt.err, err)
+		}
+	}
+}
 
 var join = filepath.Join
 
