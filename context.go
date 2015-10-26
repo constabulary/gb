@@ -180,6 +180,13 @@ func (c *Context) Workdir() string { return c.workdir }
 
 // ResolvePackage resolves the package at path using the current context.
 func (c *Context) ResolvePackage(path string) (*Package, error) {
+	if path == "." {
+		return nil, fmt.Errorf("%q is not a package", filepath.Join(c.rootdir, "src"))
+	}
+	path, err := relImportPath(filepath.Join(c.rootdir, "src"), path)
+	if err != nil {
+		return nil, err
+	}
 	return loadPackage(c, nil, path)
 }
 
