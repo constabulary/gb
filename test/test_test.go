@@ -73,8 +73,8 @@ func TestTest(t *testing.T) {
 	for _, tt := range tests {
 		ctx := testContext(t, gb.Ldflags(tt.ldflags...))
 		defer ctx.Destroy()
-		// TODO(dfc) can we resolve the duplication here ?
-		pkg, err := ctx.ResolvePackageWithTests(tt.pkg)
+		r := TestResolver(ctx)
+		pkg, err := r.ResolvePackage(tt.pkg)
 		if err != nil {
 			t.Errorf("ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue
