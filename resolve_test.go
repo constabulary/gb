@@ -16,7 +16,7 @@ func TestResolvePackages(t *testing.T) {
 		err   error
 	}{
 		{paths: []string{"a"}},
-		{paths: []string{"."}, err: fmt.Errorf("%q is not a package", root)},
+		{paths: []string{"."}, err: fmt.Errorf("failed to resolve import path %q: %q is not a package", ".", root)},
 		{paths: []string{"h"}, err: fmt.Errorf("failed to resolve import path %q: no buildable Go source files in %s", "h", filepath.Join(root, "blank"))},
 	}
 
@@ -73,7 +73,7 @@ func TestRelImportPath(t *testing.T) {
 
 	for _, tt := range tests {
 
-		got := relImportPath(tt.root, tt.path)
+		got, _ := relImportPath(tt.root, tt.path)
 		if got != tt.want {
 			t.Errorf("relImportPath(%q, %q): want: %v, got: %v", tt.root, tt.path, tt.want, got)
 		}
