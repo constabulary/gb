@@ -1,10 +1,13 @@
 package gb
 
 import (
+	"bufio"
 	"fmt"
 	"go/build"
+	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 )
 
@@ -118,6 +121,8 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
+var filenameRe = regexp.MustCompile(`^(.*?):((\d+):.*$)`)
+
 func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error {
 	args := append(pkg.gcflags, "-p", importpath, "-pack")
 	args = append(args, "-o", outfile)
@@ -141,5 +146,34 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 	if err := mkdir(filepath.Join(filepath.Dir(outfile), pkg.Name)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
 	}
-	return runOut(os.Stdout, srcdir, nil, t.gc, args...)
+
+	// Pipe the output through a filter that corrects any error paths found.
+	in, out := io.Pipe()
+	go func() {
+		scanner := bufio.NewScanner(in)
+		if cwd, err := os.Getwd(); err == nil {
+			for scanner.Scan() {
+				line := scanner.Text()
+				if matches := filenameRe.FindStringSubmatch(line); matches != nil {
+					fullpath := filepath.Join(srcdir, matches[1])
+					rel, err := filepath.Rel(cwd, fullpath)
+					if err != nil {
+						fmt.Fprintln(os.Stdout, fullpath+":"+matches[2])
+					} else {
+						fmt.Fprintln(os.Stdout, rel+":"+matches[2])
+					}
+				} else {
+					fmt.Fprintln(os.Stdout, line)
+				}
+			}
+		} else {
+			for scanner.Scan() {
+				fmt.Fprintln(os.Stdout, scanner.Text())
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}()
+	return runOut(out, srcdir, nil, t.gc, args...)
 }
