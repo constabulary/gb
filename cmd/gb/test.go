@@ -44,7 +44,8 @@ See 'go help test'.
 	Run: func(ctx *gb.Context, args []string) error {
 		ctx.Force = F
 		ctx.SkipInstall = FF
-		pkgs, err := gb.ResolvePackagesWithTests(ctx, args...)
+		r := test.TestResolver(ctx)
+		pkgs, err := gb.ResolvePackages(r, args...)
 		if err != nil {
 			return err
 		}
