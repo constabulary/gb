@@ -57,7 +57,7 @@ var (
 // Remote repositories can be bare import paths, or urls including a checkout scheme.
 // If deduction would cause traversal of an insecure host, a message will be
 // printed and the travelsal path will be ignored.
-func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
+func DeduceRemoteRepo(path string, insecure bool, scm string) (RemoteRepo, string, error) {
 	u, err := url.Parse(path)
 	if err != nil {
 		return nil, "", fmt.Errorf("%q is not a valid import path", path)
@@ -128,7 +128,10 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 	// try the general syntax
 	if genericre.MatchString(path) {
 		v := genericre.FindStringSubmatch(path)
-		switch v[5] {
+		if scm == "" {
+			scm = v[5]
+		}
+		switch scm {
 		case "git":
 			x := strings.SplitN(v[1], "/", 2)
 			url := &url.URL{
