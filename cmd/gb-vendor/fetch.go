@@ -10,10 +10,10 @@ import (
 
 	"go/build"
 
-	"../../vendor"
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/log"
+	"github.com/lateefj/gb/vendor"
 )
 
 var (
