@@ -16,6 +16,7 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		extra    string
 		err      error
 		insecure bool
+		scm      *string
 	}{{
 		path: "",
 		err:  fmt.Errorf(`"" is not a valid import path`),
@@ -127,7 +128,12 @@ func TestDeduceRemoteRepo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Logf("DeduceRemoteRepo(%q, %v)", tt.path, tt.insecure)
-		got, extra, err := DeduceRemoteRepo(tt.path, tt.insecure)
+		scm := ""
+		if tt.scm != nil {
+			scm = *tt.scm
+		}
+
+		got, extra, err := DeduceRemoteRepo(tt.path, tt.insecure, scm)
 		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("DeduceRemoteRepo(%q): want err: %v, got err: %v", tt.path, tt.err, err)
 			continue

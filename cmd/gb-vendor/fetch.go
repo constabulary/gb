@@ -13,7 +13,7 @@ import (
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/log"
-	"github.com/constabulary/gb/vendor"
+	"github.com/lateefj/gb/vendor"
 )
 
 var (
@@ -38,11 +38,12 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&tag, "tag", "", "tag of the package")
 	fs.BoolVar(&noRecurse, "no-recurse", false, "do not fetch recursively")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
+	fs.StringVar(&scm, "scm", false, "specify the type of source code management (git, hg, bzr..")
 }
 
 var cmdFetch = &cmd.Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
+	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] [-scm scm] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
@@ -63,6 +64,8 @@ Flags:
 		revision supplied, the latest available will be supplied.
 	-precaire
 		allow the use of insecure protocols.
+	-scm
+		specificy the type of source code management (git, hg, bzr..)
 
 `,
 	Run: func(ctx *gb.Context, args []string) error {
@@ -86,7 +89,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 		return fmt.Errorf("could not load manifest: %v", err)
 	}
 
-	repo, extra, err := vendor.DeduceRemoteRepo(path, insecure)
+	repo, extra, err := vendor.DeduceRemoteRepo(path, insecure, scm)
 	if err != nil {
 		return err
 	}
