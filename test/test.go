@@ -175,7 +175,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		return func() error {
 			err := fn()
 			log.Infof(format, args...)
-			if err != nil || output.Len() > 0 {
+			if err != nil {
 				io.Copy(os.Stdout, &output)
 			}
 			return err
