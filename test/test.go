@@ -111,17 +111,17 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	testpkg.Scope = "test"
 	testpkg.Stale = true
 
-	// build dependencies
-	deps, err := gb.BuildDependencies(targets, testpkg)
-	if err != nil {
-		return nil, err
-	}
-
 	// only build the internal test if there is Go source or
 	// internal test files.
 	var testobj *gb.Action
 	if len(testpkg.GoFiles)+len(testpkg.CgoFiles)+len(testpkg.TestGoFiles) > 0 {
-		var err error
+		
+		// build internal testpkg dependencies
+		deps, err := gb.BuildDependencies(targets, testpkg)
+		if err != nil {
+			return nil, err
+		}
+
 		testobj, err = gb.Compile(testpkg, deps...)
 		if err != nil {
 			return nil, err
@@ -181,11 +181,41 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 			return err
 		}
 	}
+	
+	// test binaries can be very large, so always unlink the 
+	// binary after the test has run to free up temporary space
+	// technically this is done by ctx.Destroy(), but freeing
+	// the space earlier is important for projects with many
+	// packages
+	withcleanup := func(fn func() error) func() error {
+		return func() error {
+			file := testmainpkg.Binfile()
+			err := fn()
+			os.Remove(file)
+			return err
+		}
+	}
+	fn := withcleanup(cmd.Run)		
+	fn = logInfoFn(fn, pkg.ImportPath)
+	// When used with the concurrent executor, building deps and
+	// linking the test binary can cause a lot of disk space to be
+	// pinned as linking will tend to occur more frequenty than retiring
+	// tests. 
+	//
+	// To solve this, we merge the testmain compile step (which includes
+	// linking) and the execute and cleanup steps so they are executed
+	// as one atomic operation.
 
 	return &gb.Action{
 		Name: fmt.Sprintf("run: %s", cmd.Args),
-		Deps: []*gb.Action{testmain},
-		Run:  logInfoFn(cmd.Run, pkg.ImportPath),
+		Deps: testmain.Deps,
+		Run: func() error {
+			err := testmain.Run()
+			if err != nil {
+				return err
+			}
+			return fn()
+		},
 	}, nil
 }
 
