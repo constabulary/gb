@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -45,6 +46,13 @@ See 'go help test'.
 		ctx.Force = F
 		ctx.SkipInstall = FF
 		r := test.TestResolver(ctx)
+
+		// gb build builds packages in dependency order, however
+		// gb test tests packages in alpha order. This matches the
+		// expected behaviour from go test; tests are executed in
+		// stable order.
+		sort.Strings(args)
+
 		pkgs, err := gb.ResolvePackages(r, args...)
 		if err != nil {
 			return err
