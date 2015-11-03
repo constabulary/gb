@@ -115,7 +115,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	// internal test files.
 	var testobj *gb.Action
 	if len(testpkg.GoFiles)+len(testpkg.CgoFiles)+len(testpkg.TestGoFiles) > 0 {
-		
+
 		// build internal testpkg dependencies
 		deps, err := gb.BuildDependencies(targets, testpkg)
 		if err != nil {
@@ -181,8 +181,8 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 			return err
 		}
 	}
-	
-	// test binaries can be very large, so always unlink the 
+
+	// test binaries can be very large, so always unlink the
 	// binary after the test has run to free up temporary space
 	// technically this is done by ctx.Destroy(), but freeing
 	// the space earlier is important for projects with many
@@ -195,12 +195,12 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 			return err
 		}
 	}
-	fn := withcleanup(cmd.Run)		
+	fn := withcleanup(cmd.Run)
 	fn = logInfoFn(fn, pkg.ImportPath)
 	// When used with the concurrent executor, building deps and
 	// linking the test binary can cause a lot of disk space to be
 	// pinned as linking will tend to occur more frequenty than retiring
-	// tests. 
+	// tests.
 	//
 	// To solve this, we merge the testmain compile step (which includes
 	// linking) and the execute and cleanup steps so they are executed
