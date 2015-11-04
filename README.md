@@ -31,10 +31,15 @@ gb has its own site, [getgb.io](http://getgb.io/), head over there for more info
 
 ### Road map
 
-In rough order
+#### Completed
 
 - [Cross Compilation](https://github.com/constabulary/gb/milestones/cross-compilation)
+- Tag handling, unify -tags, ENVVARS and GOOS/GOARCH into a single format for binary names and pkg cache
+
+#### Todo
+
 - gb test improvements, test output, flag handling
+  - [Race detector support](https://github.com/constabulary/gb/issues/96)
 - gb vendor updates and bug fixes
 - new package resolver (replace go/build)
 
@@ -42,8 +47,6 @@ In rough order
 
 Big ticket items that are not on the road map yet
 
-- [Race detector support](https://github.com/constabulary/gb/issues/96)
-- Tag handling, unify -tags, ENVVARS and GOOS/GOARCH into a single format for binary names and pkg cache
 - Package BuildID support (make stale detection work like the Go 1.5)
 - `gccgo` toolchain support.
 
