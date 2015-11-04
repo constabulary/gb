@@ -38,10 +38,10 @@ gb has its own site, [getgb.io](http://getgb.io/), head over there for more info
 
 #### Todo
 
-- gb test improvements, test output, flag handling
+- 0.3 series: gb test improvements, test output, ~~flag handling~~ (done)
   - [Race detector support](https://github.com/constabulary/gb/issues/96)
-- gb vendor updates and bug fixes
-- new package resolver (replace go/build)
+- 0.4 series: gb vendor updates and bug fixes
+- 0.5 series: new package resolver (replace go/build)
 
 ### Big ticket items 
 
