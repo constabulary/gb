@@ -1,9 +1,6 @@
 package log
 
-import (
-	"fmt"
-	"os"
-)
+import "fmt"
 
 var (
 	// Quiet suppresses all logging output below ERROR
@@ -12,11 +9,6 @@ var (
 	// Verbose enables logging output below INFO
 	Verbose bool
 )
-
-func Fatalf(format string, args ...interface{}) {
-	fmt.Printf("FATAL "+format+"\n", args...)
-	os.Exit(1)
-}
 
 func Infof(format string, args ...interface{}) {
 	if !Quiet {

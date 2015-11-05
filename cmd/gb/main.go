@@ -40,6 +40,11 @@ func registerCommand(command *cmd.Command) {
 }
 
 func main() {
+	fatalf := func(format string, args ...interface{}) {
+		fmt.Fprintf(os.Stderr, "FATAL: "+format+"\n", args...)
+		os.Exit(1)
+	}
+
 	args := os.Args
 	if len(args) < 2 || args[1] == "-h" {
 		fs.Usage()
@@ -99,7 +104,7 @@ func main() {
 		err = fs.Parse(args[2:])
 	}
 	if err != nil {
-		log.Fatalf("could not parse flags: %v", err)
+		fatalf("could not parse flags: %v", err)
 	}
 
 	args = fs.Args() // reset args to the leftovers from fs.Parse
@@ -108,7 +113,7 @@ func main() {
 	}
 	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
 	if err != nil {
-		log.Fatalf("could not make project root absolute: %v", err)
+		fatalf("could not make project root absolute: %v", err)
 	}
 
 	ctx, err := cmd.NewContext(
@@ -119,7 +124,7 @@ func main() {
 		gb.Tags(buildtags...),
 	)
 	if err != nil {
-		log.Fatalf("unable to construct context: %v", err)
+		fatalf("unable to construct context: %v", err)
 	}
 
 	if !noDestroyContext {
@@ -137,6 +142,6 @@ func main() {
 		if !noDestroyContext {
 			ctx.Destroy()
 		}
-		log.Fatalf("command %q failed: %v", name, err)
+		fatalf("command %q failed: %v", name, err)
 	}
 }

@@ -7,7 +7,6 @@ package gb
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -63,14 +62,6 @@ type Action struct {
 
 	// Run identifies the task that this action represents.
 	Run func() error
-}
-
-func mktmpdir() string {
-	d, err := ioutil.TempDir("", "gb")
-	if err != nil {
-		log.Fatalf("could not create temporary directory: %v", err)
-	}
-	return d
 }
 
 func mkdir(path string) error {
