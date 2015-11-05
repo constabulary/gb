@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/build"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -101,9 +102,14 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		},
 		GcToolchain(),
 	}
+	workdir, err := ioutil.TempDir("", "gb")
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := Context{
 		Project:   p,
-		workdir:   mktmpdir(),
+		workdir:   workdir,
 		pkgs:      make(map[string]*Package),
 		buildmode: "exe",
 	}

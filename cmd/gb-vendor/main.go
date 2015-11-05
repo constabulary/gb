@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -33,6 +34,11 @@ var commands = []*cmd.Command{
 }
 
 func main() {
+	fatalf := func(format string, args ...interface{}) {
+		fmt.Fprintf(os.Stderr, "FATAL: "+format+"\n", args...)
+		os.Exit(1)
+	}
+
 	args := os.Args[1:]
 
 	switch {
@@ -43,13 +49,13 @@ func main() {
 		help(args[1:])
 		return
 	case projectroot == "":
-		log.Fatalf("don't run this binary directly, it is meant to be run as 'gb vendor ...'")
+		fatalf("don't run this binary directly, it is meant to be run as 'gb vendor ...'")
 	default:
 	}
 
 	root, err := cmd.FindProjectroot(projectroot)
 	if err != nil {
-		log.Fatalf("could not locate project root: %v", err)
+		fatalf("could not locate project root: %v", err)
 	}
 	project := gb.NewProject(root,
 		gb.SourceDir(filepath.Join(root, "src")),
@@ -70,7 +76,7 @@ func main() {
 				err = fs.Parse(args[1:])
 			}
 			if err != nil {
-				log.Fatalf("could not parse flags: %v", err)
+				fatalf("could not parse flags: %v", err)
 			}
 			args = fs.Args() // reset args to the leftovers from fs.Parse
 			log.Debugf("args: %v", args)
@@ -79,17 +85,17 @@ func main() {
 				gb.GcToolchain(),
 			)
 			if err != nil {
-				log.Fatalf("unable to construct context: %v", err)
+				fatalf("unable to construct context: %v", err)
 			}
 			defer ctx.Destroy()
 
 			if err := command.Run(ctx, args); err != nil {
-				log.Fatalf("command %q failed: %v", command.Name, err)
+				fatalf("command %q failed: %v", command.Name, err)
 			}
 			return
 		}
 	}
-	log.Fatalf("unknown command %q ", args[0])
+	fatalf("unknown command %q ", args[0])
 }
 
 const manifestfile = "manifest"
