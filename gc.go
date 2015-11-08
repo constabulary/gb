@@ -1,11 +1,15 @@
 package gb
 
 import (
+	"bytes"
 	"fmt"
 	"go/build"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/constabulary/gb/log"
 )
 
 // gc toolchain
@@ -73,7 +77,13 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
 		return fmt.Errorf("gc:asm: %v", err)
 	}
-	return run(srcdir, nil, t.as, args...)
+	var buf bytes.Buffer
+	err := runOut(&buf, srcdir, nil, t.as, args...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
+	return err
 }
 
 func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
@@ -88,7 +98,13 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	if err := mkdir(filepath.Dir(outfile)); err != nil {
 		return fmt.Errorf("gc:ld: %v", err)
 	}
-	return run(".", nil, t.ld, args...)
+	var buf bytes.Buffer
+	err := runOut(&buf, ".", nil, t.ld, args...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
+	return err
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
@@ -105,14 +121,26 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 		"-D", "GOARCH_" + pkg.gotargetarch,
 		cfile,
 	}
-	return run(pkg.Dir, nil, t.cc, args...)
+	var buf bytes.Buffer
+	err := runOut(&buf, pkg.Dir, nil, t.cc, args...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
+	return err
 }
 
 func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 	args := []string{"r"}
 	args = append(args, afiles...)
 	dir := filepath.Dir(afiles[0])
-	return run(dir, nil, t.pack, args...)
+	var buf bytes.Buffer
+	err := runOut(&buf, dir, nil, t.pack, args...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
+	return err
 }
 
 func (t *gcToolchain) compiler() string { return t.gc }
@@ -141,5 +169,11 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 	if err := mkdir(filepath.Join(filepath.Dir(outfile), pkg.Name)); err != nil {
 		return fmt.Errorf("gc:gc: %v", err)
 	}
-	return runOut(os.Stdout, srcdir, nil, t.gc, args...)
+	var buf bytes.Buffer
+	err := runOut(&buf, srcdir, nil, t.gc, args...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
+	return err
 }
