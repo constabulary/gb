@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/constabulary/gb/log"
 )
 
 // RemoteRepo describes a remote dvcs repository.
@@ -248,7 +246,7 @@ func probe(vcs func(*url.URL) error, url *url.URL, insecure bool, schemes ...str
 			}
 		case "http", "git":
 			if !insecure {
-				log.Infof("skipping insecure protocol: %s", url.String())
+				fmt.Println("skipping insecure protocol:", url.String())
 				continue
 			}
 			if err := vcs(&url); err == nil {

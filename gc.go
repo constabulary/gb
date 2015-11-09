@@ -8,8 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"github.com/constabulary/gb/log"
 )
 
 // gc toolchain
@@ -80,8 +78,8 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, srcdir, nil, t.as, args...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	return err
 }
@@ -101,8 +99,8 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	var buf bytes.Buffer
 	err := runOut(&buf, ".", nil, t.ld, args...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	return err
 }
@@ -124,8 +122,8 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, pkg.Dir, nil, t.cc, args...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	return err
 }
@@ -137,8 +135,8 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, dir, nil, t.pack, args...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	return err
 }
@@ -172,8 +170,8 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 	var buf bytes.Buffer
 	err := runOut(&buf, srcdir, nil, t.gc, args...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	return err
 }

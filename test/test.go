@@ -174,9 +174,11 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	logInfoFn := func(fn func() error, format string, args ...interface{}) func() error {
 		return func() error {
 			err := fn()
-			log.Infof(format, args...)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
 				io.Copy(os.Stdout, &output)
+			} else {
+				fmt.Println(pkg.ImportPath)
 			}
 			return err
 		}

@@ -24,7 +24,6 @@ const (
 )
 
 func init() {
-	fs.BoolVar(&log.Quiet, "q", log.Quiet, "suppress log messages below ERROR level")
 	fs.BoolVar(&log.Verbose, "v", log.Verbose, "enable log levels below INFO level")
 	fs.StringVar(&cwd, "R", cmd.MustGetwd(), "set the project root") // actually the working directory to start the project root search
 
