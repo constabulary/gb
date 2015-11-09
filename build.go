@@ -209,10 +209,10 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	return build, nil
 }
 
-func logInfoFn(fn func() error, format string, args ...interface{}) func() error {
+func logInfoFn(fn func() error, s string) func() error {
 	return func() error {
 		err := fn()
-		log.Infof(format, args...)
+		fmt.Println(s)
 		return err
 	}
 }

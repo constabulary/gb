@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/constabulary/gb/log"
 )
 
 func cgo(pkg *Package) (*Action, []string, []string, error) {
@@ -216,8 +214,8 @@ func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, pkg.Dir, nil, gcc[0], append(gcc[1:], args...)...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	pkg.Record(gcc[0], time.Since(t0))
 	return err
@@ -239,8 +237,8 @@ func rungpp1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, pkg.Dir, nil, gxx[0], append(gxx[1:], args...)...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	pkg.Record(gxx[0], time.Since(t0))
 	return err
@@ -263,8 +261,8 @@ func gccld(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles []
 	var buf bytes.Buffer
 	err := runOut(&buf, pkg.Dir, nil, cmd[0], append(cmd[1:], args...)...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	pkg.Record("gccld", time.Since(t0))
 	return err
@@ -293,8 +291,8 @@ func rungcc3(pkg *Package, dir string, ofile string, ofiles []string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, dir, nil, cmd[0], append(cmd[1:], args...)...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	pkg.Record("gcc3", time.Since(t0))
 	return err
@@ -412,8 +410,8 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, pkg.Dir, cgoenv, cgo, args...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	return err
 }
@@ -444,8 +442,8 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 	var buf bytes.Buffer
 	err := runOut(&buf, pkg.Dir, nil, cgo, args...)
 	if err != nil {
-		log.Infof(pkg.ImportPath)
-		io.Copy(os.Stdout, &buf)
+		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
+		io.Copy(os.Stderr, &buf)
 	}
 	return err
 }
