@@ -3,12 +3,15 @@ package gb
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/constabulary/gb/log"
 )
 
 func cgo(pkg *Package) (*Action, []string, []string, error) {
@@ -210,7 +213,12 @@ func rungcc1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 	)
 	t0 := time.Now()
 	gcc := gccCmd(pkg, pkg.Dir)
-	err := run(pkg.Dir, nil, gcc[0], append(gcc[1:], args...)...)
+	var buf bytes.Buffer
+	err := runOut(&buf, pkg.Dir, nil, gcc[0], append(gcc[1:], args...)...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
 	pkg.Record(gcc[0], time.Since(t0))
 	return err
 }
@@ -228,7 +236,12 @@ func rungpp1(pkg *Package, cgoCFLAGS []string, ofile, cfile string) error {
 	)
 	t0 := time.Now()
 	gxx := gxxCmd(pkg, pkg.Dir)
-	err := run(pkg.Dir, nil, gxx[0], append(gxx[1:], args...)...)
+	var buf bytes.Buffer
+	err := runOut(&buf, pkg.Dir, nil, gxx[0], append(gxx[1:], args...)...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
 	pkg.Record(gxx[0], time.Since(t0))
 	return err
 }
@@ -247,7 +260,12 @@ func gccld(pkg *Package, cgoCFLAGS, cgoLDFLAGS []string, ofile string, ofiles []
 	} else {
 		cmd = gccCmd(pkg, pkg.Dir)
 	}
-	err := run(pkg.Dir, nil, cmd[0], append(cmd[1:], args...)...)
+	var buf bytes.Buffer
+	err := runOut(&buf, pkg.Dir, nil, cmd[0], append(cmd[1:], args...)...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
 	pkg.Record("gccld", time.Since(t0))
 	return err
 }
@@ -272,7 +290,12 @@ func rungcc3(pkg *Package, dir string, ofile string, ofiles []string) error {
 		args = append(args, libgcc)
 	}
 	t0 := time.Now()
-	err := run(dir, nil, cmd[0], append(cmd[1:], args...)...)
+	var buf bytes.Buffer
+	err := runOut(&buf, dir, nil, cmd[0], append(cmd[1:], args...)...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
 	pkg.Record("gcc3", time.Since(t0))
 	return err
 }
@@ -386,7 +409,13 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 		"CGO_CFLAGS=" + strings.Join(quoteFlags(cflags), " "),
 		"CGO_LDFLAGS=" + strings.Join(quoteFlags(ldflags), " "),
 	}
-	return run(pkg.Dir, cgoenv, cgo, args...)
+	var buf bytes.Buffer
+	err := runOut(&buf, pkg.Dir, cgoenv, cgo, args...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
+	return err
 }
 
 // runcgo2 invokes the cgo tool to create _cgo_import.go
@@ -412,7 +441,13 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 	default:
 		return fmt.Errorf("unsuppored Go version: %v", runtime.Version)
 	}
-	return run(pkg.Dir, nil, cgo, args...)
+	var buf bytes.Buffer
+	err := runOut(&buf, pkg.Dir, nil, cgo, args...)
+	if err != nil {
+		log.Infof(pkg.ImportPath)
+		io.Copy(os.Stdout, &buf)
+	}
+	return err
 }
 
 // cgoworkdir returns the cgo working directory for this package.

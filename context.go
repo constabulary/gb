@@ -1,7 +1,6 @@
 package gb
 
 import (
-	"bytes"
 	"fmt"
 	"go/build"
 	"io"
@@ -211,15 +210,6 @@ func (c *Context) ctxString() string {
 	}
 	v = append(v, c.buildtags...)
 	return strings.Join(v, "-")
-}
-
-func run(dir string, env []string, command string, args ...string) error {
-	var buf bytes.Buffer
-	err := runOut(&buf, dir, env, command, args...)
-	if err != nil {
-		return fmt.Errorf("# %s %s: %v\n%s", command, strings.Join(args, " "), err, buf.String())
-	}
-	return nil
 }
 
 func runOut(output io.Writer, dir string, env []string, command string, args ...string) error {
