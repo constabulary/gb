@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/log"
+	"github.com/constabulary/gb/debug"
 )
 
 // Command represents a subcommand, or plugin that is executed within
@@ -66,7 +66,7 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	}
 	defer ctx.Destroy()
 
-	log.Debugf("args: %v", args)
+	debug.Debugf("args: %v", args)
 	return cmd.Run(ctx, args)
 }
 
@@ -85,7 +85,7 @@ func NewContext(projectroot string, options ...func(*gb.Context) error) (*gb.Con
 		gb.SourceDir(filepath.Join(root, "vendor", "src")),
 	)
 
-	log.Debugf("project root %q", project.Projectdir())
+	debug.Debugf("project root %q", project.Projectdir())
 	return project.NewContext(options...)
 }
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
-	"github.com/constabulary/gb/log"
+	"github.com/constabulary/gb/debug"
 )
 
 var (
@@ -59,8 +59,10 @@ func main() {
 	}
 	project := gb.NewProject(root,
 		gb.SourceDir(filepath.Join(root, "src")),
-		gb.SourceDir(filepath.Join(root, "vendor", "src")))
-	log.Debugf("project root %q", project.Projectdir())
+		gb.SourceDir(filepath.Join(root, "vendor", "src")),
+	)
+
+	debug.Debugf("project root %q", project.Projectdir())
 
 	for _, command := range commands {
 		if command.Name == args[0] && command.Runnable() {
@@ -79,7 +81,7 @@ func main() {
 				fatalf("could not parse flags: %v", err)
 			}
 			args = fs.Args() // reset args to the leftovers from fs.Parse
-			log.Debugf("args: %v", args)
+			debug.Debugf("args: %v", args)
 
 			ctx, err := project.NewContext(
 				gb.GcToolchain(),

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/constabulary/gb/log"
+	"github.com/constabulary/gb/debug"
 )
 
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
@@ -45,14 +45,14 @@ func BuildPackages(pkgs ...*Package) (*Action, error) {
 	build := Action{
 		Name: fmt.Sprintf("build: %s", strings.Join(names(pkgs), ",")),
 		Run: func() error {
-			log.Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
+			debug.Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		},
 	}
 
 	for _, pkg := range pkgs {
 		if len(pkg.GoFiles)+len(pkg.CgoFiles) == 0 {
-			log.Debugf("skipping %v: no go files", pkg.ImportPath)
+			debug.Debugf("skipping %v: no go files", pkg.ImportPath)
 			continue
 		}
 		a, err := BuildPackage(targets, pkg)

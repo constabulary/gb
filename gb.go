@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/constabulary/gb/log"
+	"github.com/constabulary/gb/debug"
 )
 
 // Toolchain represents a standardised set of command line tools
@@ -83,7 +83,7 @@ func copyfile(dst, src string) error {
 		return fmt.Errorf("copyfile: create(%q): %v", dst, err)
 	}
 	defer w.Close()
-	log.Debugf("copyfile(dst: %v, src: %v)", dst, src)
+	debug.Debugf("copyfile(dst: %v, src: %v)", dst, src)
 	_, err = io.Copy(w, r)
 	return err
 }
