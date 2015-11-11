@@ -10,12 +10,9 @@ import (
 	"time"
 
 	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/debug"
 )
 
 func TestTest(t *testing.T) {
-	debug.Verbose = false
-	defer func() { debug.Verbose = false }()
 	tests := []struct {
 		pkg      string
 		testArgs []string

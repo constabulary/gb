@@ -24,9 +24,7 @@ const (
 )
 
 func init() {
-	fs.BoolVar(&debug.Verbose, "v", debug.Verbose, "enable log levels below INFO level")
 	fs.StringVar(&cwd, "R", cmd.MustGetwd(), "set the project root") // actually the working directory to start the project root search
-
 	fs.Usage = usage
 }
 

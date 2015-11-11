@@ -10,14 +10,9 @@ import (
 	"reflect"
 	"sort"
 	"testing"
-
-	"github.com/constabulary/gb/debug"
 )
 
 func TestBuild(t *testing.T) {
-	debug.Verbose = false
-	defer func() { debug.Verbose = false }()
-
 	opts := func(o ...func(*Context) error) []func(*Context) error { return o }
 	tests := []struct {
 		pkg  string
@@ -97,8 +92,6 @@ func TestBuild(t *testing.T) {
 }
 
 func TestBuildPackage(t *testing.T) {
-	debug.Verbose = false
-	defer func() { debug.Verbose = false }()
 	tests := []struct {
 		pkg string
 		err error
@@ -150,8 +143,6 @@ func TestBuildPackage(t *testing.T) {
 }
 
 func TestBuildPackages(t *testing.T) {
-	debug.Verbose = false
-	defer func() { debug.Verbose = false }()
 	tests := []struct {
 		pkgs    []string
 		actions []string
