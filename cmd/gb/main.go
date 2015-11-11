@@ -9,7 +9,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
-	"github.com/constabulary/gb/log"
+	"github.com/constabulary/gb/debug"
 )
 
 var (
@@ -24,7 +24,7 @@ const (
 )
 
 func init() {
-	fs.BoolVar(&log.Verbose, "v", log.Verbose, "enable log levels below INFO level")
+	fs.BoolVar(&debug.Verbose, "v", debug.Verbose, "enable log levels below INFO level")
 	fs.StringVar(&cwd, "R", cmd.MustGetwd(), "set the project root") // actually the working directory to start the project root search
 
 	fs.Usage = usage
@@ -136,7 +136,7 @@ func main() {
 		args = cmd.ImportPaths(ctx, cwd, args)
 	}
 
-	log.Debugf("args: %v", args)
+	debug.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
 		if !noDestroyContext {
 			ctx.Destroy()
