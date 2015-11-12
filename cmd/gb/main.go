@@ -63,9 +63,6 @@ func main() {
 		}
 		command = &cmd.Command{
 			Run: func(ctx *gb.Context, args []string) error {
-				if len(args) < 1 {
-					return fmt.Errorf("plugin: no command supplied")
-				}
 				args = append([]string{plugin}, args...)
 
 				env := cmd.MergeEnv(os.Environ(), map[string]string{
