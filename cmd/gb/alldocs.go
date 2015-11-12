@@ -57,9 +57,6 @@ Flags:
 		sets the base of the project root search path from the current working
 		directory to the value supplied. Effectively gb changes working
 		directory to this path before searching for the project root.
-	-v
-		increases verbosity, effectively lowering the output level from INFO
-		to DEBUG.
 	-dotfile
 		if provided, gb will output a dot formatted file of the build steps to
 		be performed.
