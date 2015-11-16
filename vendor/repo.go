@@ -379,6 +379,7 @@ func (h *hgrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		"clone",
 		h.url,
 		dir,
+		"--noninteractive",
 	}
 
 	if branch != "" {
@@ -499,6 +500,7 @@ func run(c string, args ...string) ([]byte, error) {
 
 func runOut(w io.Writer, c string, args ...string) error {
 	cmd := exec.Command(c, args...)
+	cmd.Stdin = nil
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
@@ -513,6 +515,7 @@ func runPath(path string, c string, args ...string) ([]byte, error) {
 func runOutPath(w io.Writer, path string, c string, args ...string) error {
 	cmd := exec.Command(c, args...)
 	cmd.Dir = path
+	cmd.Stdin = nil
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
