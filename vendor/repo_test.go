@@ -44,7 +44,7 @@ func TestDeduceRemoteRepo(t *testing.T) {
 			url: "https://github.com/coreos/go-etcd",
 		},
 	}, {
-/*		path: "bitbucket.org/davecheney/gitrepo/cmd/main",
+		path: "bitbucket.org/davecheney/gitrepo/cmd/main",
 		want: &gitrepo{
 			url: "https://bitbucket.org/davecheney/gitrepo",
 		},
@@ -55,7 +55,7 @@ func TestDeduceRemoteRepo(t *testing.T) {
 			url: "https://bitbucket.org/davecheney/hgrepo",
 		},
 		extra: "/cmd/main",
-	}, { */
+	}, {
 		path: "code.google.com/p/goauth2/oauth",
 		want: &hgrepo{
 			url: "https://code.google.com/p/goauth2",

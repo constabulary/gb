@@ -18,6 +18,7 @@ install:
   - echo '#!/bin/bash' > "$GOPATH/bin/sudo"
     && echo 'echo >&2 attempted sudo "$@"' >> "$GOPATH/bin/sudo"
     && chmod +x "$GOPATH/bin/sudo"
+  - ssh -o StrictHostKeyChecking=no bitbucket.org || true
 
 script:
   - go test -v ./...
