@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
@@ -87,6 +88,15 @@ func NewContext(projectroot string, options ...func(*gb.Context) error) (*gb.Con
 
 	debug.Debugf("project root %q", project.Projectdir())
 	return project.NewContext(options...)
+}
+
+// Destroy context on SIGINT
+func DestroyContextOnSigint(ctx *gb.Context) {
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, os.Interrupt)
+	<-sigchan
+	ctx.Destroy()
+	os.Exit(2)
 }
 
 func mkdir(path string) error {
