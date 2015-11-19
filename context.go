@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -138,6 +139,14 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		CgoEnabled: build.Default.CgoEnabled,
 	}
 
+	go func () {
+		sigchan := make(chan os.Signal, 1)
+		signal.Notify(sigchan, os.Interrupt)
+		<-sigchan
+		ctx.Destroy()
+		os.Exit(2)
+	}()
+	
 	return &ctx, nil
 }
 
