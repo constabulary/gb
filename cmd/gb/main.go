@@ -120,7 +120,8 @@ func main() {
 	if err != nil {
 		fatalf("unable to construct context: %v", err)
 	}
-
+	go cmd.DestroyContextOnSigint(ctx)
+	
 	if !noDestroyContext {
 		defer ctx.Destroy()
 	}
