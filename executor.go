@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -82,14 +83,23 @@ func ExecuteConcurrent(a *Action, n int) error {
 					return
 				}
 			}
-			// wait for a permit and execute our action
-			<-permits
-			result <- a.Run()
-			permits <- true
+			
+			// select is non-blocking  
+			// for-cycle will block until the execution or interruption
+			for {
+				select { 				
+				case <- permits:
+					result <- a.Run()
+					permits <- true
+					return
+				case <- interrupted:
+					result <- fmt.Errorf("process interrupted")
+					return			
+				}	
+			}					
 		}()
 
 		return result
-
 	}
 	err := get(execute(seen, a))
 	wg.Wait()

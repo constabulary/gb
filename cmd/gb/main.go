@@ -132,6 +132,7 @@ func main() {
 	}
 
 	debug.Debugf("args: %v", args)
+	gb.StartSignalHandler()
 	if err := command.Run(ctx, args); err != nil {
 		if !noDestroyContext {
 			ctx.Destroy()
