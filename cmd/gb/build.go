@@ -119,6 +119,7 @@ For more about where packages and binaries are installed, run 'gb help project'.
 			printActions(f, build)
 		}
 
+		startSigHandlers()
 		return gb.ExecuteConcurrent(build, P)
 	},
 	AddFlags: addBuildFlags,

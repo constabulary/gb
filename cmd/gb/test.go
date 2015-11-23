@@ -72,6 +72,7 @@ See 'go help test'.
 			printActions(f, test)
 		}
 
+		startSigHandlers()
 		return gb.ExecuteConcurrent(test, P)
 	},
 	AddFlags: addTestFlags,
