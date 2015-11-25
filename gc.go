@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/build"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -85,7 +86,16 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 }
 
 func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
-	args := append(pkg.ldflags, "-o", outfile)
+	// to ensure we don't write a partial binary, link the binary to a temporary file in
+	// in the target directory, then rename.
+	dir := filepath.Dir(outfile)
+	tmp, err := ioutil.TempFile(dir, ".gb-link")
+	if err != nil {
+		return err
+	}
+	tmp.Close()
+
+	args := append(pkg.ldflags, "-o", tmp.Name())
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}
@@ -93,16 +103,19 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 		args = append(args, "-buildmode", pkg.buildmode)
 	}
 	args = append(args, afile)
-	if err := mkdir(filepath.Dir(outfile)); err != nil {
-		return fmt.Errorf("gc:ld: %v", err)
+
+	if err := mkdir(dir); err != nil {
+		return err
 	}
+
 	var buf bytes.Buffer
-	err := runOut(&buf, ".", nil, t.ld, args...)
-	if err != nil {
+	if err = runOut(&buf, ".", nil, t.ld, args...); err != nil {
+		os.Remove(tmp.Name()) // remove partial file
 		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
 		io.Copy(os.Stderr, &buf)
+		return err
 	}
-	return err
+	return os.Rename(tmp.Name(), outfile)
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
