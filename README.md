@@ -2,7 +2,7 @@
 
 ### Build status
 Unix:
-[![wercker status](https://app.wercker.com/status/494a8ac6b836f39cc7e67036d957a43e/m/master "wercker status")](https://app.wercker.com/project/bykey/494a8ac6b836f39cc7e67036d957a43e)
+[![travis-cs status](https://travis-ci.org/constabulary/gb.svg "travis-ci status")](https://travis-ci.org/constabulary/gb)
 
 Windows:
 [![Build status](https://ci.appveyor.com/api/projects/status/rjttg1agmp2sra3h/branch/master?svg=true)](https://ci.appveyor.com/project/davecheney/gb/branch/master)
