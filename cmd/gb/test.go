@@ -73,7 +73,7 @@ See 'go help test'.
 		}
 
 		startSigHandlers()
-		return gb.ExecuteConcurrent(test, P)
+		return gb.ExecuteConcurrent(test, P, interrupted)
 	},
 	AddFlags: addTestFlags,
 	FlagParse: func(flags *flag.FlagSet, args []string) error {

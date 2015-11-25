@@ -120,7 +120,7 @@ For more about where packages and binaries are installed, run 'gb help project'.
 		}
 
 		startSigHandlers()
-		return gb.ExecuteConcurrent(build, P)
+		return gb.ExecuteConcurrent(build, P, interrupted)
 	},
 	AddFlags: addBuildFlags,
 }

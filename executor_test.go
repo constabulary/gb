@@ -155,7 +155,7 @@ func TestExecute(t *testing.T) {
 func testExecuteConcurrentN(t *testing.T, n int) {
 	for _, tt := range executorTests {
 		executeReset()
-		got := ExecuteConcurrent(tt.action, n)
+		got := ExecuteConcurrent(tt.action, n, nil) // no interrupt ch
 		if !reflect.DeepEqual(got, tt.err) {
 			t.Errorf("ExecuteConcurrent(%v): %v: want err: %v, got err %v", n, tt.action.Name, tt.err, got)
 		}

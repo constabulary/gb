@@ -17,7 +17,7 @@ func Build(pkgs ...*Package) error {
 	if err != nil {
 		return err
 	}
-	return ExecuteConcurrent(build, runtime.NumCPU())
+	return ExecuteConcurrent(build, runtime.NumCPU(), nil)
 }
 
 // BuildPackages produces a tree of *Actions that can be executed to build
