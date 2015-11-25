@@ -36,12 +36,12 @@ func registerCommand(command *cmd.Command) {
 	commands[command.Name] = command
 }
 
-func main() {
-	fatalf := func(format string, args ...interface{}) {
-		fmt.Fprintf(os.Stderr, "FATAL: "+format+"\n", args...)
-		os.Exit(1)
-	}
+func fatalf(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, "FATAL: "+format+"\n", args...)
+	os.Exit(1)
+}
 
+func main() {
 	args := os.Args
 	if len(args) < 2 || args[1] == "-h" {
 		fs.Usage()
@@ -134,8 +134,9 @@ func main() {
 	debug.Debugf("args: %v", args)
 	if err := command.Run(ctx, args); err != nil {
 		if !noDestroyContext {
-			ctx.Destroy()
+			defer ctx.Destroy()
 		}
 		fatalf("command %q failed: %v", name, err)
 	}
+	return
 }
