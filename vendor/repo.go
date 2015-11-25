@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/constabulary/gb/fileutils"
 )
 
 // RemoteRepo describes a remote dvcs repository.
@@ -322,7 +324,7 @@ type workingcopy struct {
 func (w workingcopy) Dir() string { return w.path }
 
 func (w workingcopy) Destroy() error {
-	if err := RemoveAll(w.path); err != nil {
+	if err := fileutils.RemoveAll(w.path); err != nil {
 		return err
 	}
 	parent := filepath.Dir(w.path)
@@ -386,12 +388,12 @@ func (h *hgrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 		args = append(args, "--branch", branch)
 	}
 	if err := runOut(os.Stderr, "hg", args...); err != nil {
-		RemoveAll(dir)
+		fileutils.RemoveAll(dir)
 		return nil, err
 	}
 	if revision != "" {
 		if err := runOut(os.Stderr, "hg", "--cwd", dir, "update", "-r", revision); err != nil {
-			RemoveAll(dir)
+			fileutils.RemoveAll(dir)
 			return nil, err
 		}
 	}
@@ -449,7 +451,7 @@ func (b *bzrrepo) Checkout(branch, tag, revision string) (WorkingCopy, error) {
 	}
 	wc := filepath.Join(dir, "wc")
 	if err := runOut(os.Stderr, "bzr", "branch", b.url, wc); err != nil {
-		RemoveAll(dir)
+		fileutils.RemoveAll(dir)
 		return nil, err
 	}
 
@@ -478,7 +480,7 @@ func cleanPath(path string) error {
 		return nil
 	}
 	parent := filepath.Dir(path)
-	if err := RemoveAll(path); err != nil {
+	if err := fileutils.RemoveAll(path); err != nil {
 		return err
 	}
 	return cleanPath(parent)
