@@ -7,6 +7,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/constabulary/gb/fileutils"
 	"github.com/constabulary/gb/vendor"
 )
 
@@ -102,7 +103,7 @@ Flags:
 				Path:       extra,
 			}
 
-			if err := vendor.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath))); err != nil {
+			if err := fileutils.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
