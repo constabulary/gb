@@ -165,15 +165,35 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		return nil, err
 	}
 
-	cmd := exec.Command(testmainpkg.Binfile(), flags...)
-	cmd.Dir = pkg.Dir // tests run in the original source directory
-	var output bytes.Buffer
-	cmd.Stdout = &output
-	cmd.Stderr = &output
+	return &gb.Action{
+		Name: fmt.Sprintf("run: %s", testmainpkg.Binfile()),
+		Deps: testmain.Deps,
+		Run: func() error {
+			// When used with the concurrent executor, building deps and
+			// linking the test binary can cause a lot of disk space to be
+			// pinned as linking will tend to occur more frequenty than retiring
+			// tests.
+			//
+			// To solve this, we merge the testmain compile step (which includes
+			// linking) and the test run and cleanup steps so they are executed
+			// as one atomic operation.
+			var output bytes.Buffer
+			err := testmain.Run() // compile and link
+			if err == nil {
+				cmd := exec.Command(testmainpkg.Binfile(), flags...)
+				cmd.Dir = pkg.Dir // tests run in the original source directory
+				cmd.Stdout = &output
+				cmd.Stderr = &output
+				err = cmd.Run() // run test
 
-	logInfoFn := func(fn func() error, format string, args ...interface{}) func() error {
-		return func() error {
-			err := fn()
+				// test binaries can be very large, so always unlink the
+				// binary after the test has run to free up temporary space
+				// technically this is done by ctx.Destroy(), but freeing
+				// the space earlier is important for projects with many
+				// packages
+				os.Remove(testmainpkg.Binfile())
+			}
+
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
 				io.Copy(os.Stdout, &output)
@@ -181,42 +201,6 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 				fmt.Println(pkg.ImportPath)
 			}
 			return err
-		}
-	}
-
-	// test binaries can be very large, so always unlink the
-	// binary after the test has run to free up temporary space
-	// technically this is done by ctx.Destroy(), but freeing
-	// the space earlier is important for projects with many
-	// packages
-	withcleanup := func(fn func() error) func() error {
-		return func() error {
-			file := testmainpkg.Binfile()
-			err := fn()
-			os.Remove(file)
-			return err
-		}
-	}
-	fn := withcleanup(cmd.Run)
-	fn = logInfoFn(fn, pkg.ImportPath)
-	// When used with the concurrent executor, building deps and
-	// linking the test binary can cause a lot of disk space to be
-	// pinned as linking will tend to occur more frequenty than retiring
-	// tests.
-	//
-	// To solve this, we merge the testmain compile step (which includes
-	// linking) and the execute and cleanup steps so they are executed
-	// as one atomic operation.
-
-	return &gb.Action{
-		Name: fmt.Sprintf("run: %s", cmd.Args),
-		Deps: testmain.Deps,
-		Run: func() error {
-			err := testmain.Run()
-			if err != nil {
-				return err
-			}
-			return fn()
 		},
 	}, nil
 }
