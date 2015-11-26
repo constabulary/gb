@@ -12,6 +12,7 @@
 package debug
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -24,5 +25,5 @@ func Debugf(format string, args ...interface{}) {
 	if len(debug) == 0 {
 		return
 	}
-	logger.Printf(format, args...)
+	logger.Output(2, fmt.Sprintf(format, args...))
 }
