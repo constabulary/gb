@@ -69,6 +69,7 @@ func cgo14(pkg *Package) (*Action, []string, []string, error) {
 	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
 	cxxflags := append(cgoCPPFLAGS, cgoCXXFLAGS...)
 	gcc1, ofiles := cgocc(pkg, cflags, cxxflags, cfiles, pkg.CXXFiles, runcgo1...)
+	ofiles = append(ofiles, pkg.SysoFiles...)
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
 	gcc2 := Action{
 		Name: "gccld: " + pkg.ImportPath + ": _cgo_.o",
@@ -140,6 +141,7 @@ func cgo15(pkg *Package) (*Action, []string, []string, error) {
 	cflags := append(cgoCPPFLAGS, cgoCFLAGS...)
 	cxxflags := append(cgoCPPFLAGS, cgoCXXFLAGS...)
 	gcc1, ofiles := cgocc(pkg, cflags, cxxflags, cfiles, pkg.CXXFiles, runcgo1...)
+	ofiles = append(ofiles, pkg.SysoFiles...)
 	ofile := filepath.Join(filepath.Dir(ofiles[0]), "_cgo_.o")
 	gcc2 := Action{
 		Name: "gccld: " + pkg.ImportPath + ": _cgo_.o",

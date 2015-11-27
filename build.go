@@ -155,6 +155,11 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		ofiles = append(ofiles, ofile)
 	}
 
+	// step 4. add system object files.
+	for _, syso := range pkg.SysoFiles {
+		ofiles = append(ofiles, filepath.Join(pkg.Dir, syso))
+	}
+
 	build := &compile
 
 	// Do we need to pack ? Yes, replace build action with pack.
