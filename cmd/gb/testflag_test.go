@@ -183,6 +183,9 @@ func TestTestFlags(t *testing.T) {
 		}, {
 			eargs: []string{"-test.short"},
 			targs: []string{"-test.short"},
+		}, {
+			eargs: []string{"-tags", "a,b,c"},
+			targs: []string{"-tags", "a,b,c"},
 		}}
 
 	for _, tt := range tests {
