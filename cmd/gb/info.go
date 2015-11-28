@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/constabulary/gb"
@@ -28,6 +29,7 @@ func info(ctx *gb.Context, args []string) error {
 	fmt.Printf("GB_SRC_PATH=%q\n", joinlist(ctx.Srcdirs()...))
 	fmt.Printf("GB_PKG_DIR=%q\n", ctx.Pkgdir())
 	fmt.Printf("GB_BIN_SUFFIX=%q\n", ctx.Suffix())
+	fmt.Printf("GB_GOROOT=%q\n", runtime.GOROOT())
 	return nil
 }
 
