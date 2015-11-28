@@ -184,6 +184,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 				cmd.Dir = pkg.Dir // tests run in the original source directory
 				cmd.Stdout = &output
 				cmd.Stderr = &output
+				debug.Debugf("%s", cmd.Args)
 				err = cmd.Run() // run test
 
 				// test binaries can be very large, so always unlink the
@@ -196,9 +197,11 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
-				io.Copy(os.Stdout, &output)
 			} else {
 				fmt.Println(pkg.ImportPath)
+			}
+			if err != nil || pkg.Verbose {
+				io.Copy(os.Stdout, &output)
 			}
 			return err
 		},
