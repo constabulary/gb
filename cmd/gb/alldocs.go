@@ -113,7 +113,20 @@ Usage:
 
         gb info
 
-info returns information about this project.
+info prints gb environment information.
+
+Values:
+
+	GB_PROJECT_DIR
+		The root of the gb project.
+	GB_SRC_PATH
+		The list of gb project source directories.
+	GB_PKG_DIR
+		The path of the gb project's package cache.
+	GB_BIN_SUFFIX
+		The suffix applied any binary written to $GB_PROJECT_DIR/bin
+	GB_GOROOT
+		The value of runtime.GOROOT for the Go version that built this copy of gb.
 
 info returns 0 if the project is well formed, and non zero otherwise.
 
