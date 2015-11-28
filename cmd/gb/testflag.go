@@ -33,7 +33,7 @@ var testFlagDefn = map[string]*testFlagSpec{
 
 	// Passed to the test binary
 	"q":                {boolVar: true, passToTest: true},
-	"v":                {boolVar: true, passToTest: true},
+	"v":                {boolVar: true, passToAll: true},
 	"bench":            {passToTest: true},
 	"benchmem":         {boolVar: true, passToTest: true},
 	"benchtime":        {passToTest: true},

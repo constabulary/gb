@@ -33,6 +33,7 @@ type Context struct {
 
 	Force       bool // force rebuild of packages
 	SkipInstall bool // do not cache compiled packages
+	Verbose     bool // verbose output
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 

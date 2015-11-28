@@ -194,14 +194,17 @@ Test packages
 
 Usage:
 
-        gb test [build flags] [packages] [flags for test binary]
+        gb test [build flags] -v [packages] [flags for test binary]
 
 Test automates testing the packages named by the import paths.
 
 'gb test' recompiles each package along with any files with names matching
 the file pattern "*_test.go".
 
-See 'go help test'.
+Flags:
+
+        -v
+                print output from test subprocess.
 
 
 */
