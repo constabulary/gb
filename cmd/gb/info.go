@@ -39,11 +39,16 @@ info returns 0 if the project is well formed, and non zero otherwise.
 }
 
 func info(ctx *gb.Context, args []string) error {
-	fmt.Printf("GB_PROJECT_DIR=%q\n", ctx.Projectdir())
-	fmt.Printf("GB_SRC_PATH=%q\n", joinlist(ctx.Srcdirs()...))
-	fmt.Printf("GB_PKG_DIR=%q\n", ctx.Pkgdir())
-	fmt.Printf("GB_BIN_SUFFIX=%q\n", ctx.Suffix())
-	fmt.Printf("GB_GOROOT=%q\n", runtime.GOROOT())
+	vars := []struct{ name, value string }{
+		{"GB_PROJECT_DIR", ctx.Projectdir()},
+		{"GB_SRC_PATH", joinlist(ctx.Srcdirs()...)},
+		{"GB_PKG_DIR", ctx.Pkgdir()},
+		{"GB_BIN_SUFFIX", ctx.Suffix()},
+		{"GB_GOROOT", runtime.GOROOT()},
+	}
+	for _, v := range vars {
+		fmt.Printf("%s=\"%s\"\n", v.name, v.value)
+	}
 	return nil
 }
 
