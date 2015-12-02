@@ -90,7 +90,7 @@ Flags:
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "gb test: %s\n", err)
 			fmt.Fprintf(os.Stderr, `run "go help test" or "go help testflag" for more information`+"\n")
-			os.Exit(2)
+			exit(2)
 		}
 		return flags.Parse(args)
 	},

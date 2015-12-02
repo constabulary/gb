@@ -119,13 +119,14 @@ func (t *T) pwd() string {
 	return wd
 }
 
-// cd changes the current directory to the named directory.  Note that
-// using this means that the test must not be run in parallel with any
-// other tests.
-func (t *T) cd(dir string) {
+// cd changes the current directory to the named directory. extra args
+// are passed through filepath.Join before cd.
+func (t *T) cd(dir string, extra ...string) {
 	if t.wd == "" {
 		t.wd = t.pwd()
 	}
+	v := append([]string{dir}, extra...)
+	dir = filepath.Join(v...)
 	abs, err := filepath.Abs(dir)
 	t.must(os.Chdir(dir))
 	if err == nil {
@@ -372,11 +373,13 @@ func (t *T) tempFile(path, contents string) {
 }
 
 // tempDir adds a temporary directory for a run of testgb.
-func (t *T) tempDir(path string) {
+func (t *T) tempDir(path string) string {
 	t.makeTempdir()
-	if err := os.MkdirAll(filepath.Join(t.tempdir, path), 0755); err != nil && !os.IsExist(err) {
+	path = filepath.Join(t.tempdir, path)
+	if err := os.MkdirAll(path, 0755); err != nil && !os.IsExist(err) {
 		t.Fatal(err)
 	}
+	return path
 }
 
 // path returns the absolute pathname to file with the temporary
@@ -395,6 +398,32 @@ func (t *T) path(name string) string {
 func (t *T) mustNotExist(path string) {
 	if _, err := os.Stat(path); err == nil || !os.IsNotExist(err) {
 		t.Fatalf("%s exists but should not (%v)", path, err)
+	}
+}
+
+// mustBeEmpty fails if root is not a directory or is not empty.
+func (t *T) mustBeEmpty(root string) {
+	fi, err := os.Stat(root)
+	if err != nil {
+		t.Fatalf("failed to stat: %s: %v", root, err)
+	}
+	if !fi.IsDir() {
+		t.Fatalf("%s exists but is not a directory", root)
+	}
+	var found []string
+	fn := func(path string, info os.FileInfo, err error) error {
+		if path == root {
+			return nil
+		}
+		if err != nil {
+			t.Fatalf("error during walk at %s: %v", path, err)
+		}
+		found = append(found, path)
+		return nil
+	}
+	err = filepath.Walk(root, fn)
+	if len(found) > 0 {
+		t.Fatalf("expected %s to be empty, found %s", root, found)
 	}
 }
 
@@ -497,9 +526,59 @@ func (t *T) resetReadOnlyFlagAll(path string) {
 	}
 }
 
+// Invoking plain "gb" should print usage to stderr and exit with 2.
+func TestNoArguments(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src")
+	gb.cd(gb.tempdir)
+	gb.runFail()
+	gb.grepStderr("^Usage:", `expected "Usage: ..."`)
+}
+
+// Invoking plain "gb" outside a project should print to stderr and exit with 2.
+func TestOutsideProject(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("x")
+	gb.cd(gb.tempdir, "x")
+	gb.runFail()
+	gb.grepStderr("^Usage:", `expected "Usage: ..."`)
+}
+
+// Invoking gb outside a project should print to stderr and exit with 2.
+func TestInfoOutsideProject(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("x")
+	gb.cd(gb.tempdir, "x")
+	gb.runFail("info")
+	regex := `FATAL: unable to construct context: could not locate project root: could not find project root in "` +
+		regexp.QuoteMeta(filepath.Join(gb.tempdir, "x")) +
+		`" or its parents`
+	gb.grepStderr(regex, "expected FATAL")
+}
+
+// Invoking gb outside a project with -R should succeed.
+func TestInfoWithMinusR(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("x")
+	gb.tempDir("y")
+	gb.tempDir("y/src")
+	gb.cd(gb.tempdir, "x")
+	gb.run("info", "-R", filepath.Join(gb.tempdir, "y"))
+	gb.grepStdout(`^GB_PROJECT_DIR="`+regexp.QuoteMeta(filepath.Join(gb.tempdir, "y"))+`"$`, "missing GB_PROJECT_DIR")
+}
+
 func TestInfoCmd(t *testing.T) {
 	gb := T{T: t}
 	defer gb.cleanup()
+
 	gb.tempDir("src")
 	gb.cd(gb.tempdir)
 	gb.run("info")
@@ -564,4 +643,230 @@ func Example_B() {
 `)
 	gb.cd(gb.tempdir)
 	gb.run("test", "testorder")
+}
+
+func TestBuildPackage(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg.go", `package pkg1
+import "fmt"
+
+func helloworld() {
+	fmt.Println("hello world!")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("build")
+	gb.grepStdout("^pkg1$", `expected "pkg1"`)
+	gb.mustBeEmpty(tmpdir)
+	gb.wantArchive(filepath.Join(gb.tempdir, "pkg", runtime.GOOS+"-"+runtime.GOARCH, "pkg1.a"))
+}
+
+func TestBuildOnlyOnePackage(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg.go", `package pkg1
+import "fmt"
+
+func helloworld() {
+	fmt.Println("hello world!")
+}
+`)
+	gb.tempDir("src/pkg2")
+	gb.tempFile("src/pkg2/pkg.go", `package pkg2
+import "fmt"
+
+func helloworld() {
+	fmt.Println("hello world!")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("build", "pkg1")
+	gb.grepStdout("^pkg1$", `expected "pkg1"`)
+	gb.grepStdoutNot("^pkg2$", `did not expect "pkg2"`)
+	gb.mustBeEmpty(tmpdir)
+	gb.wantArchive(filepath.Join(gb.tempdir, "pkg", runtime.GOOS+"-"+runtime.GOARCH, "pkg1.a"))
+}
+
+func TestBuildOnlyOnePackageFromWorkingDir(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg.go", `package pkg1
+import "fmt"
+
+func helloworld() {
+	fmt.Println("hello world!")
+}
+`)
+	gb.tempDir("src/pkg2")
+	gb.tempFile("src/pkg2/pkg.go", `package pkg2
+import "fmt"
+
+func helloworld() {
+	fmt.Println("hello world!")
+}
+`)
+	gb.cd(filepath.Join(gb.tempdir, "src", "pkg1"))
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("build")
+	gb.grepStdout("^pkg1$", `expected "pkg1"`)
+	gb.grepStdoutNot("^pkg2$", `did not expect "pkg2"`)
+	gb.mustBeEmpty(tmpdir)
+	gb.wantArchive(filepath.Join(gb.tempdir, "pkg", runtime.GOOS+"-"+runtime.GOARCH, "pkg1.a"))
+}
+
+func TestBuildPackageWrongPackage(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg.go", `package pkg1
+import "fmt"
+
+func helloworld() {
+	fmt.Println("hello world!")
+}
+`)
+	gb.cd(gb.tempdir)
+	gb.runFail("build", "pkg2")
+	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg2": cannot find package "pkg2" in any of:`, "expected FATAL")
+	gb.grepStderr(regexp.QuoteMeta(filepath.Join(runtime.GOROOT(), "src", "pkg2")), "expected GOROOT")
+	gb.grepStderr(regexp.QuoteMeta(filepath.Join(gb.tempdir, "src", "pkg2")), "expected GOPATH")
+	gb.grepStderr(regexp.QuoteMeta(filepath.Join(gb.tempdir, "vendor", "src", "pkg2")), "expected GOPATH")
+}
+
+func TestBuildPackageNoSource(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.cd(gb.tempdir)
+	gb.runFail("build", "pkg1")
+	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg1": no buildable Go source files in `+regexp.QuoteMeta(filepath.Join(gb.tempdir, "src", "pkg1")), "expected FATAL")
+}
+
+func TestTestPackageNoTests(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg.go", `package pkg1
+import "fmt"
+
+func helloworld() {
+	fmt.Println("hello world!")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "pkg1")
+	gb.grepStdout("^pkg1$", `expected "pkg1"`)
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+// test that compiling A in test scope compiles B in regular scope
+func TestTestDepdenantPackage(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/A")
+	gb.tempDir("src/B")
+	gb.tempFile("src/B/B.go", `package B
+const X = 1
+`)
+	gb.tempFile("src/A/A_test.go", `package A
+import "testing"
+import "B"
+
+func TestX(t *testing.T) {
+	if B.X != 1 {
+		t.Fatal("expected 1, got %d", B.X)
+	}
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "A")
+	gb.grepStdout("^B$", `expected "B"`) // output from build action
+	gb.grepStdout("^A$", `expected "A"`) // output from test action
+	gb.mustBeEmpty(tmpdir)
+	gb.wantArchive(filepath.Join(gb.tempdir, "pkg", runtime.GOOS+"-"+runtime.GOARCH, "B.a"))
+}
+
+func TestTestPackageOnlyTests(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg_test.go", `package pkg1
+import "testing"
+
+func TestTest(t *testing.T) {
+	t.Log("hello")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "pkg1")
+	gb.grepStdout("^pkg1$", `expected "pkg1"`)
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+func TestTestPackageFailedToBuild(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg_test.go", `package pkg1
+import "testing"
+
+func TestTest(t *testing.T) {
+	t.Log("hello"	// missing parens
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.runFail("test")
+	gb.grepStderr(`FATAL: command "test" failed:`, "expected FATAL")
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+func TestTestPackageTestFailed(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg_test.go", `package pkg1
+import "testing"
+
+func TestTest(t *testing.T) {
+	t.Error("failed")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.runFail("test")
+	gb.grepStderr("^# pkg1$", "expected # pkg1")
+	gb.grepStdout("pkg_test.go:6: failed", "expected message from test")
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 }

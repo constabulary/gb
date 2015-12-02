@@ -47,7 +47,7 @@ func help(args []string) {
 	}
 	if len(args) != 1 {
 		fmt.Fprintf(os.Stderr, "usage: gb help command\n\nToo many arguments given.\n")
-		os.Exit(2) // failed at 'gb help'
+		exit(2) // failed at 'gb help'
 	}
 
 	arg := args[0]
@@ -72,7 +72,7 @@ func help(args []string) {
 	}
 
 	fmt.Fprintf(os.Stderr, "Unknown help topic %#q. Run 'gb help'.\n", arg)
-	os.Exit(2) // failed at 'gb help cmd'
+	exit(2) // failed at 'gb help cmd'
 }
 
 var usageTemplate = `gb, a project based build tool for the Go programming language.
@@ -158,5 +158,5 @@ func sortedCommands() []*cmd.Command {
 
 func usage() {
 	printUsage(os.Stderr)
-	os.Exit(2)
+	exit(2)
 }

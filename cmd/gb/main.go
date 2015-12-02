@@ -19,8 +19,8 @@ var (
 )
 
 const (
-	// enable to keep working directory
-	noDestroyContext = false
+	// disable to keep working directory
+	destroyContext = true
 )
 
 func init() {
@@ -36,21 +36,31 @@ func registerCommand(command *cmd.Command) {
 	commands[command.Name] = command
 }
 
+// atExit functions are called in sequence at the exit of the program.
+var atExit []func() error
+
+// exit runs all atExit functions, then calls os.Exit(code).
+func exit(code int) {
+	for _, fn := range atExit {
+		fn()
+	}
+	os.Exit(code)
+}
+
 func fatalf(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, "FATAL: "+format+"\n", args...)
-	os.Exit(1)
+	exit(1)
 }
 
 func main() {
 	args := os.Args
 	if len(args) < 2 || args[1] == "-h" {
-		fs.Usage()
-		os.Exit(1)
+		fs.Usage() // usage calles exit(2)
 	}
 	name := args[1]
 	if name == "help" {
 		help(args[2:])
-		return
+		exit(0)
 	}
 
 	command, ok := commands[name]
@@ -58,8 +68,7 @@ func main() {
 		plugin, err := lookupPlugin(name)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "FATAL: unknown command %q\n", name)
-			fs.Usage()
-			os.Exit(1)
+			fs.Usage() // usage calles exit(2)
 		}
 		command = &cmd.Command{
 			Run: func(ctx *gb.Context, args []string) error {
@@ -121,10 +130,6 @@ func main() {
 		fatalf("unable to construct context: %v", err)
 	}
 
-	if !noDestroyContext {
-		defer ctx.Destroy()
-	}
-
 	if command.ParseArgs != nil {
 		args = command.ParseArgs(ctx, ctx.Projectdir(), args)
 	} else {
@@ -132,11 +137,13 @@ func main() {
 	}
 
 	debug.Debugf("args: %v", args)
+
+	if destroyContext {
+		atExit = append(atExit, ctx.Destroy)
+	}
+
 	if err := command.Run(ctx, args); err != nil {
-		if !noDestroyContext {
-			defer ctx.Destroy()
-		}
 		fatalf("command %q failed: %v", name, err)
 	}
-	return
+	exit(0)
 }
