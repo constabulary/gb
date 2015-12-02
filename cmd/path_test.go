@@ -51,7 +51,7 @@ func TestFindProjectroot(t *testing.T) {
 		{path: root, want: root},
 		{path: join(root, "src"), want: root},
 		{path: join(join(root, "src"), "a"), want: root},
-		{path: join(root, ".."), err: fmt.Errorf("could not find project root in %q or its parents", join(root, ".."))},
+		{path: join(root, ".."), err: fmt.Errorf(`could not find project root in "%s" or its parents`, join(root, ".."))},
 	}
 
 	for _, tt := range tests {
