@@ -870,3 +870,26 @@ func TestTest(t *testing.T) {
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 }
+
+func TestTestPackageMinusV(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg_test.go", `package pkg1
+import "testing"
+
+func TestTest(t *testing.T) {
+	t.Logf("hello")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "-v")
+	gb.grepStdout("^pkg1$", "expected pkg1")
+	gb.grepStdout("pkg_test.go:6: hello", "expected output from test binary")
+	gb.grepStdout("PASS", "expected PASS")
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
