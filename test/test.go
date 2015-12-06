@@ -70,6 +70,7 @@ func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
 // TestPackage returns an Action representing the steps required to build
 // and test this Package.
 func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string) (*gb.Action, error) {
+	debug.Debugf("TestPackage: %s, flags: %s", pkg.ImportPath, flags)
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 	gofiles = append(gofiles, pkg.TestGoFiles...)
