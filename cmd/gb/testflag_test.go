@@ -107,6 +107,13 @@ func TestTestFlagsPreParse(t *testing.T) {
 			args:  []string{"-P=1", "-short"},
 			pargs: []string{"-P=1"},
 			eargs: []string{"-short"},
+		}, {
+			args:  []string{"-name=jardin"},
+			eargs: []string{"-name=jardin"},
+		}, {
+			args:  []string{"-cover", "-name=jardin"},
+			pargs: []string{"-cover"},
+			eargs: []string{"-name=jardin"},
 		}}
 
 	for _, tt := range tests {

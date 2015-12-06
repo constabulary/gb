@@ -893,3 +893,33 @@ func TestTest(t *testing.T) {
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 }
+
+// https://github.com/constabulary/gb/issues/349
+func TestTestGbTestPassesUnknownFlags(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/projectx")
+	gb.tempFile("src/projectx/main_test.go", `package main
+
+import (
+    "flag"
+    "testing"
+)
+
+var name = flag.String("name", "nsf", "what is your name")
+
+func TestX(t *testing.T) {
+    if *name != "jardin" {
+        t.Fatalf("got: '%s', expected: 'jardin'", *name)
+    }
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "-name=jardin")
+	gb.grepStdout("^projectx$", "expected projectx") // output from gb test
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
