@@ -589,6 +589,17 @@ func TestInfoCmd(t *testing.T) {
 	gb.grepStdout(`^GB_GOROOT="`+regexp.QuoteMeta(runtime.GOROOT())+`"$`, "missing GB_GOROOT")
 }
 
+func TestInfoWithArgs(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src")
+	gb.cd(gb.tempdir)
+	gb.run("info", "GB_PROJECT_DIR", "GB_GOROOT")
+	gb.grepStdout(`^`+regexp.QuoteMeta(gb.tempdir), "missing "+regexp.QuoteMeta(gb.tempdir))
+	gb.grepStdout(`^`+regexp.QuoteMeta(runtime.GOROOT()), "missing "+regexp.QuoteMeta(runtime.GOROOT()))
+}
+
 // Only succeeds if source order is preserved.
 func TestSourceFileNameOrderPreserved(t *testing.T) {
 	gb := T{T: t}
