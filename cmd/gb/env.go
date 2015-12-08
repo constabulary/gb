@@ -15,7 +15,7 @@ var EnvCmd = &cmd.Command{
 	Short:     "print project environment variables",
 	Long: `
 Env prints project environment variables. If one or more variable names is 
-given as arguments, info prints the value of each named variable on its own line.
+given as arguments, env prints the value of each named variable on its own line.
 `,
 	Run: info,
 	ParseArgs: func(ctx *gb.Context, cwd string, args []string) []string {
