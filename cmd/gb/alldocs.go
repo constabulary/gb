@@ -88,9 +88,10 @@ Print project environment variables
 
 Usage:
 
-        gb env
+        gb env [var ...]
 
-Env prints project environment variables.
+Env prints project environment variables. If one or more variable names is 
+given as arguments, env prints the value of each named variable on its own line.
 
 
 Generate Go files by processing source
@@ -111,7 +112,7 @@ Info returns information about this project
 
 Usage:
 
-        gb info
+        gb info [var ...]
 
 info prints gb environment information.
 
@@ -129,6 +130,8 @@ Values:
 		The value of runtime.GOROOT for the Go version that built this copy of gb.
 
 info returns 0 if the project is well formed, and non zero otherwise.
+If one or more variable names is given as arguments, info prints the 
+value of each named variable on its own line.
 
 
 List the packages named by the importpaths
