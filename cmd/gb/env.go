@@ -19,6 +19,8 @@ given as arguments, env prints the value of each named variable on its own line.
 `,
 	Run: info,
 	ParseArgs: func(ctx *gb.Context, cwd string, args []string) []string {
+		// env treats arguments as environment variables names,
+		// don't do any processing.
 		return args
 	},
 }

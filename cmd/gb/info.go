@@ -37,6 +37,8 @@ value of each named variable on its own line.
 `,
 		Run: info,
 		ParseArgs: func(ctx *gb.Context, cwd string, args []string) []string {
+			// env treats arguments as environment variables names,
+			// don't do any processing.
 			return args
 		},
 		AddFlags: addBuildFlags,
@@ -45,12 +47,15 @@ value of each named variable on its own line.
 
 func info(ctx *gb.Context, args []string) error {
 	env := makeenv(ctx)
+	// print values for env variables when args are provided
 	if len(args) > 0 {
 		for _, arg := range args {
+			// print each var on its own line, blank line for each invalid variables
 			fmt.Println(findenv(env, arg))
 		}
 		return nil
 	}
+	// print all variable when no args are provided
 	for _, v := range env {
 		fmt.Printf("%s=\"%s\"\n", v.name, v.val)
 	}
