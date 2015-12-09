@@ -910,13 +910,7 @@ func TestTest(t *testing.T) {
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 }
 
-// https://github.com/constabulary/gb/issues/349
-func TestTestGbTestPassesUnknownFlags(t *testing.T) {
-	gb := T{T: t}
-	defer gb.cleanup()
-	gb.tempDir("src")
-	gb.tempDir("src/projectx")
-	gb.tempFile("src/projectx/main_test.go", `package main
+const issue349 = `package main
 
 import (
     "flag"
@@ -930,12 +924,105 @@ func TestX(t *testing.T) {
         t.Fatalf("got: '%s', expected: 'jardin'", *name)
     }
 }
-`)
+`
+
+// https://github.com/constabulary/gb/issues/349
+func TestTestGbTestPassesUnknownFlags(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/projectx")
+	gb.tempFile("src/projectx/main_test.go", issue349)
 	gb.cd(gb.tempdir)
 	tmpdir := gb.tempDir("tmp")
 	gb.setenv("TMP", tmpdir)
 	gb.run("test", "-name=jardin")
 	gb.grepStdout("^projectx$", "expected projectx") // output from gb test
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+const issue473 = `package main
+
+import (
+    "flag"
+    "testing"
+)
+
+var name = flag.String("name", "nsf", "what is your name")
+
+func TestX(t *testing.T) {
+}
+
+func TestY(t *testing.T) {
+}
+`
+
+// https://github.com/constabulary/gb/issues/473
+func TestGbTestIssue473a(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/projectx")
+	gb.tempFile("src/projectx/main_test.go", issue473)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "-v", "projectx", "-run", "TestX")
+	gb.grepStdout("^projectx$", "expected projectx") // output from gb test
+	gb.grepStdout("TestX", "expected TestX")
+	gb.grepStdoutNot("TestY", "expected TestY")
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+func TestGbTestIssue473b(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/projectx")
+	gb.tempFile("src/projectx/main_test.go", issue473)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "-v", "-run", "TestX", "projectx")
+	gb.grepStdout("^projectx$", "expected projectx") // output from gb test
+	gb.grepStdout("TestX", "expected TestX")
+	gb.grepStdoutNot("TestY", "expected TestY")
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+func TestGbTestIssue473c(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/projectx")
+	gb.tempFile("src/projectx/main_test.go", issue473)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "-v", "projectx")
+	gb.grepStdout("^projectx$", "expected projectx") // output from gb test
+	gb.grepStdout("TestX", "expected TestX")
+	gb.grepStdout("TestY", "expected TestY")
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+func TestGbTestIssue473d(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/projectx")
+	gb.tempFile("src/projectx/main_test.go", issue473)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "projectx", "-v")
+	gb.grepStdout("^projectx$", "expected projectx") // output from gb test
+	gb.grepStdout("TestX", "expected TestX")
+	gb.grepStdout("TestY", "expected TestY")
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 }

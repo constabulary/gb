@@ -95,16 +95,22 @@ func TestFlagsExtraParse(args []string) (parseArgs []string, extraArgs []string,
 
 	for x := 0; x < argsLen; x++ {
 		nArg := args[x]
+
 		val, ok := testFlagDefn[strings.TrimPrefix(nArg, "-")]
 		if !strings.HasPrefix(nArg, "-") || (ok && !val.passToTest) {
 			err = setArgFound(nArg)
 			if err != nil {
 				return
 			}
-			parseArgs = append(parseArgs, nArg)
 			if ok && val.passToAll {
+				// passToAll arguments, like -v or -cover, are special. They are handled by gb test
+				// and the test sub process. So move them to the front of the parseArgs list but
+				// the back of the extraArgs list.
+				parseArgs = append([]string{nArg}, parseArgs...)
 				extraArgs = append(extraArgs, nArg)
+				continue
 			}
+			parseArgs = append(parseArgs, nArg)
 			continue
 		}
 
