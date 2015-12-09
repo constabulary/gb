@@ -90,7 +90,7 @@ Usage:
 
         gb env [var ...]
 
-Env prints project environment variables. If one or more variable names is 
+Env prints project environment variables. If one or more variable names is
 given as arguments, env prints the value of each named variable on its own line.
 
 
@@ -130,7 +130,7 @@ Values:
 		The value of runtime.GOROOT for the Go version that built this copy of gb.
 
 info returns 0 if the project is well formed, and non zero otherwise.
-If one or more variable names is given as arguments, info prints the 
+If one or more variable names is given as arguments, info prints the
 value of each named variable on its own line.
 
 

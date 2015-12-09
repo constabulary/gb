@@ -21,6 +21,10 @@ func TestTestFlagsPreParse(t *testing.T) {
 			pargs: []string{"-v", "package_name"},
 			eargs: []string{"-v", "-debug"},
 		}, {
+			args:  []string{"-debug", "package_name", "-v"},
+			pargs: []string{"-v", "package_name"},
+			eargs: []string{"-debug", "-v"},
+		}, {
 			args:  []string{"-q", "-debug", "package_name"},
 			pargs: []string{"package_name"},
 			eargs: []string{"-q", "-debug"},

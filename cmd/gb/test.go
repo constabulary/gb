@@ -85,6 +85,7 @@ Flags:
 	AddFlags: addTestFlags,
 	FlagParse: func(flags *flag.FlagSet, args []string) error {
 		var err error
+		debug.Debugf("%s", args)
 		args, tfs, err = TestFlagsExtraParse(args[2:])
 		debug.Debugf("%s %s", args, tfs)
 		if err != nil {
