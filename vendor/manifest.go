@@ -117,6 +117,8 @@ func writeManifest(w io.Writer, m *Manifest) error {
 	if err != nil {
 		return err
 	}
+	buf = append(buf, 0)
+
 	_, err = io.Copy(w, bytes.NewReader(buf))
 	return err
 }
