@@ -93,6 +93,7 @@ type T struct {
 	env            []string
 	tempdir        string
 	ran            bool
+	stdin          io.Reader
 	stdout, stderr bytes.Buffer
 }
 
@@ -164,6 +165,7 @@ func (t *T) doRun(args []string) error {
 	cmd := exec.Command(testgb, args...)
 	t.stdout.Reset()
 	t.stderr.Reset()
+	cmd.Stdin = t.stdin
 	cmd.Stdout = &t.stdout
 	cmd.Stderr = &t.stderr
 	cmd.Env = t.env
@@ -1026,3 +1028,104 @@ func TestGbTestIssue473d(t *testing.T) {
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 }
+
+// gb list with an empty project succeeds and returns nothing.
+func TestGbListEmpty(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("list")
+	gb.grepStdoutNot(".", "expected no output")
+	gb.grepStderrNot(".", "expected no output")
+	gb.mustBeEmpty(tmpdir)
+}
+
+// gb list with a project with source at the top level should return nothing.
+func TestGbListSrcTopLevel(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempFile("src/main.go", "package main; func main() { println() }")
+	gb.cd(gb.tempdir)
+	gb.run("list")
+	gb.grepStdoutNot(".", "expected no output")
+	gb.grepStderrNot(".", "expected no output")
+}
+
+// gb list with a project with source in a top level directory called will fail.
+func TestGbListSrcCmd(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/cmd")
+	gb.tempFile("src/cmd/main.go", "package main; func main() { println() }")
+	gb.cd(gb.tempdir)
+	gb.runFail("list")
+	gb.grepStdoutNot(".", "expected no output")
+	gb.grepStderr(`unable to resolve: failed to resolve import path "cmd": no buildable Go source files in `+regexp.QuoteMeta(filepath.Join(runtime.GOROOT(), "src", "cmd")), "expected FATAL")
+}
+
+func mklistfixture(gb *T) {
+	gb.tempDir("src/p")
+	gb.tempDir("src/q")
+	gb.tempDir("src/r/s")
+	gb.tempFile("src/p/p.go", "package p; const P = 'p'")
+	gb.tempFile("src/q/q.go", "package p; const Q = 'q'") // package name differs from import path
+	gb.tempFile("src/r/r.go", "package r; const R = 'r'")
+	gb.tempFile("src/r/s/s.go", "package s; const S = 's'")
+}
+
+// gb list with a few projects should show them all.
+func TestGbList(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	mklistfixture(&gb)
+	gb.cd(gb.tempdir)
+	gb.run("list")
+	gb.grepStdout("^p$", "expected 'p'")
+	gb.grepStdout("^q$", "expected 'q'")
+	gb.grepStdout("^r$", "expected 'r'")
+	gb.grepStdout("^r/s$", "expected 'r/s'")
+}
+
+func TestGbListPart(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	mklistfixture(&gb)
+	gb.cd(gb.tempdir)
+	gb.run("list", "r/...", "q")
+	gb.grepStdoutNot("^p$", "unexpected 'p'")
+	gb.grepStdout("^q$", "expected 'q'")
+	gb.grepStdout("^r$", "expected 'r'")
+	gb.grepStdout("^r/s$", "expected 'r/s'")
+}
+
+func TestGbListPackageNames(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	mklistfixture(&gb)
+	gb.cd(gb.tempdir)
+	gb.run("list", "-f", "{{ .Name }}")
+	gb.grepStdout("^p$", "expected 'p'")
+	gb.grepStdoutNot("^q$", "unexpected 'q'")
+	gb.grepStdout("^r$", "expected 'r'")
+	gb.grepStdout("^s$", "expected 's'")
+}
+
+func TestGbListFormatFromStdin(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	mklistfixture(&gb)
+	gb.cd(gb.tempdir)
+	gb.stdin = strings.NewReader("{{ .Name }}")
+	gb.run("list", "-s")
+	gb.grepStdout("^p$", "expected 'p'")
+	gb.grepStdoutNot("^q$", "unexpected 'q'")
+	gb.grepStdout("^r$", "expected 'r'")
+	gb.grepStdout("^s$", "expected 's'")
+}
+
+// TODO(dfc) add tests for -json
