@@ -384,6 +384,15 @@ func (t *T) tempDir(path string) string {
 	return path
 }
 
+// symlink adds a symlink from src to dst.
+func (t *T) symlink(src, dst string) string {
+	t.makeTempdir()
+	src = filepath.Join(t.tempdir, src)
+	dst = filepath.Join(t.tempdir, dst)
+	t.must(os.Symlink(src, dst))
+	return dst
+}
+
 // path returns the absolute pathname to file with the temporary
 // directory.
 func (t *T) path(name string) string {
@@ -1129,3 +1138,88 @@ func TestGbListFormatFromStdin(t *testing.T) {
 }
 
 // TODO(dfc) add tests for -json
+
+func skipWindows(t *testing.T, msg string) {
+	if runtime.GOOS == "windows" {
+		t.Skip("test skipped on windows:", msg)
+	}
+}
+
+// issue 481: check that project detection works correctly
+// in the presence of symlinks above the project root.
+func TestProjectRootDetectionWorksWithParentSymlink(t *testing.T) {
+	skipWindows(t, "no symlinks, lol")
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("code/project")
+	gb.tempDir("code/project/src/a")
+	gb.tempFile("code/project/src/a/a.go", "package a; const A = 'a'")
+	root := gb.symlink("code", "code1")
+	gb.cd(filepath.Join(root, "project"))
+	gb.run("list")
+	gb.grepStdout("^a$", "expected 'a'")
+}
+
+func TestProjectRootDetectionWorksWithDirectSymlink(t *testing.T) {
+	skipWindows(t, "no symlinks, lol")
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("code/project")
+	gb.tempDir("code/project/src/a")
+	gb.tempFile("code/project/src/a/a.go", "package a; const A = 'a'")
+	root := gb.symlink("code/project", "code/symlink")
+	gb.cd(root)
+	gb.run("list")
+	gb.grepStdout("^a$", "expected 'a'")
+}
+
+// issue 157
+func TestTestWorksWithProjectSymlink(t *testing.T) {
+	skipWindows(t, "no symlinks, lol")
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("code/project")
+	gb.tempDir("code/project/src/a")
+	gb.tempFile("code/project/src/a/a.go", "package a; const A = 'a'")
+	gb.tempFile("code/project/src/a/a_test.go", `package a
+
+import "testing"
+
+func TestA(t *testing.T) {
+	if A != 'a' {
+		t.Fatal("expected a, got", A)
+	}
+}
+`)
+	root := gb.symlink("code/project", "code/symlink")
+	gb.cd(root)
+	gb.run("test")
+	gb.grepStdout("^a$", "expected 'a'")
+}
+
+func TestTestWorksInsideProjectSymlink(t *testing.T) {
+	skipWindows(t, "no symlinks, lol")
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("code/project")
+	gb.tempDir("code/project/src/a")
+	gb.tempFile("code/project/src/a/a.go", "package a; const A = 'a'")
+	gb.tempFile("code/project/src/a/a_test.go", `package a
+
+import "testing"
+
+func TestA(t *testing.T) {
+	if A != 'a' {
+		t.Fatal("expected a, got", A)
+	}
+}
+`)
+	root := gb.symlink("code/project", "code/symlink")
+	gb.cd(filepath.Join(root, "src", "a"))
+	gb.run("test")
+	gb.grepStdout("^a$", "expected 'a'")
+}
