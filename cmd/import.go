@@ -4,6 +4,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/constabulary/gb/debug"
 )
 
 type Context interface {
@@ -15,6 +17,7 @@ type Context interface {
 // command line, but it does no ... expansion.
 func importPathsNoDotExpansion(ctx Context, cwd string, args []string) []string {
 	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], cwd)
+	debug.Debugf("%s %s", cwd, srcdir)
 	if srcdir == ".." {
 		srcdir = "."
 	}
