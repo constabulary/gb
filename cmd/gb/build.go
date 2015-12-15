@@ -30,6 +30,9 @@ var (
 	// skip caching of packages
 	FF bool
 
+	// enable race runtime
+	race bool
+
 	ldflags, gcflags []string
 
 	P int // number of executors to run in parallel
@@ -45,6 +48,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&R, "r", false, "perform a release build")
 	fs.BoolVar(&F, "f", false, "rebuild up-to-date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
+	fs.BoolVar(&race, "race", false, "enable race detector")
 	fs.IntVar(&P, "P", runtime.NumCPU(), "number of parallel jobs")
 	fs.Var((*stringsFlag)(&ldflags), "ldflags", "flags passed to the linker")
 	fs.Var((*stringsFlag)(&gcflags), "gcflags", "flags passed to the compiler")

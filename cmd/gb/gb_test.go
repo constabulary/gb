@@ -1223,3 +1223,46 @@ func TestA(t *testing.T) {
 	gb.run("test")
 	gb.grepStdout("^a$", "expected 'a'")
 }
+
+// test -race flag is wired up correctly
+func TestBuildRaceFlag(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/x")
+	gb.tempFile("src/x/x_race.go", "package x\nconst A = 1\n")
+	gb.tempFile("src/x/y.go", "// +build race\n\npackage x\nconst B = 2\n")
+	gb.tempFile("src/x/z.go", "package x\n const C = A +B\n")
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("build", "-race", "x")
+	gb.mustBeEmpty(tmpdir)
+	gb.wantArchive(filepath.Join(gb.tempdir, "pkg", runtime.GOOS+"-"+runtime.GOARCH+"-race", "x.a"))
+}
+
+func TestTestRaceFlag(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/x")
+	gb.tempFile("src/x/x_race.go", "package x\nconst A = 1\n")
+	gb.tempFile("src/x/y.go", "// +build race\n\npackage x\nconst B = 2\n")
+	gb.tempFile("src/x/q.go", "// +build !race\n\npackage x\nconst B = 7\n")
+	gb.tempFile("src/x/x_test.go", `package x
+import "testing"
+
+func TestRaceFlag(t *testing.T) {
+	if A != 1 || B != 2 {
+		t.Fatal("expected", 1, 2,"got", A, B)
+	}
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "-race", "x")
+	gb.grepStdout("^x$", "expected x") // output from gb test
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}

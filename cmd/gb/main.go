@@ -111,6 +111,9 @@ func main() {
 	}
 
 	args = fs.Args() // reset args to the leftovers from fs.Parse
+
+	debug.Debugf("args: %v", args)
+
 	if command == commands["plugin"] {
 		args = append([]string{name}, args...)
 	}
@@ -125,7 +128,14 @@ func main() {
 		gb.Gcflags(gcflags...),
 		gb.Ldflags(ldflags...),
 		gb.Tags(buildtags...),
+		func(c *gb.Context) error {
+			if race {
+				return gb.WithRace(c)
+			}
+			return nil
+		},
 	)
+
 	if err != nil {
 		fatalf("unable to construct context: %v", err)
 	}
