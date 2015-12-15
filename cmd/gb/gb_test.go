@@ -80,6 +80,7 @@ func TestMain(m *testing.M) {
 	// Don't let these environment variables confuse the test.
 	os.Unsetenv("GOBIN")
 	os.Unsetenv("GOPATH")
+	os.Unsetenv("DEBUG")
 
 	r := m.Run()
 	os.Exit(r)
@@ -1263,6 +1264,34 @@ func TestRaceFlag(t *testing.T) {
 	gb.setenv("TMP", tmpdir)
 	gb.run("test", "-race", "x")
 	gb.grepStdout("^x$", "expected x") // output from gb test
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+// check that go test -race builds and runs a racy binary, and that it finds the race.
+func TestTestRace(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/race")
+	gb.tempFile("src/race/map_test.go", `package race
+import "testing"
+
+func TestRaceMapRW(t *testing.T) {
+        m := make(map[int]int)
+        ch := make(chan bool, 1)
+        go func() {
+                _ = m[1]
+                ch <- true
+        }()
+        m[1] = 1
+        <-ch
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.runFail("test", "-race")
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 }

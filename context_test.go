@@ -123,10 +123,26 @@ func TestContextOptions(t *testing.T) {
 		fn:     Tags("bar"),
 		expect: matches(Context{buildtags: []string{"foo", "bar"}}),
 	}, {
+		fn:     Gcflags("foo"),
+		expect: matches(Context{gcflags: []string{"foo"}}),
+	}, {
+		ctx:    Context{gcflags: []string{"foo"}},
+		fn:     Gcflags("bar"),
+		expect: matches(Context{gcflags: []string{"foo", "bar"}}),
+	}, {
+		fn:     Ldflags("foo"),
+		expect: matches(Context{ldflags: []string{"foo"}}),
+	}, {
+		ctx:    Context{ldflags: []string{"foo"}},
+		fn:     Ldflags("bar"),
+		expect: matches(Context{ldflags: []string{"foo", "bar"}}),
+	}, {
 		fn: WithRace,
 		expect: matches(Context{
 			buildtags: []string{"race"},
 			race:      true,
+			gcflags:   []string{"-race"},
+			ldflags:   []string{"-race"},
 		}),
 	}, {
 		ctx: Context{buildtags: []string{"zzz"}},
@@ -134,6 +150,8 @@ func TestContextOptions(t *testing.T) {
 		expect: matches(Context{
 			buildtags: []string{"zzz", "race"},
 			race:      true,
+			gcflags:   []string{"-race"},
+			ldflags:   []string{"-race"},
 		}),
 	}}
 
