@@ -34,6 +34,7 @@ type Context struct {
 	Force       bool // force rebuild of packages
 	SkipInstall bool // do not cache compiled packages
 	Verbose     bool // verbose output
+	race        bool // race detector requested
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -49,7 +50,7 @@ type Context struct {
 func GOOS(goos string) func(*Context) error {
 	return func(c *Context) error {
 		if goos == "" {
-			return fmt.Errorf("goos cannot be blank")
+			return fmt.Errorf("GOOS cannot be blank")
 		}
 		c.gotargetos = goos
 		return nil
@@ -60,7 +61,7 @@ func GOOS(goos string) func(*Context) error {
 func GOARCH(goarch string) func(*Context) error {
 	return func(c *Context) error {
 		if goarch == "" {
-			return fmt.Errorf("goarch cannot be blank")
+			return fmt.Errorf("GOARCH cannot be blank")
 		}
 		c.gotargetarch = goarch
 		return nil
@@ -70,10 +71,16 @@ func GOARCH(goarch string) func(*Context) error {
 // Tags configured the context to use these additional build tags
 func Tags(tags ...string) func(*Context) error {
 	return func(c *Context) error {
-		c.buildtags = make([]string, len(tags))
-		copy(c.buildtags, tags)
+		c.buildtags = append(c.buildtags, tags...)
 		return nil
 	}
+}
+
+// WithRace enables the race detector and adds the tag "race" to
+// the Context build tags.
+func WithRace(c *Context) error {
+	c.race = true
+	return Tags("race")(c)
 }
 
 // NewContext returns a new build context from this project.
