@@ -1293,5 +1293,4 @@ func TestRaceMapRW(t *testing.T) {
 	gb.setenv("TMP", tmpdir)
 	gb.runFail("test", "-race")
 	gb.mustBeEmpty(tmpdir)
-	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 }

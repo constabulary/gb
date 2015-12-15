@@ -228,22 +228,31 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 	var deps []*Action
 	pkgs := pkg.Imports()
 
-	if pkg.isMain() {
-		extra := []string{
-			// all binaries depend on runtime, even if they do not
-			// explicitly import it.
-			"runtime",
+	var extra []string
+	switch {
+	case pkg.isMain():
+		// all binaries depend on runtime, even if they do not
+		// explicitly import it.
+		extra = append(extra, "runtime")
+		if pkg.race {
+			// race binaries have extra implicit depdendenceis.
+			extra = append(extra, "runtime/race")
 		}
-		for _, i := range extra {
-			if pkg.shouldignore(i) {
-				continue
-			}
-			p, err := pkg.ResolvePackage(i)
-			if err != nil {
-				return nil, err
-			}
-			pkgs = append(pkgs, p)
+
+	case len(pkg.CgoFiles) > 0 && pkg.ImportPath != "runtime/cgo":
+		// anything that uses cgo has a dependency on runtime/cgo which is
+		// only visible after cgo file generation.
+		extra = append(extra, "runtime/cgo")
+	}
+	for _, i := range extra {
+		if pkg.shouldignore(i) {
+			continue
 		}
+		p, err := pkg.ResolvePackage(i)
+		if err != nil {
+			return nil, err
+		}
+		pkgs = append(pkgs, p)
 	}
 	for _, i := range pkgs {
 		a, err := BuildPackage(targets, i)

@@ -324,6 +324,13 @@ func (c *Context) shouldignore(p string) bool {
 	if c.isCrossCompile() {
 		return p == "C" || p == "unsafe"
 	}
+
+	// Always consider standard library in scope if race enabled.
+	// This may mean that a race runtime is built into the project's
+	// cache. Issue #490.
+	if false && c.race {
+		return p == "C" || p == "unsafe"
+	}
 	return stdlib[p]
 }
 

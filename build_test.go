@@ -146,6 +146,7 @@ func TestBuildPackages(t *testing.T) {
 	tests := []struct {
 		pkgs    []string
 		actions []string
+		options []func(*Context) error // set of options to apply to the test context
 		err     error
 	}{{
 		pkgs:    []string{"a", "b", "c"},
@@ -153,10 +154,14 @@ func TestBuildPackages(t *testing.T) {
 	}, {
 		pkgs:    []string{"cgotest", "cgomain", "notestfiles", "cgoonlynotest", "testonly", "extestonly"},
 		actions: []string{"compile: notestfiles", "link: cgomain", "pack: cgoonlynotest", "pack: cgotest"},
+	}, {
+		pkgs:    []string{"a", "b", "c"},
+		options: []func(*Context) error{WithRace},
+		actions: []string{"compile: a", "compile: c", "link: b"},
 	}}
 
 	for _, tt := range tests {
-		ctx := testContext(t)
+		ctx := testContext(t, tt.options...)
 		defer ctx.Destroy()
 		var pkgs []*Package
 		for _, pkg := range tt.pkgs {
