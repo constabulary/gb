@@ -13,6 +13,7 @@ import (
 	"go/format"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,6 +44,14 @@ func init() {
 		case "arm", "arm64":
 			canRun = false
 		}
+	}
+
+	_, err := os.Stat(filepath.Join(runtime.GOROOT(), "pkg", fmt.Sprintf("%s_%s_race", runtime.GOOS, runtime.GOARCH)))
+	switch {
+	case os.IsNotExist(err):
+		log.Printf("go installation at %s is missing race support", runtime.GOROOT())
+	case runtime.GOARCH == "amd64":
+		canRace = runtime.GOOS == "linux" || runtime.GOOS == "freebsd" || runtime.GOOS == "windows" || runtime.GOOS == "darwin"
 	}
 
 	switch runtime.GOOS {
@@ -1227,6 +1236,10 @@ func TestA(t *testing.T) {
 
 // test -race flag is wired up correctly
 func TestBuildRaceFlag(t *testing.T) {
+	if !canRace {
+		t.Skip("skipping because race detector not supported")
+	}
+
 	gb := T{T: t}
 	defer gb.cleanup()
 
@@ -1243,6 +1256,10 @@ func TestBuildRaceFlag(t *testing.T) {
 }
 
 func TestTestRaceFlag(t *testing.T) {
+	if !canRace {
+		t.Skip("skipping because race detector not supported")
+	}
+
 	gb := T{T: t}
 	defer gb.cleanup()
 
@@ -1254,6 +1271,10 @@ func TestTestRaceFlag(t *testing.T) {
 import "testing"
 
 func TestRaceFlag(t *testing.T) {
+        if !canRace {
+                t.Skip("skipping because race detector not supported")
+        }
+
 	if A != 1 || B != 2 {
 		t.Fatal("expected", 1, 2,"got", A, B)
 	}
@@ -1270,6 +1291,10 @@ func TestRaceFlag(t *testing.T) {
 
 // check that go test -race builds and runs a racy binary, and that it finds the race.
 func TestTestRace(t *testing.T) {
+	if !canRace {
+		t.Skip("skipping because race detector not supported")
+	}
+
 	gb := T{T: t}
 	defer gb.cleanup()
 
