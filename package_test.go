@@ -16,9 +16,9 @@ func testProject(t *testing.T) *Project {
 	)
 }
 
-func testContext(t *testing.T) *Context {
+func testContext(t *testing.T, opts ...func(*Context) error) *Context {
 	prj := testProject(t)
-	ctx, err := prj.NewContext()
+	ctx, err := prj.NewContext(opts...)
 	if err != nil {
 		t.Fatal(err)
 	}

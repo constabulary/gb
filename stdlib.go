@@ -115,6 +115,7 @@ var stdlib = map[string]bool{
 	"regexp/syntax":       true,
 	"runtime":             true,
 	"runtime/cgo":         true,
+	"runtime/race":        true,
 	"runtime/debug":       true,
 	"runtime/pprof":       true,
 	"sort":                true,

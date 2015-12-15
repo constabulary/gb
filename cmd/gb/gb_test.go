@@ -13,6 +13,7 @@ import (
 	"go/format"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,6 +44,14 @@ func init() {
 		case "arm", "arm64":
 			canRun = false
 		}
+	}
+
+	_, err := os.Stat(filepath.Join(runtime.GOROOT(), "pkg", fmt.Sprintf("%s_%s_race", runtime.GOOS, runtime.GOARCH)))
+	switch {
+	case os.IsNotExist(err):
+		log.Printf("go installation at %s is missing race support", runtime.GOROOT())
+	case runtime.GOARCH == "amd64":
+		canRace = runtime.GOOS == "linux" || runtime.GOOS == "freebsd" || runtime.GOOS == "windows" || runtime.GOOS == "darwin"
 	}
 
 	switch runtime.GOOS {
@@ -80,6 +89,7 @@ func TestMain(m *testing.M) {
 	// Don't let these environment variables confuse the test.
 	os.Unsetenv("GOBIN")
 	os.Unsetenv("GOPATH")
+	os.Unsetenv("DEBUG")
 
 	r := m.Run()
 	os.Exit(r)
@@ -1226,6 +1236,10 @@ func TestA(t *testing.T) {
 
 // test -race flag is wired up correctly
 func TestBuildRaceFlag(t *testing.T) {
+	if !canRace {
+		t.Skip("skipping because race detector not supported")
+	}
+
 	gb := T{T: t}
 	defer gb.cleanup()
 
@@ -1242,6 +1256,10 @@ func TestBuildRaceFlag(t *testing.T) {
 }
 
 func TestTestRaceFlag(t *testing.T) {
+	if !canRace {
+		t.Skip("skipping because race detector not supported")
+	}
+
 	gb := T{T: t}
 	defer gb.cleanup()
 
@@ -1253,6 +1271,10 @@ func TestTestRaceFlag(t *testing.T) {
 import "testing"
 
 func TestRaceFlag(t *testing.T) {
+        if !canRace {
+                t.Skip("skipping because race detector not supported")
+        }
+
 	if A != 1 || B != 2 {
 		t.Fatal("expected", 1, 2,"got", A, B)
 	}
@@ -1265,4 +1287,35 @@ func TestRaceFlag(t *testing.T) {
 	gb.grepStdout("^x$", "expected x") // output from gb test
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+// check that go test -race builds and runs a racy binary, and that it finds the race.
+func TestTestRace(t *testing.T) {
+	if !canRace {
+		t.Skip("skipping because race detector not supported")
+	}
+
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/race")
+	gb.tempFile("src/race/map_test.go", `package race
+import "testing"
+
+func TestRaceMapRW(t *testing.T) {
+        m := make(map[int]int)
+        ch := make(chan bool, 1)
+        go func() {
+                _ = m[1]
+                ch <- true
+        }()
+        m[1] = 1
+        <-ch
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.runFail("test", "-race")
+	gb.mustBeEmpty(tmpdir)
 }

@@ -76,11 +76,30 @@ func Tags(tags ...string) func(*Context) error {
 	}
 }
 
+// Gcflags appends flags to the list passed to the compiler.
+func Gcflags(flags ...string) func(*Context) error {
+	return func(c *Context) error {
+		c.gcflags = append(c.gcflags, flags...)
+		return nil
+	}
+}
+
+// Ldflags appends flags to the list passed to the linker.
+func Ldflags(flags ...string) func(*Context) error {
+	return func(c *Context) error {
+		c.ldflags = append(c.ldflags, flags...)
+		return nil
+	}
+}
+
 // WithRace enables the race detector and adds the tag "race" to
 // the Context build tags.
 func WithRace(c *Context) error {
 	c.race = true
-	return Tags("race")(c)
+	Tags("race")(c)
+	Gcflags("-race")(c)
+	Ldflags("-race")(c)
+	return nil
 }
 
 // NewContext returns a new build context from this project.
@@ -147,22 +166,6 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	}
 
 	return &ctx, nil
-}
-
-// Gcflags sets options passed to the compiler.
-func Gcflags(flags ...string) func(*Context) error {
-	return func(c *Context) error {
-		c.gcflags = flags
-		return nil
-	}
-}
-
-// Ldflags sets options passed to the linker.
-func Ldflags(flags ...string) func(*Context) error {
-	return func(c *Context) error {
-		c.ldflags = flags
-		return nil
-	}
 }
 
 // IncludePaths returns the include paths visible in this context.
@@ -319,6 +322,13 @@ func (c *Context) AllPackages(pattern string) []string {
 // shouldignore tests if the package should be ignored.
 func (c *Context) shouldignore(p string) bool {
 	if c.isCrossCompile() {
+		return p == "C" || p == "unsafe"
+	}
+
+	// Always consider standard library in scope if race enabled.
+	// This may mean that a race runtime is built into the project's
+	// cache. Issue #490.
+	if false && c.race {
 		return p == "C" || p == "unsafe"
 	}
 	return stdlib[p]
