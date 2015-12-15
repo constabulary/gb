@@ -40,6 +40,6 @@ See 'go help doc'.
 			}
 			return cmd.Run()
 		},
-		ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
+		SkipParseArgs: true,
 	})
 }

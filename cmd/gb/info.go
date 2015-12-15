@@ -35,13 +35,9 @@ info returns 0 if the project is well formed, and non zero otherwise.
 If one or more variable names is given as arguments, info prints the 
 value of each named variable on its own line.
 `,
-		Run: info,
-		ParseArgs: func(ctx *gb.Context, cwd string, args []string) []string {
-			// env treats arguments as environment variables names,
-			// don't do any processing.
-			return args
-		},
-		AddFlags: addBuildFlags,
+		Run:           info,
+		SkipParseArgs: true,
+		AddFlags:      addBuildFlags,
 	})
 }
 
