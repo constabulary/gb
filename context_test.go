@@ -1,6 +1,8 @@
 package gb
 
 import (
+	"fmt"
+	"reflect"
 	"runtime"
 	"runtime/debug"
 	"strings"
@@ -60,6 +62,89 @@ func TestContextCtxString(t *testing.T) {
 		got := ctx.ctxString()
 		if got != tt.want {
 			t.Errorf("NewContext(%q).ctxString(): got %v, want %v", tt.opts, got, tt.want)
+		}
+	}
+}
+
+func TestContextOptions(t *testing.T) {
+	matches := func(want Context) func(t *testing.T, got *Context) {
+		return func(t *testing.T, got *Context) {
+			if !reflect.DeepEqual(got, &want) {
+				t.Errorf("got %#v, want %#v", got, &want)
+			}
+		}
+	}
+
+	tests := []struct {
+		ctx    Context
+		fn     func(*Context) error
+		err    error
+		expect func(*testing.T, *Context)
+	}{{
+		// assert that an zero context is not altered by the test rig.
+		fn:     func(*Context) error { return nil },
+		expect: matches(Context{}),
+	}, {
+		// test blank GOOS is an error
+		fn:  GOOS(""),
+		err: fmt.Errorf("GOOS cannot be blank"),
+	}, {
+		// test blank GOARCH is an error
+		fn:  GOARCH(""),
+		err: fmt.Errorf("GOARCH cannot be blank"),
+	}, {
+		ctx: Context{
+			gotargetos:   "bar",
+			gotargetarch: "baz",
+		},
+		fn: GOOS("foo"),
+		expect: matches(Context{
+			gotargetos:   "foo",
+			gotargetarch: "baz",
+		}),
+	}, {
+		ctx: Context{
+			gotargetos:   "bar",
+			gotargetarch: "baz",
+		},
+		fn: GOARCH("foo"),
+		expect: matches(Context{
+			gotargetos:   "bar",
+			gotargetarch: "foo",
+		}),
+	}, {
+		fn:     Tags(),
+		expect: matches(Context{}),
+	}, {
+		fn:     Tags("foo"),
+		expect: matches(Context{buildtags: []string{"foo"}}),
+	}, {
+		ctx:    Context{buildtags: []string{"foo"}},
+		fn:     Tags("bar"),
+		expect: matches(Context{buildtags: []string{"foo", "bar"}}),
+	}, {
+		fn: WithRace,
+		expect: matches(Context{
+			buildtags: []string{"race"},
+			race:      true,
+		}),
+	}, {
+		ctx: Context{buildtags: []string{"zzz"}},
+		fn:  WithRace,
+		expect: matches(Context{
+			buildtags: []string{"zzz", "race"},
+			race:      true,
+		}),
+	}}
+
+	for i, tt := range tests {
+		ctx := tt.ctx
+		err := tt.fn(&ctx)
+		switch {
+		case !reflect.DeepEqual(err, tt.err):
+			t.Errorf("test %d: expected err: %v, got %v", i+1, tt.err, err)
+		case err == nil:
+			tt.expect(t, &ctx)
 		}
 	}
 }
