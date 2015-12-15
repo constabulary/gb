@@ -91,7 +91,7 @@ func main() {
 				return cmd.Run()
 			},
 			// plugin should not interpret arguments
-			ParseArgs: func(_ *gb.Context, _ string, args []string) []string { return args },
+			SkipParseArgs: true,
 		}
 	}
 
@@ -130,9 +130,7 @@ func main() {
 		fatalf("unable to construct context: %v", err)
 	}
 
-	if command.ParseArgs != nil {
-		args = command.ParseArgs(ctx, ctx.Projectdir(), args)
-	} else {
+	if !command.SkipParseArgs {
 		args = cmd.ImportPaths(ctx, cwd, args)
 	}
 

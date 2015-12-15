@@ -1,9 +1,6 @@
 package main
 
-import (
-	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/cmd"
-)
+import "github.com/constabulary/gb/cmd"
 
 func init() {
 	registerCommand(EnvCmd)
@@ -17,10 +14,6 @@ var EnvCmd = &cmd.Command{
 Env prints project environment variables. If one or more variable names is 
 given as arguments, env prints the value of each named variable on its own line.
 `,
-	Run: info,
-	ParseArgs: func(ctx *gb.Context, cwd string, args []string) []string {
-		// env treats arguments as environment variables names,
-		// don't do any processing.
-		return args
-	},
+	Run:           info,
+	SkipParseArgs: true,
 }
