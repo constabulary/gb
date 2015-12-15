@@ -69,7 +69,7 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 	}
 
 	path = u.Host + u.Path
-	if !regexp.MustCompile(`^([A-Za-z0-9-]+)(.[A-Za-z0-9-]+)+(/[A-Za-z0-9-_.]+)*$`).MatchString(path) {
+	if !regexp.MustCompile(`^([A-Za-z0-9-]+)(\.[A-Za-z0-9-]+)+(/[A-Za-z0-9-_.]+)*$`).MatchString(path) {
 		return nil, "", fmt.Errorf("%q is not a valid import path", path)
 	}
 
