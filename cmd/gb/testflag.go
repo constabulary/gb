@@ -32,6 +32,7 @@ var testFlagDefn = map[string]*testFlagSpec{
 	"gcflags":   {},
 	"dotfile":   {},
 	"tags":      {},
+	"race":      {},
 
 	// Passed to the test binary
 	"q":                {boolVar: true, passToTest: true},
