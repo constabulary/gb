@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -129,10 +130,17 @@ func main() {
 		gb.Ldflags(ldflags...),
 		gb.Tags(buildtags...),
 		func(c *gb.Context) error {
-			if race {
-				return gb.WithRace(c)
+			if !race {
+				return nil
 			}
-			return nil
+
+			// check the race runtime is built
+			_, err := os.Stat(filepath.Join(runtime.GOROOT(), "pkg", fmt.Sprintf("%s_%s_race", runtime.GOOS, runtime.GOARCH), "runtime.a"))
+			if os.IsNotExist(err) || err != nil {
+				fatalf("go installation at %s is missing race support. See https://getgb.io/faq/#missing-race-support", runtime.GOROOT())
+			}
+
+			return gb.WithRace(c)
 		},
 	)
 

@@ -46,14 +46,6 @@ func init() {
 		}
 	}
 
-	_, err := os.Stat(filepath.Join(runtime.GOROOT(), "pkg", fmt.Sprintf("%s_%s_race", runtime.GOOS, runtime.GOARCH)))
-	switch {
-	case os.IsNotExist(err):
-		log.Printf("go installation at %s is missing race support", runtime.GOROOT())
-	case runtime.GOARCH == "amd64":
-		canRace = runtime.GOOS == "linux" || runtime.GOOS == "freebsd" || runtime.GOOS == "windows" || runtime.GOOS == "darwin"
-	}
-
 	switch runtime.GOOS {
 	case "windows":
 		exeSuffix = ".exe"
@@ -79,11 +71,13 @@ func TestMain(m *testing.M) {
 			os.Exit(2)
 		}
 
-		switch runtime.GOOS {
-		case "linux", "darwin", "freebsd", "windows":
-			canRace = canCgo && runtime.GOARCH == "amd64"
+		_, err = os.Stat(filepath.Join(runtime.GOROOT(), "pkg", fmt.Sprintf("%s_%s_race", runtime.GOOS, runtime.GOARCH), "runtime.a"))
+		switch {
+		case os.IsNotExist(err):
+			log.Printf("go installation at %s is missing race support", runtime.GOROOT())
+		case runtime.GOARCH == "amd64":
+			canRace = runtime.GOOS == "linux" || runtime.GOOS == "freebsd" || runtime.GOOS == "windows" || runtime.GOOS == "darwin"
 		}
-		defer os.RemoveAll(dir)
 	}
 
 	// Don't let these environment variables confuse the test.
@@ -1259,9 +1253,6 @@ func TestTestRaceFlag(t *testing.T) {
 	if !canRace {
 		t.Skip("skipping because race detector not supported")
 	}
-	if strings.HasPrefix(runtime.Version(), "go1.4") {
-		t.Skipf("skipping race test as Go version %v incorrectly marks race failures as success", runtime.Version())
-	}
 
 	gb := T{T: t}
 	defer gb.cleanup()
@@ -1274,10 +1265,6 @@ func TestTestRaceFlag(t *testing.T) {
 import "testing"
 
 func TestRaceFlag(t *testing.T) {
-        if !canRace {
-                t.Skip("skipping because race detector not supported")
-        }
-
 	if A != 1 || B != 2 {
 		t.Fatal("expected", 1, 2,"got", A, B)
 	}
@@ -1296,6 +1283,9 @@ func TestRaceFlag(t *testing.T) {
 func TestTestRace(t *testing.T) {
 	if !canRace {
 		t.Skip("skipping because race detector not supported")
+	}
+	if strings.HasPrefix(runtime.Version(), "go1.4") {
+		t.Skipf("skipping race test as Go version %v incorrectly marks race failures as success", runtime.Version())
 	}
 
 	gb := T{T: t}
@@ -1320,5 +1310,37 @@ func TestRaceMapRW(t *testing.T) {
 	tmpdir := gb.tempDir("tmp")
 	gb.setenv("TMP", tmpdir)
 	gb.runFail("test", "-race")
+	gb.mustBeEmpty(tmpdir)
+}
+
+// check that missing -race support generates error message.
+func TestRaceMissing(t *testing.T) {
+	if canRace {
+		t.Skip("skipping because race detector is available")
+	}
+
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/race")
+	gb.tempFile("src/race/map_test.go", `package race
+import "testing"
+
+func TestRaceMapRW(t *testing.T) {
+        m := make(map[int]int)
+        ch := make(chan bool, 1)
+        go func() {
+                _ = m[1]
+                ch <- true
+        }()
+        m[1] = 1
+        <-ch
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.runFail("test", "-race")
+	gb.grepStderr(regexp.QuoteMeta(fmt.Sprintf("FATAL: go installation at %s is missing race support", runtime.GOROOT())), "expected missing race support message")
 	gb.mustBeEmpty(tmpdir)
 }
