@@ -134,6 +134,17 @@ func main() {
 				return nil
 			}
 
+			// check this is a supported platform
+			if runtime.GOARCH != "amd64" {
+				fatalf("race detector not supported on %s/%s", runtime.GOOS, runtime.GOARCH)
+			}
+			switch runtime.GOOS {
+			case "linux", "windows", "darwin", "freebsd":
+				// supported
+			default:
+				fatalf("race detector not supported on %s/%s", runtime.GOOS, runtime.GOARCH)
+			}
+
 			// check the race runtime is built
 			_, err := os.Stat(filepath.Join(runtime.GOROOT(), "pkg", fmt.Sprintf("%s_%s_race", runtime.GOOS, runtime.GOARCH), "runtime.a"))
 			if os.IsNotExist(err) || err != nil {
