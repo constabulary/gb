@@ -84,6 +84,12 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		},
 		extra: "",
 	}, {
+		path: "goji.io",
+		want: &gitrepo{
+			url: "https://github.com/goji/goji",
+		},
+		extra: "",
+	}, {
 		path: "golang.org/x/tools/go/vcs",
 		want: &gitrepo{
 			url: "https://go.googlesource.com/tools",

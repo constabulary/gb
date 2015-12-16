@@ -1259,6 +1259,9 @@ func TestTestRaceFlag(t *testing.T) {
 	if !canRace {
 		t.Skip("skipping because race detector not supported")
 	}
+	if strings.HasPrefix(runtime.Version(), "go1.4") {
+		t.Skipf("skipping race test as Go version %v incorrectly marks race failures as success", runtime.Version())
+	}
 
 	gb := T{T: t}
 	defer gb.cleanup()
