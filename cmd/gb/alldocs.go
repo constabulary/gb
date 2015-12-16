@@ -64,6 +64,9 @@ Flags:
 		arguments to pass on each linker invocation.
 	-gcflags 'arg list'
 		arguments to pass on each compile invocation.
+        -race
+                enable data race detection.
+                Supported only on linux/amd64, freebsd/amd64, darwin/amd64 and windows/amd64.
 	-tags 'tag list'
 		additional build tags.
 
