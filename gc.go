@@ -22,7 +22,7 @@ func GcToolchain() func(c *Context) error {
 		// TODO(dfc) this should come from the context, not the runtime.
 		goroot := runtime.GOROOT()
 
-		if gc14 && (c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch) {
+		if goversion == 1.4 && (c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch) {
 			// cross-compliation is not supported yet #31
 			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported with Go 1.4", c.gohostos, c.gohostarch, c.gotargetos, c.gotargetarch)
 		}
@@ -33,7 +33,7 @@ func GcToolchain() func(c *Context) error {
 			exe += ".exe"
 		}
 		switch {
-		case gc14:
+		case goversion == 1.4:
 			archchar, err := build.ArchChar(c.gotargetarch)
 			if err != nil {
 				return err
@@ -45,7 +45,7 @@ func GcToolchain() func(c *Context) error {
 				cc:   filepath.Join(tooldir, archchar+"c"+exe),
 				pack: filepath.Join(tooldir, "pack"+exe),
 			}
-		case gc15:
+		case goversion > 1.4:
 			c.tc = &gcToolchain{
 				gc:   filepath.Join(tooldir, "compile"+exe),
 				ld:   filepath.Join(tooldir, "link"+exe),
@@ -62,10 +62,10 @@ func GcToolchain() func(c *Context) error {
 func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	args := []string{"-o", ofile, "-D", "GOOS_" + pkg.gotargetos, "-D", "GOARCH_" + pkg.gotargetarch}
 	switch {
-	case gc14:
+	case goversion == 1.4:
 		includedir := filepath.Join(pkg.Context.Context.GOROOT, "pkg", pkg.gotargetos+"_"+pkg.gotargetarch)
 		args = append(args, "-I", includedir)
-	case gc15:
+	case goversion > 1.4:
 		odir := filepath.Join(filepath.Dir(ofile))
 		includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
 		args = append(args, "-I", odir, "-I", includedir)
@@ -99,7 +99,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}
-	if gc15 {
+	if goversion > 1.4 {
 		args = append(args, "-buildmode", pkg.buildmode)
 	}
 	args = append(args, afile)
@@ -119,8 +119,8 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
-	if gc15 {
-		return fmt.Errorf("gc15 does not support cc")
+	if goversion > 1.4 {
+		return fmt.Errorf("gc %f does not support cc", goversion)
 	}
 	args := []string{
 		"-F", "-V", "-w",
@@ -169,9 +169,10 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 		args = append(args, "-+")
 	}
 
-	if pkg.Complete() {
+	switch {
+	case pkg.Complete():
 		args = append(args, "-complete")
-	} else if gc15 {
+	case goversion > 1.4:
 		asmhdr := filepath.Join(filepath.Dir(outfile), pkg.Name, "go_asm.h")
 		args = append(args, "-asmhdr", asmhdr)
 	}
