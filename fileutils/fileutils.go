@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const debugCopypath = true
+const debugCopypath = false
 const debugCopyfile = false
 
 // Copypath copies the contents of src to dst, excluding any file or
@@ -40,7 +40,7 @@ func Copypath(dst string, src string) error {
 		}
 
 		dst := filepath.Join(dst, path[len(src):])
-		return copyfile(dst, path)
+		return Copyfile(dst, path)
 	})
 	if err != nil {
 		// if there was an error during copying, remove the partial copy.
@@ -49,7 +49,7 @@ func Copypath(dst string, src string) error {
 	return err
 }
 
-func copyfile(dst, src string) error {
+func Copyfile(dst, src string) error {
 	err := mkdir(filepath.Dir(dst))
 	if err != nil {
 		return fmt.Errorf("copyfile: mkdirall: %v", err)
