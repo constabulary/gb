@@ -399,14 +399,21 @@ func (t *T) symlink(src, dst string) string {
 
 // path returns the absolute pathname to file with the temporary
 // directory.
-func (t *T) path(name string) string {
+func (t *T) path(names ...string) string {
 	if t.tempdir == "" {
-		t.Fatalf("internal testsuite error: path(%q) with no tempdir", name)
+		t.Fatalf("internal testsuite error: path(%q) with no tempdir", filepath.Join(names...))
 	}
-	if name == "." {
+	if len(names) == 0 || names[0] == "." {
 		return t.tempdir
 	}
-	return filepath.Join(t.tempdir, name)
+	return filepath.Join(append([]string{t.tempdir}, names...)...)
+}
+
+// mustExist fails if path does not exists.
+func (t *T) mustExist(path string) {
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("%s does not exist (%v)", path, err)
+	}
 }
 
 // mustNotExist fails if path exists.
@@ -1354,6 +1361,34 @@ func TestNoBuildStdlib(t *testing.T) {
 	gb.cd(gb.tempdir)
 	defer gb.cleanup()
 	gb.runFail("build", "-f", "-F", "net/http")
+}
+
+func TestCrossCompile(t *testing.T) {
+        if strings.HasPrefix(runtime.Version(), "go1.4") {
+                t.Skip("skipping cross compile test, not supported on", runtime.Version())
+        }
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src/p")
+	gb.tempFile("src/p/main.go", `package main
+func main() { println("hello world") }
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	goos := "windows"
+	if runtime.GOOS == goos {
+		goos = "linux"
+	}
+	gb.setenv("TMP", tmpdir)
+	gb.setenv("GOOS", goos)
+	gb.run("build")
+	gb.mustBeEmpty(tmpdir)
+	name := fmt.Sprintf("p-%s-%s", goos, runtime.GOARCH)
+	if goos == "windows" {
+		name += ".exe"
+	}
+	gb.mustExist(gb.path("bin", name))
+	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/p-$GOOS-$GOARCH")
 }
 
 // https://github.com/constabulary/gb/issues/416

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // gc toolchain
@@ -176,6 +177,18 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 	case goversion > 1.4:
 		asmhdr := filepath.Join(filepath.Dir(outfile), pkg.Name, "go_asm.h")
 		args = append(args, "-asmhdr", asmhdr)
+	}
+
+	// If there are vendored components, create an -importmap to map the import statement
+	// to the vendored import path. The possibilities for abusing this flag are endless.
+	if goversion > 1.5 && pkg.Standard {
+		for _, path := range pkg.Package.Imports {
+			if i := strings.LastIndex(path, "/vendor/"); i >= 0 {
+				args = append(args, "-importmap", path[i+len("/vendor/"):]+"="+path)
+			} else if strings.HasPrefix(path, "vendor/") {
+				args = append(args, "-importmap", path[len("vendor/"):]+"="+path)
+			}
+		}
 	}
 
 	args = append(args, files...)

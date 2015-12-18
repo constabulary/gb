@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/build"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"testing"
 )
@@ -77,7 +78,7 @@ func TestPackageBinfile(t *testing.T) {
 
 	proj := testProject(t)
 	for i, tt := range tests {
-		ctx, err := proj.NewContext(tt.opts...)
+		ctx, _ := proj.NewContext(tt.opts...)
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != nil {
@@ -172,6 +173,37 @@ func TestPackageIsMain(t *testing.T) {
 		got := tt.pkg.isMain()
 		if got != tt.want {
 			t.Errorf("Package{Name:%q, ImportPath: %q, Scope:%q}.isMain(): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.Scope, got, tt.want)
+		}
+	}
+}
+
+func TestNewPackage(t *testing.T) {
+	tests := []struct {
+		pkg  build.Package
+		want Package
+	}{{
+		build.Package{
+			Name:       "C",
+			ImportPath: "C",
+			Goroot:     true,
+		},
+		Package{
+			Stale:    false,
+			Standard: true,
+		},
+	}}
+	proj := testProject(t)
+	for i, tt := range tests {
+		ctx, _ := proj.NewContext()
+		defer ctx.Destroy()
+
+		got := NewPackage(ctx, &tt.pkg)
+		want := tt.want // deep copy
+		want.Package = &tt.pkg
+		want.Context = ctx
+
+		if !reflect.DeepEqual(got, &want) {
+			t.Errorf("%d: pkg: %s: expected %#v, got %#v", i+1, tt.pkg.ImportPath, &want, got)
 		}
 	}
 }

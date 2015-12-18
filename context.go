@@ -165,6 +165,23 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		CgoEnabled: build.Default.CgoEnabled,
 	}
 
+	// C and unsafe are fake packages synthesised by the compiler.
+	// Insert fake packages into the package cache.
+	for _, name := range []string{"C", "unsafe"} {
+		pkg := &Package{
+			Context:  &ctx,
+			Scope:    "build",
+			Standard: true, // synthetic packages belong to the stdlib
+			Package: &build.Package{
+				Name:       name,
+				ImportPath: name,
+				Goroot:     true,
+			},
+		}
+		pkg.Stale = isStale(pkg)
+		ctx.pkgs[pkg.ImportPath] = pkg
+	}
+
 	return &ctx, nil
 }
 
@@ -251,16 +268,14 @@ func (c *Context) loadPackage(stack []string, dir, path string) (*Package, error
 	if err != nil {
 		return nil, err
 	}
+	path = p.ImportPath // may have changed if looking up path relative to dir returned a vendored path.
 
-	standard := p.Goroot && p.ImportPath != "" && !strings.Contains(p.ImportPath, ".")
+	standard := p.Goroot && p.ImportPath != "" && !strings.HasPrefix(p.ImportPath, ".") // TODO(dfc) ensure relative imports never get this far
 	push(path)
 	var stale bool
-	for _, i := range p.Imports {
-		if c.shouldignore(i) {
-			continue
-		}
-		if onStack(i) {
-			push(i)
+	for i, im := range p.Imports {
+		if onStack(im) {
+			push(im)
 			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
 		}
 		if standard {
@@ -269,10 +284,13 @@ func (c *Context) loadPackage(stack []string, dir, path string) (*Package, error
 			// because the standard library cannot import things that are not in the stdlib.
 			dir = p.Dir
 		}
-		pkg, err := c.loadPackage(stack, dir, i)
+		pkg, err := c.loadPackage(stack, dir, im)
 		if err != nil {
 			return nil, err
 		}
+
+		// update the import path as the import may have been discovered via vendoring.
+		p.Imports[i] = pkg.ImportPath
 		stale = stale || pkg.Stale
 	}
 	pop(path)
@@ -398,21 +416,6 @@ func treeCanMatchPattern(pattern string) func(name string) bool {
 // The pattern is a path including "...".
 func (c *Context) AllPackages(pattern string) []string {
 	return matchPackages(c, pattern)
-}
-
-// shouldignore tests if the package should be ignored.
-func (c *Context) shouldignore(p string) bool {
-	if c.isCrossCompile() {
-		return p == "C" || p == "unsafe"
-	}
-
-	// Always consider standard library in scope if race enabled.
-	// This may mean that a race runtime is built into the project's
-	// cache. Issue #490.
-	if false && c.race {
-		return p == "C" || p == "unsafe"
-	}
-	return stdlib[p]
 }
 
 func (c *Context) isCrossCompile() bool {

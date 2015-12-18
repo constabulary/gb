@@ -13,6 +13,8 @@ import (
 func pkgpath(pkg *Package) string {
 	importpath := filepath.FromSlash(pkg.ImportPath) + ".a"
 	switch {
+	case pkg.isCrossCompile():
+		return filepath.Join(pkg.Pkgdir(), importpath)
 	case pkg.Standard && pkg.race:
 		// race enabled standard lib
 		return filepath.Join(runtime.GOROOT(), "pkg", pkg.gotargetos+"_"+pkg.gotargetarch+"_race", importpath)
