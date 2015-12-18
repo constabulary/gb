@@ -7,6 +7,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/constabulary/gb/fileutils"
 	"github.com/constabulary/gb/vendor"
 )
 
@@ -50,7 +51,7 @@ func restore(ctx *gb.Context) error {
 		dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
 		src := filepath.Join(wc.Dir(), dep.Path)
 
-		if err := vendor.Copypath(dst, src); err != nil {
+		if err := fileutils.Copypath(dst, src); err != nil {
 			return err
 		}
 

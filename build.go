@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/fileutils"
 )
 
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
@@ -194,7 +195,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		build = &Action{
 			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
 			Deps: []*Action{build},
-			Run:  func() error { return copyfile(pkgfile(pkg), objfile(pkg)) },
+			Run:  func() error { return fileutils.Copyfile(pkgfile(pkg), objfile(pkg)) },
 		}
 	}
 

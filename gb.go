@@ -5,13 +5,9 @@
 package gb
 
 import (
-	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/constabulary/gb/debug"
 )
 
 // Toolchain represents a standardised set of command line tools
@@ -66,26 +62,6 @@ type Action struct {
 
 func mkdir(path string) error {
 	return os.MkdirAll(path, 0755)
-}
-
-func copyfile(dst, src string) error {
-	err := mkdir(filepath.Dir(dst))
-	if err != nil {
-		return fmt.Errorf("copyfile: mkdirall: %v", err)
-	}
-	r, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("copyfile: open(%q): %v", src, err)
-	}
-	defer r.Close()
-	w, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("copyfile: create(%q): %v", dst, err)
-	}
-	defer w.Close()
-	debug.Debugf("copyfile(dst: %v, src: %v)", dst, src)
-	_, err = io.Copy(w, r)
-	return err
 }
 
 // joinlist joins a []string representing path items
