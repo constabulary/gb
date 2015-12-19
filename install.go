@@ -6,16 +6,25 @@ import (
 	"time"
 )
 
-// pkgdir returns the destination for object cached for this Package.
-func pkgdir(pkg *Package) string {
-	if pkg.Scope == "test" {
-		panic("pkgdir called with test scope")
-	}
-	return filepath.Join(pkg.Pkgdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+// pkgfile returns the destination for object cached for this Package.
+func pkgfile(pkg *Package) string {
+	return filepath.Join(pkg.Pkgdir(), filepath.FromSlash(pkg.ImportPath)+".a")
 }
 
-func pkgfile(pkg *Package) string {
-	return filepath.Join(pkgdir(pkg), filepath.Base(filepath.FromSlash(pkg.ImportPath))+".a")
+// installpath returns the distination to cache this package's compiled .a file.
+// pkgfile and installpath differ in that the former returns the location where you will find
+// a previously cached .a file, the latter returns the location where an installed file
+// will be placed.
+//
+// The difference is subtle. pkgfile must deal with the possibility that the file is from the
+// standard library and is previously compiled. installpath will always return a path for the
+// project's pkg/ directory in the case that the stdlib is out of date, or not compiled for
+// a specific architecture.
+func installpath(pkg *Package) string {
+	if pkg.Scope == "test" {
+		panic("installpath called with test scope")
+	}
+	return filepath.Join(pkg.Pkgdir(), filepath.FromSlash(pkg.ImportPath)+".a")
 }
 
 // isStale returns true if the source pkg is considered to be stale with
