@@ -203,7 +203,88 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	return loadPackage(c, nil, path)
+	srcdir := filepath.Join(c.Projectdir(), "src") // TODO(dfc) should be a helper.
+	return c.loadPackage(nil, srcdir, path)
+}
+
+// loadPackage recursively resolves path as a package relative to dir. If successful loadPackage
+// records the package in the Context's internal package cache.
+func (c *Context) loadPackage(stack []string, dir, path string) (*Package, error) {
+	if build.IsLocalImport(path) {
+		// sanity check
+		return nil, fmt.Errorf("%q is not a valid import path", path)
+	}
+	if pkg, ok := c.pkgs[path]; ok {
+		// already loaded, just return
+		return pkg, nil
+	}
+
+	push := func(path string) {
+		stack = append(stack, path)
+	}
+	pop := func(path string) {
+		stack = stack[:len(stack)-1]
+	}
+	onStack := func(path string) bool {
+		for _, p := range stack {
+			if p == path {
+				return true
+			}
+		}
+		return false
+	}
+
+	// build.Context.Import takes a directory argument that is relative to
+	// a specific directory. This is to support relative imports and vendoring.
+	// gb does not support either of these in the project, but we must do so
+	// to support recursing into the stdlib and rebuilding it.
+	//
+	// dir is supplied by the caller, which initially will be $PROJECT/src as no
+	// other packages will be valid roots. See issue #505
+	// If loadPackage recurses into the stdlib, then dir will be updated to be the
+	// location of the currently resolved package.
+
+	// TODO(dfc) allow vendor should only be enabled if we're inside the stdlib to
+	// avoid activating $PROJECT/vendor/src/.../vendor directories.
+	const mode = 0 | allowVendor // defined in goversionNN.go for backwards compatability
+	p, err := c.Context.Import(path, dir, mode)
+	if err != nil {
+		return nil, err
+	}
+
+	standard := p.Goroot && p.ImportPath != "" && !strings.Contains(p.ImportPath, ".")
+	push(path)
+	var stale bool
+	for _, i := range p.Imports {
+		if c.shouldignore(i) {
+			continue
+		}
+		if onStack(i) {
+			push(i)
+			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
+		}
+		if standard {
+			// if we have recursed into the stdlib, set the dir passed to build.Context.Import
+			// to this package's directory to support relative imports. It is safe to do this
+			// because the standard library cannot import things that are not in the stdlib.
+			dir = p.Dir
+		}
+		pkg, err := c.loadPackage(stack, dir, i)
+		if err != nil {
+			return nil, err
+		}
+		stale = stale || pkg.Stale
+	}
+	pop(path)
+
+	pkg := Package{
+		Context:  c,
+		Package:  p,
+		Standard: standard,
+	}
+	pkg.Stale = stale || isStale(&pkg)
+	c.pkgs[path] = &pkg
+	return &pkg, nil
 }
 
 // Destroy removes the temporary working files of this context.
