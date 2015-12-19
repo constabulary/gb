@@ -78,3 +78,38 @@ func TestStale(t *testing.T) {
 		}
 	}
 }
+
+func TestInstallpath(t *testing.T) {
+	ctx := testContext(t)
+	defer ctx.Destroy()
+
+	tests := []struct {
+		pkg         string
+		installpath string
+	}{{
+		pkg:         "a", // from testdata
+		installpath: filepath.Join(ctx.Pkgdir(), "a.a"),
+	}, {
+		pkg:         "runtime", // from stdlib
+		installpath: filepath.Join(ctx.Pkgdir(), "runtime.a"),
+	}, {
+		pkg:         "unsafe", // synthetic
+		installpath: filepath.Join(ctx.Pkgdir(), "unsafe.a"),
+	}}
+
+	resolve := func(pkg string) *Package {
+		p, err := ctx.ResolvePackage(pkg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+
+	for _, tt := range tests {
+		pkg := resolve(tt.pkg)
+		got := installpath(pkg)
+		if got != tt.installpath {
+			t.Errorf("installpath(%q): expected: %v, got %v", tt.pkg, tt.installpath, got)
+		}
+	}
+}

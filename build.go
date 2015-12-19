@@ -195,7 +195,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		build = &Action{
 			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
 			Deps: []*Action{build},
-			Run:  func() error { return fileutils.Copyfile(pkgfile(pkg), objfile(pkg)) },
+			Run:  func() error { return fileutils.Copyfile(installpath(pkg), objfile(pkg)) },
 		}
 	}
 
