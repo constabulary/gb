@@ -3,4 +3,7 @@
 
 package gb
 
-const goversion = 1.2
+const (
+	goversion   = 1.2
+	allowVendor = 0
+)

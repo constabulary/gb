@@ -1344,3 +1344,14 @@ func TestRaceMapRW(t *testing.T) {
 	gb.grepStderr(regexp.QuoteMeta(fmt.Sprintf("FATAL: go installation at %s is missing race support", runtime.GOROOT())), "expected missing race support message")
 	gb.mustBeEmpty(tmpdir)
 }
+
+// test that gb will no build the stdlib directly, only as transitive deps.
+func TestNoBuildStdlib(t *testing.T) {
+	t.Skip("constabulary/gb#505")
+	gb := T{T: t}
+	defer gb.cleanup()
+        gb.tempDir("src/")
+        gb.cd(gb.tempdir)
+	defer gb.cleanup()
+	gb.runFail("build", "-f", "-F", "net/http")
+}
