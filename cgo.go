@@ -510,6 +510,14 @@ func ccompilerCmd(pkg *Package, envvar, defcmd, objdir string) []string {
 	return a
 }
 
+// linkCmd returns the name of the binary to use for linking for the given
+// environment variable and using the default command when the variable is
+// empty.
+func linkCmd(pkg *Package, envvar, defcmd string) string {
+	compiler := envList(envvar, defcmd)
+	return compiler[0]
+}
+
 // gccArchArgs returns arguments to pass to gcc based on the architecture.
 func gccArchArgs(goarch string) []string {
 	switch goarch {
