@@ -2,7 +2,6 @@ package gb
 
 import (
 	"fmt"
-	"go/build"
 	"io"
 	"io/ioutil"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/importer"
 )
 
 // Context represents an execution of one or more Targets inside a Project.
@@ -160,10 +160,10 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		Compiler: runtime.Compiler, // TODO(dfc) probably unused
 
 		// Make sure we use the same set of release tags as go/build
-		ReleaseTags: build.Default.ReleaseTags,
+		ReleaseTags: releaseTags,
 		BuildTags:   ctx.buildtags,
 
-		CgoEnabled: build.Default.CgoEnabled,
+		CgoEnabled: cgoEnabled,
 	}
 
 	// C and unsafe are fake packages synthesised by the compiler.
@@ -438,7 +438,7 @@ func matchPackages(c *Context, pattern string) []string {
 			}
 			_, err = c.importer.bc.Import(".", path, 0)
 			if err != nil {
-				if _, noGo := err.(*build.NoGoError); noGo {
+				if _, noGo := err.(*importer.NoGoError); noGo {
 					return nil
 				}
 			}

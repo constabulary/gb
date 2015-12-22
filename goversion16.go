@@ -2,9 +2,9 @@
 
 package gb
 
-import "go/build"
+import "github.com/constabulary/gb/importer"
 
 const (
 	goversion   = 1.6
-	allowVendor = build.AllowVendor
+	allowVendor = importer.AllowVendor
 )

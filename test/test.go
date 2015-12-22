@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"fmt"
-	"go/build"
 	"io"
 	"os"
 	"os/exec"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/importer"
 )
 
 // Test returns a Target representing the result of compiling the
@@ -89,7 +89,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	}
 
 	// internal tests
-	testpkg := gb.NewPackage(pkg.Context, &build.Package{
+	testpkg := gb.NewPackage(pkg.Context, &importer.Package{
 		Name:       name,
 		ImportPath: pkg.ImportPath,
 		Dir:        pkg.Dir,
@@ -131,7 +131,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
-		xtestpkg := gb.NewPackage(pkg.Context, &build.Package{
+		xtestpkg := gb.NewPackage(pkg.Context, &importer.Package{
 			Name:       name,
 			ImportPath: pkg.ImportPath + "_test",
 			Dir:        pkg.Dir,
@@ -229,7 +229,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), tests); err != nil {
 		return nil, err
 	}
-	testmain := gb.NewPackage(pkg.Context, &build.Package{
+	testmain := gb.NewPackage(pkg.Context, &importer.Package{
 		Name:       pkg.Name,
 		ImportPath: path.Join(pkg.ImportPath, "testmain"),
 		Dir:        dir,

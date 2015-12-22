@@ -2,11 +2,12 @@ package gb
 
 import (
 	"fmt"
-	"go/build"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"testing"
+
+	"github.com/constabulary/gb/importer"
 )
 
 func testProject(t *testing.T) *Project {
@@ -101,7 +102,7 @@ func TestPackageIsMain(t *testing.T) {
 		want bool
 	}{{
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "main",
 			},
@@ -109,7 +110,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: true,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "a",
 				ImportPath: "main",
 			},
@@ -117,7 +118,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: false,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "a",
 			},
@@ -125,7 +126,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: true,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "testmain",
 			},
@@ -133,7 +134,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: true,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "main",
 			},
@@ -142,7 +143,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: false,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "a",
 				ImportPath: "main",
 			},
@@ -151,7 +152,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: false,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "a",
 			},
@@ -160,7 +161,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: false,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "testmain",
 			},
