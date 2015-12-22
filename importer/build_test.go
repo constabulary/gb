@@ -6,16 +6,20 @@ package importer
 
 import (
 	"io"
-	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"strings"
 	"testing"
 )
 
 func TestMatch(t *testing.T) {
-	ctxt := Default
+	ctxt := &Importer{
+		Context: &Context{
+			GOOS:   runtime.GOOS,
+			GOARCH: runtime.GOARCH,
+		},
+		Root: filepath.Join(runtime.GOROOT()),
+	}
 	what := "default"
 	match := func(tag string, want map[string]bool) {
 		m := make(map[string]bool)
@@ -50,74 +54,6 @@ func TestMatch(t *testing.T) {
 	nomatch("!", map[string]bool{})
 }
 
-func TestDotSlashImport(t *testing.T) {
-	p, err := Default.Import(".", "testdata/other", 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(p.Imports) != 1 || p.Imports[0] != "./file" {
-		t.Fatalf("testdata/other: Imports=%v, want [./file]", p.Imports)
-	}
-
-	p1, err := Default.Import("./file", "testdata/other", 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if p1.Name != "file" {
-		t.Fatalf("./file: Name=%q, want %q", p1.Name, "file")
-	}
-	dir := filepath.Clean("testdata/other/file") // Clean to use \ on Windows
-	if p1.Dir != dir {
-		t.Fatalf("./file: Dir=%q, want %q", p1.Name, dir)
-	}
-}
-
-func TestEmptyFolderImport(t *testing.T) {
-	_, err := Default.Import(".", "testdata/empty", 0)
-	if _, ok := err.(*NoGoError); !ok {
-		t.Fatal(`Import("testdata/empty") did not return NoGoError.`)
-	}
-}
-
-func TestMultiplePackageImport(t *testing.T) {
-	_, err := Default.Import(".", "testdata/multi", 0)
-	mpe, ok := err.(*MultiplePackageError)
-	if !ok {
-		t.Fatal(`Import("testdata/multi") did not return MultiplePackageError.`)
-	}
-	want := &MultiplePackageError{
-		Dir:      filepath.FromSlash("testdata/multi"),
-		Packages: []string{"main", "test_package"},
-		Files:    []string{"file.go", "file_appengine.go"},
-	}
-	if !reflect.DeepEqual(mpe, want) {
-		t.Errorf("got %#v; want %#v", mpe, want)
-	}
-}
-
-func TestLocalDirectory(t *testing.T) {
-	if runtime.GOOS == "darwin" {
-		switch runtime.GOARCH {
-		case "arm", "arm64":
-			t.Skipf("skipping on %s/%s, no valid GOROOT", runtime.GOOS, runtime.GOARCH)
-		}
-	}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := Default.Import(".", cwd, 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	const want = "github.com/constabulary/gb/importer"
-	if p.ImportPath != want {
-		t.Fatalf("ImportPath=%q, want %q", p.ImportPath, want)
-	}
-}
-
 func TestShouldBuild(t *testing.T) {
 	const file1 = "// +build tag1\n\n" +
 		"package main\n"
@@ -136,7 +72,7 @@ func TestShouldBuild(t *testing.T) {
 		"func shouldBuild(content []byte)\n"
 	want3 := map[string]bool{}
 
-	ctx := &Context{BuildTags: []string{"tag1"}}
+	ctx := &Importer{Context: &Context{BuildTags: []string{"tag1"}}}
 	m := map[string]bool{}
 	if !ctx.shouldBuild([]byte(file1), m) {
 		t.Errorf("shouldBuild(file1) = false, want true")
@@ -154,7 +90,7 @@ func TestShouldBuild(t *testing.T) {
 	}
 
 	m = map[string]bool{}
-	ctx = &Context{BuildTags: nil}
+	ctx = &Importer{Context: &Context{BuildTags: nil}}
 	if !ctx.shouldBuild([]byte(file3), m) {
 		t.Errorf("shouldBuild(file3) = false, want true")
 	}
@@ -196,23 +132,6 @@ var matchFileTests = []struct {
 	{ctxtAndroid, "plan9_test.go", "", true},
 	{ctxtAndroid, "arm.s", "", true},
 	{ctxtAndroid, "amd64.s", "", true},
-}
-
-func TestImportCmd(t *testing.T) {
-	if runtime.GOOS == "darwin" {
-		switch runtime.GOARCH {
-		case "arm", "arm64":
-			t.Skipf("skipping on %s/%s, no valid GOROOT", runtime.GOOS, runtime.GOARCH)
-		}
-	}
-
-	p, err := Default.Import("cmd/internal/objfile", "", 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.HasSuffix(filepath.ToSlash(p.Dir), "src/cmd/internal/objfile") {
-		t.Fatalf("Import cmd/internal/objfile returned Dir=%q, want %q", filepath.ToSlash(p.Dir), ".../src/cmd/internal/objfile")
-	}
 }
 
 var (
@@ -264,32 +183,5 @@ func TestShellSafety(t *testing.T) {
 		if output != test.expected {
 			t.Errorf("Expected %q while %q expands with SRCDIR=%q; got %q", test.expected, test.input, test.srcdir, output)
 		}
-	}
-}
-
-func TestImportVendor(t *testing.T) {
-	ctxt := Default
-	ctxt.GOPATH = ""
-	p, err := ctxt.Import("golang.org/x/net/http2/hpack", filepath.Join(ctxt.GOROOT, "src/net/http"), AllowVendor)
-	if err != nil {
-		t.Fatalf("cannot find vendored golang.org/x/net/http2/hpack from net/http directory: %v", err)
-	}
-	want := "vendor/golang.org/x/net/http2/hpack"
-	if p.ImportPath != want {
-		t.Fatalf("Import succeeded but found %q, want %q", p.ImportPath, want)
-	}
-}
-
-func TestImportVendorFailure(t *testing.T) {
-	ctxt := Default
-	ctxt.GOPATH = ""
-	p, err := ctxt.Import("x.com/y/z", filepath.Join(ctxt.GOROOT, "src/net/http"), AllowVendor)
-	if err == nil {
-		t.Fatalf("found made-up package x.com/y/z in %s", p.Dir)
-	}
-
-	e := err.Error()
-	if !strings.Contains(e, " (vendor tree)") {
-		t.Fatalf("error on failed import does not mention GOROOT/src/vendor directory:\n%s", e)
 	}
 }

@@ -131,7 +131,7 @@ func testRead(t *testing.T, tests []readTest, read func(io.Reader) ([]byte, erro
 }
 
 func TestReadImports(t *testing.T) {
-	testRead(t, readImportsTests, func(r io.Reader) ([]byte, error) { return readImports(r, true, nil) })
+	testRead(t, readImportsTests, readImports)
 }
 
 func TestReadComments(t *testing.T) {
@@ -207,7 +207,7 @@ var readFailuresTests = []readTest{
 
 func TestReadFailures(t *testing.T) {
 	// Errors should be reported (true arg to readImports).
-	testRead(t, readFailuresTests, func(r io.Reader) ([]byte, error) { return readImports(r, true, nil) })
+	testRead(t, readFailuresTests, func(r io.Reader) ([]byte, error) { return readImports0(r, true) })
 }
 
 func TestReadFailuresIgnored(t *testing.T) {
@@ -222,5 +222,5 @@ func TestReadFailuresIgnored(t *testing.T) {
 			tt.err = ""
 		}
 	}
-	testRead(t, tests, func(r io.Reader) ([]byte, error) { return readImports(r, false, nil) })
+	testRead(t, tests, readImports)
 }

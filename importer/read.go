@@ -198,7 +198,7 @@ func (r *importReader) readImport(imports *[]string) {
 // readComments is like ioutil.ReadAll, except that it only reads the leading
 // block of comments in the file.
 func readComments(f io.Reader) ([]byte, error) {
-	r := &importReader{b: bufio.NewReader(f)}
+	r := importReader{b: bufio.NewReader(f)}
 	r.peekByte(true)
 	if r.err == nil && !r.eof {
 		// Didn't reach EOF, so must have found a non-space byte. Remove it.
@@ -209,7 +209,12 @@ func readComments(f io.Reader) ([]byte, error) {
 
 // readImports is like ioutil.ReadAll, except that it expects a Go file as input
 // and stops reading the input once the imports have completed.
-func readImports(f io.Reader, reportSyntaxError bool, imports *[]string) ([]byte, error) {
+func readImports(f io.Reader) ([]byte, error) {
+	return readImports0(f, false)
+}
+
+func readImports0(f io.Reader, reportSyntaxError bool) ([]byte, error) {
+	var imports *[]string
 	r := &importReader{b: bufio.NewReader(f)}
 
 	r.readKeyword("package")

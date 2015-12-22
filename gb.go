@@ -5,10 +5,10 @@
 package gb
 
 import (
+	"go/build"
 	"os"
 	"path/filepath"
 	"strings"
-	"go/build"
 )
 
 var releaseTags = build.Default.ReleaseTags
