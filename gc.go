@@ -99,6 +99,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	for _, d := range searchpaths {
 		args = append(args, "-L", d)
 	}
+	args = append(args, "-extld", linkCmd(pkg, "CC", defaultCC))
 	if goversion > 1.4 {
 		args = append(args, "-buildmode", pkg.buildmode)
 	}
