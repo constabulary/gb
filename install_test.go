@@ -171,7 +171,7 @@ func TestPkgpath(t *testing.T) {
 		opts: opts(GOOS(gotargetos), GOARCH(gotargetarch)),
 		pkg:  "runtime", // from stdlib
 		pkgpath: func(ctx *Context) string {
-			return filepath.Join(runtime.GOROOT(), "pkg", ctx.gotargetos+"_"+ctx.gotargetarch, "runtime.a")
+			return filepath.Join(ctx.Pkgdir(), "runtime.a")
 		},
 	}, {
 		pkg: "unsafe", // synthetic
@@ -182,7 +182,7 @@ func TestPkgpath(t *testing.T) {
 		pkg:  "unsafe", // synthetic
 		opts: opts(GOOS(gotargetos), GOARCH(gotargetarch), WithRace),
 		pkgpath: func(ctx *Context) string {
-			return filepath.Join(runtime.GOROOT(), "pkg", ctx.gotargetos+"_"+ctx.gotargetarch+"_race", "unsafe.a")
+			return filepath.Join(ctx.Pkgdir(), "unsafe.a")
 		},
 	}}
 

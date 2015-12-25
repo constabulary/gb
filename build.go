@@ -246,9 +246,6 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 		extra = append(extra, "runtime/cgo")
 	}
 	for _, i := range extra {
-		if pkg.shouldignore(i) {
-			continue
-		}
 		p, err := pkg.ResolvePackage(i)
 		if err != nil {
 			return nil, err

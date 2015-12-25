@@ -23,8 +23,8 @@ func NewPackage(ctx *Context, p *build.Package) *Package {
 		Context: ctx,
 		Package: p,
 	}
-	// seed pkg.c so calling result never blocks
 	pkg.Stale = isStale(&pkg)
+	pkg.Standard = pkg.Goroot // TODO(dfc) check this isn't set anywhere else
 	return &pkg
 }
 
@@ -43,10 +43,6 @@ func (p *Package) isMain() bool {
 func (p *Package) Imports() []*Package {
 	pkgs := make([]*Package, 0, len(p.Package.Imports))
 	for _, i := range p.Package.Imports {
-		if p.shouldignore(i) {
-			continue
-		}
-
 		pkg, ok := p.pkgs[i]
 		if !ok {
 			panic("could not locate package: " + i)

@@ -122,9 +122,10 @@ func TestTestPackage(t *testing.T) {
 	for _, tt := range tests {
 		ctx := testContext(t)
 		defer ctx.Destroy()
-		pkg, err := ctx.ResolvePackage(tt.pkg)
+		r := TestResolver(ctx)
+		pkg, err := r.ResolvePackage(tt.pkg)
 		if err != nil {
-			t.Errorf("ctx.ResolvePackage(%v):  %v", tt.pkg, err)
+			t.Errorf("r.ResolvePackage(%v):  %v", tt.pkg, err)
 			continue
 		}
 		targets := make(map[string]*gb.Action)
@@ -158,14 +159,16 @@ func TestTestPackages(t *testing.T) {
 		},
 	}}
 
-	for _, tt := range tests {
+	for i, tt := range tests {
 		ctx := testContext(t)
 		defer ctx.Destroy()
 		var pkgs []*gb.Package
+		t.Logf("testing: %v: pkgs: %v", i+1, tt.pkgs)
+		r := TestResolver(ctx)
 		for _, pkg := range tt.pkgs {
-			pkg, err := ctx.ResolvePackage(pkg)
+			pkg, err := r.ResolvePackage(pkg)
 			if err != nil {
-				t.Errorf("ctx.ResolvePackage(%v):  %v", pkg, err)
+				t.Errorf("r.ResolvePackage(%v):  %v", pkg, err)
 				continue
 			}
 			pkgs = append(pkgs, pkg)
