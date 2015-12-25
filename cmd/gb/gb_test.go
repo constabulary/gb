@@ -1350,8 +1350,26 @@ func TestNoBuildStdlib(t *testing.T) {
 	t.Skip("constabulary/gb#505")
 	gb := T{T: t}
 	defer gb.cleanup()
-        gb.tempDir("src/")
-        gb.cd(gb.tempdir)
+	gb.tempDir("src/")
+	gb.cd(gb.tempdir)
 	defer gb.cleanup()
 	gb.runFail("build", "-f", "-F", "net/http")
+}
+
+// https://github.com/constabulary/gb/issues/416
+func TestGbBuildRejectsPackgeCalledCmd(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src/cmd")
+	gb.tempFile("src/cmd/main.go", `package main
+func main() { println("hello world") }
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.runFail("build")
+	gb.mustBeEmpty(tmpdir)
+	gb.grepStderr(regexp.QuoteMeta(`FATAL: command "build" failed: failed to resolve import path "cmd": no buildable Go source files in `+filepath.Join(runtime.GOROOT(), "src", "cmd")), "expected $GOROOT/src/cmd")
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+	gb.mustNotExist(filepath.Join(gb.tempdir, "bin")) // ensure no bin directory is created
 }
