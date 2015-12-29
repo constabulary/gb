@@ -1428,3 +1428,36 @@ func main() { println("hello world") }
 	}
 	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/hello")
 }
+
+// https://github.com/constabulary/gb/issues/515
+func TestIssue515(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src/main")
+	gb.tempFile("src/main/main.go", `package main
+
+import (
+    "log"
+    "net/http"
+)
+
+func main() {
+    err := http.ListenAndServe(":8080", nil)
+    if err != nil {
+        log.Fatal("ListenAndServe: ", err)
+    } else {
+        log.Print("Server started!")
+    }
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("build")
+	gb.mustBeEmpty(tmpdir)
+	name := "main"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/main")
+}
