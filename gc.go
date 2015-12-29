@@ -64,7 +64,7 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	args := []string{"-o", ofile, "-D", "GOOS_" + pkg.gotargetos, "-D", "GOARCH_" + pkg.gotargetarch}
 	switch {
 	case goversion == 1.4:
-		includedir := filepath.Join(pkg.Context.Context.GOROOT, "pkg", pkg.gotargetos+"_"+pkg.gotargetarch)
+		includedir := filepath.Join(runtime.GOROOT(), "pkg", pkg.gotargetos+"_"+pkg.gotargetarch)
 		args = append(args, "-I", includedir)
 	case goversion > 1.4:
 		odir := filepath.Join(filepath.Dir(ofile))
@@ -128,7 +128,7 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 		"-F", "-V", "-w",
 		"-trimpath", pkg.Workdir(),
 		"-I", Workdir(pkg),
-		"-I", filepath.Join(pkg.Context.Context.GOROOT, "pkg", pkg.gohostos+"_"+pkg.gohostarch), // for runtime.h
+		"-I", filepath.Join(runtime.GOROOT(), "pkg", pkg.gohostos+"_"+pkg.gohostarch), // for runtime.h
 		"-o", ofile,
 		"-D", "GOOS_" + pkg.gotargetos,
 		"-D", "GOARCH_" + pkg.gotargetarch,

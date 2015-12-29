@@ -312,8 +312,7 @@ func libgcc(ctx *Context) (string, error) {
 }
 
 func cgotool(ctx *Context) string {
-	// TODO(dfc) need ctx.GOROOT method
-	return filepath.Join(ctx.Context.GOROOT, "pkg", "tool", ctx.gohostos+"_"+ctx.gohostarch, "cgo")
+	return filepath.Join(runtime.GOROOT(), "pkg", "tool", ctx.gohostos+"_"+ctx.gohostarch, "cgo")
 }
 
 // envList returns the value of the given environment variable broken

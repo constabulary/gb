@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -184,7 +185,7 @@ func TestTestPackages(t *testing.T) {
 		sort.Strings(actual)
 		var expected []string
 		exe := ""
-		if ctx.Context.GOOS == "windows" {
+		if runtime.GOOS == "windows" {
 			exe = ".exe"
 		}
 		for _, s := range tt.actions {
