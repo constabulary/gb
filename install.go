@@ -118,7 +118,7 @@ func isStale(pkg *Package) bool {
 
 	if pkg.Standard && !pkg.isCrossCompile() {
 		// if this is a standard lib package, and we are not cross compiling
-		// then assume the package is up to date. This also works around 
+		// then assume the package is up to date. This also works around
 		// golang/go#13769.
 		return false
 	}
