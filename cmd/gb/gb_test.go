@@ -1408,3 +1408,23 @@ func main() { println("hello world") }
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
 	gb.mustNotExist(filepath.Join(gb.tempdir, "bin")) // ensure no bin directory is created
 }
+
+// https://github.com/constabulary/gb/issues/492
+func TestGbBuildSubPackageOfCmd(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src/cmd/hello")
+	gb.tempFile("src/cmd/hello/main.go", `package main
+func main() { println("hello world") }
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("build")
+	gb.mustBeEmpty(tmpdir)
+	name := "hello"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/hello")
+}
