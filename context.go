@@ -21,7 +21,7 @@ import (
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
-	Context *build.Context
+	context *build.Context
 	workdir string
 
 	tc Toolchain
@@ -151,7 +151,7 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	sort.Strings(ctx.buildtags)
 
 	// backfill enbedded go/build.Context
-	ctx.Context = &build.Context{
+	ctx.context = &build.Context{
 		GOOS:     ctx.gotargetos,
 		GOARCH:   ctx.gotargetarch,
 		GOROOT:   runtime.GOROOT(),
@@ -220,13 +220,12 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	srcdir := filepath.Join(c.Projectdir(), "src") // TODO(dfc) should be a helper.
-	return c.loadPackage(nil, srcdir, path)
+	return c.loadPackage(nil, path)
 }
 
 // loadPackage recursively resolves path as a package relative to dir. If successful loadPackage
 // records the package in the Context's internal package cache.
-func (c *Context) loadPackage(stack []string, dir, path string) (*Package, error) {
+func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	if build.IsLocalImport(path) {
 		// sanity check
 		return nil, fmt.Errorf("%q is not a valid import path", path)
@@ -251,20 +250,7 @@ func (c *Context) loadPackage(stack []string, dir, path string) (*Package, error
 		return false
 	}
 
-	// build.Context.Import takes a directory argument that is relative to
-	// a specific directory. This is to support relative imports and vendoring.
-	// gb does not support either of these in the project, but we must do so
-	// to support recursing into the stdlib and rebuilding it.
-	//
-	// dir is supplied by the caller, which initially will be $PROJECT/src as no
-	// other packages will be valid roots. See issue #505
-	// If loadPackage recurses into the stdlib, then dir will be updated to be the
-	// location of the currently resolved package.
-
-	// TODO(dfc) allow vendor should only be enabled if we're inside the stdlib to
-	// avoid activating $PROJECT/vendor/src/.../vendor directories.
-	const mode = 0 | allowVendor // defined in goversionNN.go for backwards compatability
-	p, err := c.Context.Import(path, dir, mode)
+	p, err := c.Import(path)
 	if err != nil {
 		return nil, err
 	}
@@ -278,13 +264,7 @@ func (c *Context) loadPackage(stack []string, dir, path string) (*Package, error
 			push(im)
 			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
 		}
-		if standard {
-			// if we have recursed into the stdlib, set the dir passed to build.Context.Import
-			// to this package's directory to support relative imports. It is safe to do this
-			// because the standard library cannot import things that are not in the stdlib.
-			dir = p.Dir
-		}
-		pkg, err := c.loadPackage(stack, dir, im)
+		pkg, err := c.loadPackage(stack, im)
 		if err != nil {
 			return nil, err
 		}
@@ -303,6 +283,25 @@ func (c *Context) loadPackage(stack []string, dir, path string) (*Package, error
 	pkg.Stale = stale || isStale(&pkg)
 	c.pkgs[path] = &pkg
 	return &pkg, nil
+}
+
+// Import loads a package.
+func (c *Context) Import(path string) (*build.Package, error) {
+	// build.Context.Import takes a directory argument that is relative to
+	// a specific directory. This is to support relative imports and vendoring.
+	// gb does not support either of these in the project, but we must do so
+	// to support recursing into the stdlib and rebuilding it.
+	//
+	// It would be great to ignore vendoring completely, but that means we cannot
+	// cross compile the 1.6+ stdlib which uses vendoring for http2. So, we do a
+	// horrid hack.
+	mode := build.ImportMode(0)
+	dir := filepath.Join(c.Projectdir(), "src") // TODO(dfc) should be a helper.
+	if goversion > 1.5 && path == "golang.org/x/net/http2/hpack" {
+		mode |= allowVendor
+		dir = filepath.Join(runtime.GOROOT(), "src", "net", "http")
+	}
+	return c.context.Import(path, dir, mode)
 }
 
 // Destroy removes the temporary working files of this context.
@@ -456,7 +455,7 @@ func matchPackages(c *Context, pattern string) []string {
 			if !match(name) {
 				return nil
 			}
-			_, err = c.Context.Import(".", path, 0)
+			_, err = c.context.Import(".", path, 0)
 			if err != nil {
 				if _, noGo := err.(*build.NoGoError); noGo {
 					return nil

@@ -166,3 +166,26 @@ func TestContextOptions(t *testing.T) {
 		}
 	}
 }
+
+func TestContextLoadPackage(t *testing.T) {
+	tests := []struct {
+		opts []func(*Context) error
+		path string
+	}{
+		{path: "errors"},
+		{path: "net/http"}, // triggers vendor logic on go 1.6+
+	}
+
+	proj := testProject(t)
+	for _, tt := range tests {
+		ctx, err := proj.NewContext(tt.opts...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ctx.Destroy()
+		_, err = ctx.loadPackage(nil, tt.path)
+		if err != nil {
+			t.Errorf("loadPackage(%q): %v", tt.path, err)
+		}
+	}
+}
