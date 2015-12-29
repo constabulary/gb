@@ -17,7 +17,7 @@ func TestParseImports(t *testing.T) {
 		t.Fatalf("ParseImports(%q): %v", root, err)
 	}
 
-	want := set("github.com/quux/flobble", "github.com/lypo/moopo", "github.com/hoo/wuu")
+	want := set("fmt", "github.com/quux/flobble", "github.com/lypo/moopo", "github.com/hoo/wuu")
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("ParseImports(%q): want: %v, got %v", root, want, got)
 	}

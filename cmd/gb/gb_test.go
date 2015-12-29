@@ -1364,9 +1364,9 @@ func TestNoBuildStdlib(t *testing.T) {
 }
 
 func TestCrossCompile(t *testing.T) {
-        if strings.HasPrefix(runtime.Version(), "go1.4") {
-                t.Skip("skipping cross compile test, not supported on", runtime.Version())
-        }
+	if strings.HasPrefix(runtime.Version(), "go1.4") {
+		t.Skip("skipping cross compile test, not supported on", runtime.Version())
+	}
 	gb := T{T: t}
 	defer gb.cleanup()
 	gb.tempDir("src/p")

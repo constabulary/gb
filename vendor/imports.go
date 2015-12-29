@@ -35,9 +35,7 @@ func ParseImports(root string) (map[string]bool, error) {
 
 		for _, s := range f.Imports {
 			p := strings.Replace(s.Path.Value, "\"", "", -1)
-			if !contains(stdlib, p) {
-				pkgs[p] = true
-			}
+			pkgs[p] = true
 		}
 		return nil
 	}
