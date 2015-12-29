@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -27,7 +28,7 @@ See 'go help doc'.
 			if len(args) == 0 {
 				args = append(args, ".")
 			}
-			args = append([]string{filepath.Join(ctx.Context.GOROOT, "bin", "godoc")}, args...)
+			args = append([]string{filepath.Join(runtime.GOROOT(), "bin", "godoc")}, args...)
 
 			cmd := exec.Cmd{
 				Path: args[0],
