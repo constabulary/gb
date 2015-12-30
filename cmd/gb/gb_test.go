@@ -1476,3 +1476,18 @@ func TestGbGenerate(t *testing.T) {
 	gb.run("generate")
 	gb.grepStdout("^gentest generate.go$", "expected $GOPACKAGE $GOFILE")
 }
+
+func TestGbDoc(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skipf("windows doesn't have echo, lol")
+	}
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src/doctest")
+	gb.tempFile("src/doctest/doc.go", `// Package doctest tests gb doc
+package doctest
+`)
+	gb.cd(gb.tempdir)
+	gb.run("doc", "doctest")
+	gb.grepStdout("Package doctest tests gb doc$", "expected Package doctest tests gb doc")
+}
