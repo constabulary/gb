@@ -21,7 +21,7 @@ import (
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
-	context *build.Context
+	importer
 	workdir string
 
 	tc Toolchain
@@ -151,7 +151,8 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	sort.Strings(ctx.buildtags)
 
 	// backfill enbedded go/build.Context
-	ctx.context = &build.Context{
+	ctx.importer.Context = &ctx
+	ctx.importer.bc = &build.Context{
 		GOOS:     ctx.gotargetos,
 		GOARCH:   ctx.gotargetarch,
 		GOROOT:   runtime.GOROOT(),
@@ -223,11 +224,11 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 	return c.loadPackage(nil, path)
 }
 
-// loadPackage recursively resolves path as a package relative to dir. If successful loadPackage
+// loadPackage recursively resolves path as a package. If successful loadPackage
 // records the package in the Context's internal package cache.
 func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
-	if build.IsLocalImport(path) {
-		// sanity check
+	// sanity check
+	if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
 		return nil, fmt.Errorf("%q is not a valid import path", path)
 	}
 	if pkg, ok := c.pkgs[path]; ok {
@@ -283,25 +284,6 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	pkg.Stale = stale || isStale(&pkg)
 	c.pkgs[path] = &pkg
 	return &pkg, nil
-}
-
-// Import loads a package.
-func (c *Context) Import(path string) (*build.Package, error) {
-	// build.Context.Import takes a directory argument that is relative to
-	// a specific directory. This is to support relative imports and vendoring.
-	// gb does not support either of these in the project, but we must do so
-	// to support recursing into the stdlib and rebuilding it.
-	//
-	// It would be great to ignore vendoring completely, but that means we cannot
-	// cross compile the 1.6+ stdlib which uses vendoring for http2. So, we do a
-	// horrid hack.
-	mode := build.ImportMode(0)
-	dir := filepath.Join(c.Projectdir(), "src") // TODO(dfc) should be a helper.
-	if goversion > 1.5 && path == "golang.org/x/net/http2/hpack" {
-		mode |= allowVendor
-		dir = filepath.Join(runtime.GOROOT(), "src", "net", "http")
-	}
-	return c.context.Import(path, dir, mode)
 }
 
 // Destroy removes the temporary working files of this context.
@@ -455,7 +437,7 @@ func matchPackages(c *Context, pattern string) []string {
 			if !match(name) {
 				return nil
 			}
-			_, err = c.context.Import(".", path, 0)
+			_, err = c.importer.bc.Import(".", path, 0)
 			if err != nil {
 				if _, noGo := err.(*build.NoGoError); noGo {
 					return nil
