@@ -21,7 +21,10 @@ import (
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
-	loader
+	importer
+
+	pkgs map[string]*Package // map of package paths to resolved packages
+
 	workdir string
 
 	tc Toolchain
@@ -135,6 +138,7 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		Project:   p,
 		workdir:   workdir,
 		buildmode: "exe",
+		pkgs:      make(map[string]*Package),
 	}
 
 	for _, opt := range append(defaults, opts...) {
@@ -148,10 +152,8 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	sort.Strings(ctx.buildtags)
 
 	// backfill enbedded go/build.Context
-	ctx.loader.Context = &ctx
-	ctx.loader.pkgs = make(map[string]*Package)
-	ctx.loader.importer.srcdir = filepath.Join(ctx.Projectdir(), "src")
-	ctx.loader.importer.bc = &build.Context{
+	ctx.importer.srcdir = filepath.Join(ctx.Projectdir(), "src")
+	ctx.importer.bc = &build.Context{
 		GOOS:     ctx.gotargetos,
 		GOARCH:   ctx.gotargetarch,
 		GOROOT:   runtime.GOROOT(),
@@ -221,6 +223,67 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 		return nil, err
 	}
 	return c.loadPackage(nil, path)
+}
+
+// loadPackage recursively resolves path as a package. If successful loadPackage
+// records the package in the Context's internal package cache.
+func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
+	// sanity check
+	if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
+		return nil, fmt.Errorf("%q is not a valid import path", path)
+	}
+	if pkg, ok := c.pkgs[path]; ok {
+		// already loaded, just return
+		return pkg, nil
+	}
+
+	push := func(path string) {
+		stack = append(stack, path)
+	}
+	pop := func(path string) {
+		stack = stack[:len(stack)-1]
+	}
+	onStack := func(path string) bool {
+		for _, p := range stack {
+			if p == path {
+				return true
+			}
+		}
+		return false
+	}
+
+	p, err := c.Import(path)
+	if err != nil {
+		return nil, err
+	}
+
+	standard := p.Goroot && p.ImportPath != "" && !strings.HasPrefix(p.ImportPath, ".") // TODO(dfc) ensure relative imports never get this far
+	push(p.ImportPath)
+	var stale bool
+	for i, im := range p.Imports {
+		if onStack(im) {
+			push(im)
+			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
+		}
+		pkg, err := c.loadPackage(stack, im)
+		if err != nil {
+			return nil, err
+		}
+
+		// update the import path as the import may have been discovered via vendoring.
+		p.Imports[i] = pkg.ImportPath
+		stale = stale || pkg.Stale
+	}
+	pop(p.ImportPath)
+
+	pkg := Package{
+		Context:  c,
+		Package:  p,
+		Standard: standard,
+	}
+	pkg.Stale = stale || isStale(&pkg)
+	c.pkgs[p.ImportPath] = &pkg
+	return &pkg, nil
 }
 
 // Destroy removes the temporary working files of this context.
