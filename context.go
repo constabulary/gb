@@ -22,7 +22,6 @@ import (
 type Context struct {
 	*Project
 	importer
-
 	pkgs map[string]*Package // map of package paths to resolved packages
 
 	workdir string
