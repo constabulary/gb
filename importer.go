@@ -7,8 +7,8 @@ import (
 )
 
 type importer struct {
-	*Context
-	bc *build.Context
+	srcdir string
+	bc     *build.Context
 }
 
 // Import imports the package indicated by the import path.
@@ -22,7 +22,7 @@ func (i *importer) Import(path string) (*build.Package, error) {
 	// cross compile the 1.6+ stdlib which uses vendoring for http2. So, we do a
 	// horrid hack.
 	mode := build.ImportMode(0)
-	dir := filepath.Join(i.Projectdir(), "src") // TODO(dfc) should be a helper.
+	dir := i.srcdir
 	if goversion > 1.5 && path == "golang.org/x/net/http2/hpack" {
 		mode |= allowVendor
 		dir = filepath.Join(runtime.GOROOT(), "src", "net", "http")
