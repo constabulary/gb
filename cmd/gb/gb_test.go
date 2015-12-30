@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 			os.Exit(2)
 		}
 		testgb = filepath.Join(dir, testgb)
-		out, err := exec.Command(filepath.Join(runtime.GOROOT(),"bin", "go"), "build", "-o", testgb).CombinedOutput()
+		out, err := exec.Command(filepath.Join(runtime.GOROOT(), "bin", "go"), "build", "-o", testgb).CombinedOutput()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "building testgb failed: %v\n%s", err, out)
 			os.Exit(2)
