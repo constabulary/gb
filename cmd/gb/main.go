@@ -53,6 +53,14 @@ func fatalf(format string, args ...interface{}) {
 	exit(1)
 }
 
+func lookupGo() (string, error) {
+	path, err := exec.LookPath("go") // filepath.Join(runtime.GOROOT(), "bin", "go")
+	if err != nil {
+		return "", fmt.Errorf("unable to locate `go`: %v", err)
+	}
+	return path, nil
+}
+
 func main() {
 	args := os.Args
 	if len(args) < 2 || args[1] == "-h" {
