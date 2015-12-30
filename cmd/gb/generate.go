@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -32,17 +31,11 @@ See 'go help generate'.
 			"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),
 		})
 
-		args = append([]string{filepath.Join(runtime.GOROOT(), "bin", "go"), "generate"}, args...)
-
-		cmd := exec.Cmd{
-			Path: args[0],
-			Args: args,
-			Env:  env,
-
-			Stdin:  os.Stdin,
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-		}
+		cmd := exec.Command("go", append([]string{"generate"}, args...)...)
+		cmd.Env = env
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 
 		return cmd.Run()
 	},

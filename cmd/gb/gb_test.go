@@ -1461,3 +1461,18 @@ func main() {
 	}
 	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/main")
 }
+
+func TestGbGenerate(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skipf("windows doesn't have echo, lol")
+	}
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src/gentest")
+	gb.tempFile("src/gentest/generate.go", `package gentest
+//go:generate echo $GOPACKAGE $GOFILE
+`)
+	gb.cd(gb.tempdir)
+	gb.run("generate")
+	gb.grepStdout("^gentest generate.go$", "expected $GOPACKAGE $GOFILE")
+}
