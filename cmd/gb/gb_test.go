@@ -65,12 +65,23 @@ func TestMain(m *testing.M) {
 			os.Exit(2)
 		}
 		testgb = filepath.Join(dir, testgb)
-		out, err := exec.Command(filepath.Join(runtime.GOROOT(), "bin", "go"), "build", "-o", testgb).CombinedOutput()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "building testgb failed: %v\n%s", err, out)
+		locations := [][]string{
+			[]string{runtime.GOROOT(), "bin", "go"},
+			[]string{runtime.GOROOT(), "..", "bin", "go"},
+			[]string{runtime.GOROOT(), "..", "..", "bin", "go"},
+		}
+		ok := false
+		for _, loc := range locations {
+			out, err := exec.Command(filepath.Join(loc...), "build", "-o", testgb).CombinedOutput()
+			if err == nil {
+				ok = true
+				break
+			}
+			log.Printf("building testgb failed: %v\n%s", err, out)
+		}
+		if !ok {
 			os.Exit(2)
 		}
-
 		_, err = os.Stat(filepath.Join(runtime.GOROOT(), "pkg", fmt.Sprintf("%s_%s_race", runtime.GOOS, runtime.GOARCH), "runtime.a"))
 		switch {
 		case os.IsNotExist(err):
