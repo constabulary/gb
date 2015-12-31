@@ -151,7 +151,7 @@ func TestPackageIsMain(t *testing.T) {
 				Name:       "main",
 				ImportPath: "main",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: false,
 	}, {
@@ -160,7 +160,7 @@ func TestPackageIsMain(t *testing.T) {
 				Name:       "a",
 				ImportPath: "main",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: false,
 	}, {
@@ -169,7 +169,7 @@ func TestPackageIsMain(t *testing.T) {
 				Name:       "main",
 				ImportPath: "a",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: false,
 	}, {
@@ -178,7 +178,7 @@ func TestPackageIsMain(t *testing.T) {
 				Name:       "main",
 				ImportPath: "testmain",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: true,
 	}}
@@ -186,7 +186,7 @@ func TestPackageIsMain(t *testing.T) {
 	for _, tt := range tests {
 		got := tt.pkg.isMain()
 		if got != tt.want {
-			t.Errorf("Package{Name:%q, ImportPath: %q, Scope:%q}.isMain(): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.Scope, got, tt.want)
+			t.Errorf("Package{Name:%q, ImportPath: %q, TestScope:%v}.isMain(): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.TestScope, got, tt.want)
 		}
 	}
 }

@@ -182,7 +182,6 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	for _, name := range []string{"C", "unsafe"} {
 		pkg := &Package{
 			Context: &ctx,
-			Scope:   "build",
 			Package: &importer.Package{
 				Name:       name,
 				ImportPath: name,

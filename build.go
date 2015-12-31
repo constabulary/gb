@@ -191,7 +191,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 
 	// should this package be cached
 	// TODO(dfc) pkg.SkipInstall should become Install
-	if !pkg.SkipInstall && pkg.Scope != "test" {
+	if !pkg.SkipInstall && !pkg.TestScope {
 		build = &Action{
 			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
 			Deps: []*Action{build},
@@ -207,7 +207,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 			Run:  func() error { return link(pkg) },
 		}
 	}
-	if pkg.Scope != "test" {
+	if !pkg.TestScope {
 		// if this package is not compiled in test scope, then
 		// log the name of the package when complete.
 		build.Run = logInfoFn(build.Run, pkg.ImportPath)
@@ -270,7 +270,7 @@ func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
 	includes := pkg.IncludePaths()
 	importpath := pkg.ImportPath
-	if pkg.Scope == "test" && pkg.ExtraIncludes != "" {
+	if pkg.TestScope && pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
 	}
@@ -300,7 +300,7 @@ func link(pkg *Package) error {
 	}
 
 	includes := pkg.IncludePaths()
-	if pkg.Scope == "test" && pkg.ExtraIncludes != "" {
+	if pkg.TestScope && pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
 	}
@@ -311,13 +311,11 @@ func link(pkg *Package) error {
 
 // Workdir returns the working directory for a package.
 func Workdir(pkg *Package) string {
-	switch pkg.Scope {
-	case "test":
+	if pkg.TestScope {
 		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
 		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
-	default:
-		return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
+	return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 }
 
 // objfile returns the name of the object file for this package
@@ -333,20 +331,19 @@ func objname(pkg *Package) string {
 }
 
 func pkgname(pkg *Package) string {
-	switch pkg.Scope {
-	case "test":
+	switch {
+	case pkg.TestScope:
+		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
+	case pkg.Name == "main":
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 	default:
-		if pkg.Name == "main" {
-			return filepath.Base(filepath.FromSlash(pkg.ImportPath))
-		}
 		return pkg.Name
 	}
 }
 
 func binname(pkg *Package) string {
 	switch {
-	case pkg.Scope == "test":
+	case pkg.TestScope:
 		return pkg.Name + ".test"
 	case pkg.Name == "main":
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))

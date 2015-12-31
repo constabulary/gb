@@ -36,7 +36,7 @@ func pkgpath(pkg *Package) string {
 // project's pkg/ directory in the case that the stdlib is out of date, or not compiled for
 // a specific architecture.
 func installpath(pkg *Package) string {
-	if pkg.Scope == "test" {
+	if pkg.TestScope {
 		panic("installpath called with test scope")
 	}
 	return filepath.Join(pkg.Pkgdir(), filepath.FromSlash(pkg.ImportPath)+".a")
@@ -56,7 +56,7 @@ func isStale(pkg *Package) bool {
 	}
 
 	// tests are always stale, they are never installed
-	if pkg.Scope == "test" {
+	if pkg.TestScope {
 		return true
 	}
 

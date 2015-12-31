@@ -262,7 +262,7 @@ func TestWorkdir(t *testing.T) {
 		got := Workdir(pkg)
 		want := filepath.Join(ctx.Workdir(), tt.want)
 		if want != got {
-			t.Errorf("Workdir(Package{Name: %v, ImportPath: %v, Scope: %v}): want %s, got %s", pkg.Name, pkg.ImportPath, pkg.Scope, want, got)
+			t.Errorf("Workdir(Package{Name: %v, ImportPath: %v, TestScope: %v}): want %s, got %s", pkg.Name, pkg.ImportPath, pkg.TestScope, want, got)
 		}
 	}
 }
@@ -309,7 +309,7 @@ func TestPkgname(t *testing.T) {
 				Name:       "main",
 				ImportPath: "main",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: "main",
 	}, {
@@ -318,7 +318,7 @@ func TestPkgname(t *testing.T) {
 				Name:       "a",
 				ImportPath: "main",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: "main",
 	}, {
@@ -327,7 +327,7 @@ func TestPkgname(t *testing.T) {
 				Name:       "main",
 				ImportPath: "a",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: "a",
 	}, {
@@ -336,7 +336,7 @@ func TestPkgname(t *testing.T) {
 				Name:       "main",
 				ImportPath: "a/a",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: "a",
 	}, {
@@ -345,7 +345,7 @@ func TestPkgname(t *testing.T) {
 				Name:       "main",
 				ImportPath: "testmain",
 			},
-			Scope: "test",
+			TestScope: true,
 		},
 		want: "testmain",
 	}}
@@ -353,7 +353,7 @@ func TestPkgname(t *testing.T) {
 	for _, tt := range tests {
 		got := pkgname(tt.pkg)
 		if got != tt.want {
-			t.Errorf("pkgname(Package{Name:%q, ImportPath: %q, Scope:%q}): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.Scope, got, tt.want)
+			t.Errorf("pkgname(Package{Name:%q, ImportPath: %q, TestScope:%v}): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.TestScope, got, tt.want)
 		}
 	}
 }

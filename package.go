@@ -12,7 +12,7 @@ import (
 type Package struct {
 	*Context
 	*importer.Package
-	Scope         string // scope: build, test, etc
+	TestScope     bool
 	ExtraIncludes string // hook for test
 	Stale         bool   // is the package out of date wrt. its cached copy
 }
@@ -30,12 +30,10 @@ func NewPackage(ctx *Context, p *importer.Package) *Package {
 // isMain returns true if this is a command, not being built in test scope, and
 // not the testmain itself.
 func (p *Package) isMain() bool {
-	switch p.Scope {
-	case "test":
+	if p.TestScope {
 		return strings.HasSuffix(p.ImportPath, "testmain")
-	default:
-		return p.Name == "main"
 	}
+	return p.Name == "main"
 }
 
 // Imports returns the Pacakges that this Package depends on.
@@ -78,12 +76,9 @@ func (p *Package) Complete() bool {
 // Binfile returns the destination of the compiled target of this command.
 func (pkg *Package) Binfile() string {
 	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
-	var target string
-	switch pkg.Scope {
-	case "test":
+	target := filepath.Join(pkg.Bindir(), binname(pkg))
+	if pkg.TestScope {
 		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
-	default:
-		target = filepath.Join(pkg.Bindir(), binname(pkg))
 	}
 
 	// if this is a cross compile or there are build tags, add ctxString.
