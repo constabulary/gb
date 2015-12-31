@@ -2,11 +2,14 @@ package gb
 
 import (
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"runtime/debug"
 	"strings"
 	"testing"
+
+	"github.com/constabulary/gb/importer"
 )
 
 func testImportCycle(pkg string, t *testing.T) {
@@ -205,6 +208,64 @@ func TestCgoEnabled(t *testing.T) {
 		got := cgoEnabled(tt.gohostos, tt.gohostarch, tt.gotargetos, tt.gotargetarch)
 		if got != tt.want {
 			t.Errorf("cgoEnabled(%q, %q, %q, %q): got %v, want %v", tt.gohostos, tt.gohostarch, tt.gotargetos, tt.gotargetarch, got, tt.want)
+		}
+	}
+}
+
+func TestContextImportPackage(t *testing.T) {
+	proj := testProject(t)
+	tests := []struct {
+		path string
+		err  error
+	}{{
+		path: "a",
+	}, {
+		path: "cgomain",
+	}, {
+		path: "net/http", // loaded from GOROOT
+	}, {
+		path: "cmd",
+		err:  &importer.NoGoError{Dir: filepath.Join(proj.Projectdir(), "src", "cmd")},
+	}}
+
+	for _, tt := range tests {
+		ctx, err := proj.NewContext()
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = ctx.importPackage(tt.path)
+		if !reflect.DeepEqual(err, tt.err) {
+			t.Errorf("importPackage(%q): got %v, want %v", tt.path, err, tt.err)
+		}
+	}
+}
+
+func TestContextMatchPackages(t *testing.T) {
+	tests := []struct {
+		pattern string
+		want    []string
+	}{{
+		pattern: "all",
+		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain"},
+	}, {
+		pattern: "...",
+		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain"},
+	}, {
+		pattern: "cmd/...",
+		want:    []string{"cmd/f"},
+	}, {
+		pattern: ".../f",
+		want:    []string{"cmd/f"},
+	}, {
+		pattern: "net/http",
+		want:    nil, // should match nothing
+	}}
+
+	for _, tt := range tests {
+		ctx := testContext(t)
+		got := matchPackages(ctx, tt.pattern)
+		if !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("matchPackages(..., %q): got %v, want %v", tt.pattern, got, tt.want)
 		}
 	}
 }

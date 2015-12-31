@@ -33,42 +33,6 @@ type Importer struct {
 	Root string // root directory
 }
 
-// hasSubdir calls ctxt.HasSubdir (if not nil) or else uses
-// the local file system to answer the question.
-func hasSubdir(root, dir string) (rel string, ok bool) {
-	// Try using paths we received.
-	if rel, ok = hasSubdir0(root, dir); ok {
-		return
-	}
-
-	// Try expanding symlinks and comparing
-	// expanded against unexpanded and
-	// expanded against expanded.
-	rootSym, _ := filepath.EvalSymlinks(root)
-	dirSym, _ := filepath.EvalSymlinks(dir)
-
-	if rel, ok = hasSubdir0(rootSym, dir); ok {
-		return
-	}
-	if rel, ok = hasSubdir0(root, dirSym); ok {
-		return
-	}
-	return hasSubdir0(rootSym, dirSym)
-}
-
-func hasSubdir0(root, dir string) (rel string, ok bool) {
-	const sep = string(filepath.Separator)
-	root = filepath.Clean(root)
-	if !strings.HasSuffix(root, sep) {
-		root += sep
-	}
-	dir = filepath.Clean(dir)
-	if !strings.HasPrefix(dir, root) {
-		return "", false
-	}
-	return filepath.ToSlash(dir[len(root):]), true
-}
-
 func isDir(path string) bool {
 	fi, err := os.Stat(path)
 	return err == nil && fi.IsDir()

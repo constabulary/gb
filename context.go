@@ -158,7 +158,7 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 		GOOS:        ctx.gotargetos,
 		GOARCH:      ctx.gotargetarch,
 		CgoEnabled:  cgoEnabled(ctx.gohostos, ctx.gohostarch, ctx.gotargetos, ctx.gotargetarch),
-		ReleaseTags: releaseTags,
+		ReleaseTags: releaseTags, // from go/build, see gb.go
 		BuildTags:   ctx.buildtags,
 	}
 
@@ -261,7 +261,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return false
 	}
 
-	p, err := c.Import(path)
+	p, err := c.importPackage(path)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +295,8 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	return &pkg, nil
 }
 
-func (c *Context) Import(path string) (*importer.Package, error) {
+// importPackage loads a package using the backing set of importers.
+func (c *Context) importPackage(path string) (*importer.Package, error) {
 	pkg, err := c.importers[0].Import(path)
 	if err == nil {
 		return pkg, nil
