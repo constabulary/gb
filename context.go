@@ -181,13 +181,12 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	// Insert fake packages into the package cache.
 	for _, name := range []string{"C", "unsafe"} {
 		pkg := &Package{
-			Context:  &ctx,
-			Scope:    "build",
-			Standard: true, // synthetic packages belong to the stdlib
+			Context: &ctx,
+			Scope:   "build",
 			Package: &importer.Package{
 				Name:       name,
 				ImportPath: name,
-				Goroot:     true,
+				Standard:   true,
 			},
 		}
 		pkg.Stale = isStale(pkg)
@@ -266,7 +265,6 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return nil, err
 	}
 
-	standard := p.Goroot && p.ImportPath != "" && !strings.HasPrefix(p.ImportPath, ".") // TODO(dfc) ensure relative imports never get this far
 	push(p.ImportPath)
 	var stale bool
 	for i, im := range p.Imports {
@@ -286,9 +284,8 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	pop(p.ImportPath)
 
 	pkg := Package{
-		Context:  c,
-		Package:  p,
-		Standard: standard,
+		Context: c,
+		Package: p,
 	}
 	pkg.Stale = stale || isStale(&pkg)
 	c.pkgs[p.ImportPath] = &pkg

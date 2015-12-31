@@ -53,7 +53,7 @@ func TestImporter(t *testing.T) {
 			Dir:        filepath.Join(runtime.GOROOT(), "src", "errors"),
 			Root:       filepath.Join(runtime.GOROOT()),
 			SrcRoot:    filepath.Join(runtime.GOROOT(), "src"),
-			Goroot:     true,
+			Standard:   true,
 
 			GoFiles:      []string{"errors.go"},
 			XTestGoFiles: []string{"errors_test.go", "example_test.go"},

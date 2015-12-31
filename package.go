@@ -15,7 +15,6 @@ type Package struct {
 	Scope         string // scope: build, test, etc
 	ExtraIncludes string // hook for test
 	Stale         bool   // is the package out of date wrt. its cached copy
-	Standard      bool   // is this package part of the standard library
 }
 
 // NewPackage creates a resolved Package.
@@ -25,7 +24,6 @@ func NewPackage(ctx *Context, p *importer.Package) *Package {
 		Package: p,
 	}
 	pkg.Stale = isStale(&pkg)
-	pkg.Standard = pkg.Goroot // TODO(dfc) check this isn't set anywhere else
 	return &pkg
 }
 
