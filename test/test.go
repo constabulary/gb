@@ -109,7 +109,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 		Imports: imports,
 	})
-	testpkg.Scope = "test"
+	testpkg.TestScope = true
 	testpkg.Stale = true
 
 	// only build the internal test if there is Go source or
@@ -143,7 +143,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		if err != nil {
 			return nil, err
 		}
-		xtestpkg.Scope = "test"
+		xtestpkg.TestScope = true
 		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 
@@ -210,7 +210,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 }
 
 func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
-	if pkg.Scope != "test" {
+	if !pkg.TestScope {
 		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name)
 	}
 	dir := gb.Workdir(pkg)
@@ -239,7 +239,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 
 		Imports: pkg.Package.Imports,
 	})
-	testmain.Scope = "test"
+	testmain.TestScope = true
 	testmain.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 	return testmain, nil
 }
