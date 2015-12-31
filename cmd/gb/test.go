@@ -50,7 +50,7 @@ Flags:
 `,
 	Run: func(ctx *gb.Context, args []string) error {
 		ctx.Force = F
-		ctx.SkipInstall = FF
+		ctx.Install = !FF
 		ctx.Verbose = testVerbose
 		r := test.TestResolver(ctx)
 

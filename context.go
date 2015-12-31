@@ -37,10 +37,10 @@ type Context struct {
 
 	Statistics
 
-	Force       bool // force rebuild of packages
-	SkipInstall bool // do not cache compiled packages
-	Verbose     bool // verbose output
-	race        bool // race detector requested
+	Force   bool // force rebuild of packages
+	Install bool // copy packages into $PROJECT/pkg
+	Verbose bool // verbose output
+	race    bool // race detector requested
 
 	gcflags []string // flags passed to the compiler
 	ldflags []string // flags passed to the linker

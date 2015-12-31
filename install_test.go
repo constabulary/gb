@@ -60,6 +60,7 @@ func TestStale(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := newctx()
+		ctx.Install = true
 		defer ctx.Destroy()
 		for _, pkg := range tt.pkgs {
 			resolve(ctx, pkg)
