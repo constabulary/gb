@@ -199,11 +199,10 @@ func TestNewPackage(t *testing.T) {
 		importer.Package{
 			Name:       "C",
 			ImportPath: "C",
-			Goroot:     true,
+			Standard:   true,
 		},
 		Package{
-			Stale:    false,
-			Standard: true,
+			Stale: false,
 		},
 	}}
 	proj := testProject(t)

@@ -23,7 +23,7 @@ type Package struct {
 	Root          string   // root of Go tree where this package lives
 	SrcRoot       string   // package source root directory ("" if unknown)
 	PkgTargetRoot string   // architecture dependent install root directory ("" if unknown)
-	Goroot        bool     // package found in Go root
+	Standard      bool     // package found in GOROOT
 	AllTags       []string // tags that can influence file selection in this directory
 	ConflictDir   string   // this directory shadows Dir in $GOPATH
 

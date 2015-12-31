@@ -54,13 +54,13 @@ func (i *Importer) Import(path string) (*Package, error) {
 	p := &Package{
 		Importer:   i,
 		ImportPath: path,
-		Goroot:     i.Root == runtime.GOROOT(),
+		Standard:   i.Root == runtime.GOROOT(),
 	}
 	dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
 	if isDir(dir) {
 		p.Dir = dir
 		p.Root = i.Root
-	} else if p.Goroot {
+	} else if p.Standard {
 		path := pathpkg.Join("vendor", path)
 		dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
 		if isDir(dir) {
