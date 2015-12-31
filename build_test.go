@@ -70,6 +70,9 @@ func TestBuild(t *testing.T) {
 	}, {
 		pkg:  "tags2",
 		opts: opts(Tags("x")),
+	}, {
+		pkg: "nosource",
+		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "nosource")},
 	}}
 
 	proj := testProject(t)

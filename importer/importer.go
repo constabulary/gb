@@ -92,38 +92,22 @@ func (i *Importer) Import(path string) (*Package, error) {
 		ImportPath: path,
 		Goroot:     i.Root == runtime.GOROOT(),
 	}
-
-	searchVendor := func(root string) bool {
-		sub, ok := hasSubdir(root, i.Root)
-		if !ok || !strings.HasPrefix(sub, "src/") || strings.Contains(sub, "/testdata/") {
-			return false
-		}
-		for {
-			vendor := filepath.Join(root, sub, "vendor")
-			if isDir(vendor) {
-				dir := filepath.Join(vendor, path)
-				if isDir(dir) {
-					p.Dir = dir
-					p.ImportPath = strings.TrimPrefix(pathpkg.Join(sub, "vendor", path), "src/")
-					p.Root = root
-					return true
-				}
-			}
-			i := strings.LastIndex(sub, "/")
-			if i < 0 {
-				break
-			}
-			sub = sub[:i]
-		}
-		return false
-	}
-	if !p.Goroot || !searchVendor(pathpkg.Join(i.Root, path)) {
-		dir := filepath.Join(i.Root, "src", path)
-		if !isDir(dir) {
-			return nil, fmt.Errorf("import %q: not a directory", path)
-		}
+	dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
+	if isDir(dir) {
 		p.Dir = dir
 		p.Root = i.Root
+	} else if p.Goroot {
+		path := pathpkg.Join("vendor", path)
+		dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
+		if isDir(dir) {
+			p.Dir = dir
+			p.Root = i.Root
+			p.ImportPath = path
+		} else {
+			return nil, fmt.Errorf("import %q: not a directory", path)
+		}
+	} else {
+		return nil, fmt.Errorf("import %q: not a directory", path)
 	}
 
 	if p.Root != "" {

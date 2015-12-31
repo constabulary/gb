@@ -8,7 +8,6 @@ import (
 	"go/build"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 var releaseTags = build.Default.ReleaseTags
@@ -66,12 +65,6 @@ type Action struct {
 
 func mkdir(path string) error {
 	return os.MkdirAll(path, 0755)
-}
-
-// joinlist joins a []string representing path items
-// using the operating system specific list separator.
-func joinlist(l []string) string {
-	return strings.Join(l, string(filepath.ListSeparator))
 }
 
 // stripext strips the extension from a filename.

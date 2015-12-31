@@ -20,14 +20,15 @@ import (
 
 // Importer resolves the import path to a package.
 type Importer interface {
-        Import(path string) (*importer.Package, error)
+	Import(path string) (*importer.Package, error)
 }
 
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
 
-	goroot, project, vendor *importer.Importer
+	*importer.Context
+	importers []Importer
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -157,24 +158,27 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	// sort build tags to ensure the ctxSring and Suffix is stable
 	sort.Strings(ctx.buildtags)
 
-	ctx.goroot = &importer.Importer {
-		Context: &importer.Context {
-			GOOS: ctx.gotargetos,
-			GOARCH: ctx.gotargetarch,
-			CgoEnabled: cgoEnabled, // TODO(dfc)
-			ReleaseTags: releaseTags,
-			BuildTags: ctx.buildtags,
-		},
-		Root: runtime.GOROOT(),
+	ic := importer.Context{
+		GOOS:        ctx.gotargetos,
+		GOARCH:      ctx.gotargetarch,
+		CgoEnabled:  cgoEnabled, // TODO(dfc)
+		ReleaseTags: releaseTags,
+		BuildTags:   ctx.buildtags,
 	}
-	ctx.project = &importer.Importer {
-		Context: ctx.goroot.Context,
-		Root: ctx.Projectdir(),
+	ctx.importers = append(ctx.importers,
+		&importer.Importer{
+			Context: &ic,
+			Root:    runtime.GOROOT(),
+		})
+	for _, dir := range p.Srcdirs() {
+		ctx.importers = append(ctx.importers,
+			&importer.Importer{
+				Context: &ic,
+				Root:    filepath.Dir(dir), // strip off "src"
+			})
 	}
-	ctx.vendor = &importer.Importer {
-		Context: ctx.goroot.Context,
-		Root: filepath.Join(ctx.Projectdir(), "vendor"),
-	}
+
+	ctx.Context = &ic
 
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
@@ -295,17 +299,19 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 }
 
 func (c *Context) Import(path string) (*importer.Package, error) {
-	pkg, err := c.goroot.Import(path)
+	pkg, err := c.importers[0].Import(path)
 	if err == nil {
 		return pkg, nil
 	}
-	pkg, err2 := c.project.Import(path)
+	pkg, err2 := c.importers[1].Import(path)
 	if err2 == nil {
 		return pkg, nil
 	}
-	pkg, err3 := c.vendor.Import(path)
-	if err3 == nil {
-		return pkg, nil
+	if len(c.importers) > 2 {
+		pkg, err3 := c.importers[2].Import(path)
+		if err3 == nil {
+			return pkg, nil
+		}
 	}
 	return nil, err2
 }
@@ -461,8 +467,16 @@ func matchPackages(c *Context, pattern string) []string {
 			if !match(name) {
 				return nil
 			}
-			pkgs = append(pkgs, name)
-			return nil
+			_, err = c.ResolvePackage(name)
+			switch err.(type) {
+			case nil:
+				pkgs = append(pkgs, name)
+				return nil
+			case *importer.NoGoError:
+				return nil // skip
+			default:
+				return err
+			}
 		})
 	}
 	return pkgs

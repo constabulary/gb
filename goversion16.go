@@ -3,5 +3,5 @@
 package gb
 
 const (
-	goversion   = 1.6
+	goversion = 1.6
 )

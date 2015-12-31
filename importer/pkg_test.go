@@ -33,7 +33,6 @@ func TestGoodOSArch(t *testing.T) {
 		{"file_foo.go", true},
 		{"file_" + thisArch + ".go", true},
 		{"file_" + otherArch + ".go", false},
-		{"file_android.go", thisOS == "linux"},
 		{"file_" + thisOS + ".go", true},
 		{"file_" + otherOS + ".go", false},
 		{"file_" + thisOS + "_" + thisArch + ".go", true},
