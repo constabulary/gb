@@ -368,42 +368,6 @@ func saveCgo(di *Package, filename string, cg *ast.CommentGroup) error {
 	return nil
 }
 
-func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
-	switch os.Getenv("CGO_ENABLED") {
-	case "1":
-		return true
-	case "0":
-		return false
-	default:
-		// cgo must be explicitly enabled for cross compilation builds
-		if gohostos == gotargetos && gohostarch == gotargetarch {
-			switch gotargetos + "/" + gotargetarch {
-			case "darwin/386", "darwin/amd64", "darwin/arm", "darwin/arm64":
-				return true
-			case "dragonfly/amd64":
-				return true
-			case "freebsd/386", "freebsd/amd64", "freebsd/arm":
-				return true
-			case "linux/386", "linux/amd64", "linux/arm", "linux/arm64", "linux/ppc64le":
-				return true
-			case "android/386", "android/amd64", "android/arm":
-				return true
-			case "netbsd/386", "netbsd/amd64", "netbsd/arm":
-				return true
-			case "openbsd/386", "openbsd/amd64":
-				return true
-			case "solaris/amd64":
-				return true
-			case "windows/386", "windows/amd64":
-				return true
-			default:
-				return false
-			}
-		}
-		return false
-	}
-}
-
 func cleanImports(m map[string][]token.Position) ([]string, map[string][]token.Position) {
 	if len(m) == 0 {
 		return nil, nil

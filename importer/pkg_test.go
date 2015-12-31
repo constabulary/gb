@@ -93,22 +93,3 @@ func TestSplitQuoted(t *testing.T) {
 		}
 	}
 }
-
-func TestCgoEnabled(t *testing.T) {
-	tests := []struct {
-		gohostos, gohostarch     string
-		gotargetos, gotargetarch string
-		want                     bool
-	}{{
-		"linux", "amd64", "linux", "amd64", true,
-	}, {
-		"linux", "amd64", "linux", "386", false,
-	}}
-
-	for _, tt := range tests {
-		got := cgoEnabled(tt.gohostos, tt.gohostarch, tt.gotargetos, tt.gotargetarch)
-		if got != tt.want {
-			t.Errorf("cgoEnabled(%q, %q, %q, %q): got %v, want %v", tt.gohostos, tt.gohostarch, tt.gotargetos, tt.gotargetarch, got, tt.want)
-		}
-	}
-}

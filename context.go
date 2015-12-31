@@ -18,17 +18,13 @@ import (
 	"github.com/constabulary/gb/importer"
 )
 
-// Importer resolves the import path to a package.
-type Importer interface {
-	Import(path string) (*importer.Package, error)
-}
-
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
 
-	*importer.Context
-	importers []Importer
+	importers []interface {
+		Import(path string) (*importer.Package, error)
+	}
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -161,15 +157,18 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	ic := importer.Context{
 		GOOS:        ctx.gotargetos,
 		GOARCH:      ctx.gotargetarch,
-		CgoEnabled:  cgoEnabled, // TODO(dfc)
+		CgoEnabled:  cgoEnabled(ctx.gohostos, ctx.gohostarch, ctx.gotargetos, ctx.gotargetarch),
 		ReleaseTags: releaseTags,
 		BuildTags:   ctx.buildtags,
 	}
+
 	ctx.importers = append(ctx.importers,
 		&importer.Importer{
 			Context: &ic,
 			Root:    runtime.GOROOT(),
-		})
+		},
+	)
+
 	for _, dir := range p.Srcdirs() {
 		ctx.importers = append(ctx.importers,
 			&importer.Importer{
@@ -177,8 +176,6 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 				Root:    filepath.Dir(dir), // strip off "src"
 			})
 	}
-
-	ctx.Context = &ic
 
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
@@ -509,4 +506,40 @@ NextVar:
 		out = append(out, inkv)
 	}
 	return out
+}
+
+func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
+	switch os.Getenv("CGO_ENABLED") {
+	case "1":
+		return true
+	case "0":
+		return false
+	default:
+		// cgo must be explicitly enabled for cross compilation builds
+		if gohostos == gotargetos && gohostarch == gotargetarch {
+			switch gotargetos + "/" + gotargetarch {
+			case "darwin/386", "darwin/amd64", "darwin/arm", "darwin/arm64":
+				return true
+			case "dragonfly/amd64":
+				return true
+			case "freebsd/386", "freebsd/amd64", "freebsd/arm":
+				return true
+			case "linux/386", "linux/amd64", "linux/arm", "linux/arm64", "linux/ppc64le":
+				return true
+			case "android/386", "android/amd64", "android/arm":
+				return true
+			case "netbsd/386", "netbsd/amd64", "netbsd/arm":
+				return true
+			case "openbsd/386", "openbsd/amd64":
+				return true
+			case "solaris/amd64":
+				return true
+			case "windows/386", "windows/amd64":
+				return true
+			default:
+				return false
+			}
+		}
+		return false
+	}
 }

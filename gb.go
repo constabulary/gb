@@ -11,7 +11,6 @@ import (
 )
 
 var releaseTags = build.Default.ReleaseTags
-var cgoEnabled = build.Default.CgoEnabled
 
 // Toolchain represents a standardised set of command line tools
 // used to build and test Go programs.
