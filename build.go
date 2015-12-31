@@ -190,8 +190,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	}
 
 	// should this package be cached
-	// TODO(dfc) pkg.SkipInstall should become Install
-	if !pkg.SkipInstall && !pkg.TestScope {
+	if pkg.Install && !pkg.TestScope {
 		build = &Action{
 			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
 			Deps: []*Action{build},

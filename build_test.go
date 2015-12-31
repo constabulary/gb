@@ -79,7 +79,6 @@ func TestBuild(t *testing.T) {
 	for _, tt := range tests {
 		ctx, err := proj.NewContext(tt.opts...)
 		ctx.Force = true
-		ctx.SkipInstall = true
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if !sameErr(err, tt.err) {

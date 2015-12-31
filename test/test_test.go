@@ -224,7 +224,6 @@ func testContext(t *testing.T, opts ...func(*gb.Context) error) *gb.Context {
 		t.Fatal(err)
 	}
 	ctx.Force = true
-	ctx.SkipInstall = true
 	return ctx
 }
 
