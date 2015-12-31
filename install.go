@@ -92,7 +92,7 @@ func isStale(pkg *Package) bool {
 			debug.Debugf("%s is older than %s", pkgpath(pkg), pkg.tc.compiler())
 			return true
 		}
-		if pkg.IsCommand() && olderThan(pkg.tc.linker()) {
+		if pkg.isMain() && olderThan(pkg.tc.linker()) {
 			debug.Debugf("%s is older than %s", pkgpath(pkg), pkg.tc.compiler())
 			return true
 		}

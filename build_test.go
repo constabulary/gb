@@ -3,13 +3,14 @@ package gb
 import (
 	"errors"
 	"fmt"
-	"go/build"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/constabulary/gb/importer"
 )
 
 func TestBuild(t *testing.T) {
@@ -69,6 +70,9 @@ func TestBuild(t *testing.T) {
 	}, {
 		pkg:  "tags2",
 		opts: opts(Tags("x")),
+	}, {
+		pkg: "nosource",
+		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "nosource")},
 	}}
 
 	proj := testProject(t)
@@ -269,7 +273,7 @@ func TestPkgname(t *testing.T) {
 		want string
 	}{{
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "main",
 			},
@@ -277,7 +281,7 @@ func TestPkgname(t *testing.T) {
 		want: "main",
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "a",
 				ImportPath: "main",
 			},
@@ -285,7 +289,7 @@ func TestPkgname(t *testing.T) {
 		want: "a",
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "a",
 			},
@@ -293,7 +297,7 @@ func TestPkgname(t *testing.T) {
 		want: "a",
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "testmain",
 			},
@@ -301,7 +305,7 @@ func TestPkgname(t *testing.T) {
 		want: "testmain",
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "main",
 			},
@@ -310,7 +314,7 @@ func TestPkgname(t *testing.T) {
 		want: "main",
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "a",
 				ImportPath: "main",
 			},
@@ -319,7 +323,7 @@ func TestPkgname(t *testing.T) {
 		want: "main",
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "a",
 			},
@@ -328,7 +332,7 @@ func TestPkgname(t *testing.T) {
 		want: "a",
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "a/a",
 			},
@@ -337,7 +341,7 @@ func TestPkgname(t *testing.T) {
 		want: "a",
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "testmain",
 			},

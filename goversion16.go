@@ -2,9 +2,6 @@
 
 package gb
 
-import "go/build"
-
 const (
-	goversion   = 1.6
-	allowVendor = build.AllowVendor
+	goversion = 1.6
 )

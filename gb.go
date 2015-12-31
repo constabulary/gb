@@ -5,10 +5,12 @@
 package gb
 
 import (
+	"go/build"
 	"os"
 	"path/filepath"
-	"strings"
 )
+
+var releaseTags = build.Default.ReleaseTags
 
 // Toolchain represents a standardised set of command line tools
 // used to build and test Go programs.
@@ -62,12 +64,6 @@ type Action struct {
 
 func mkdir(path string) error {
 	return os.MkdirAll(path, 0755)
-}
-
-// joinlist joins a []string representing path items
-// using the operating system specific list separator.
-func joinlist(l []string) string {
-	return strings.Join(l, string(filepath.ListSeparator))
 }
 
 // stripext strips the extension from a filename.

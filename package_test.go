@@ -2,11 +2,12 @@ package gb
 
 import (
 	"fmt"
-	"go/build"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"testing"
+
+	"github.com/constabulary/gb/importer"
 )
 
 func testProject(t *testing.T) *Project {
@@ -29,11 +30,24 @@ func testContext(t *testing.T, opts ...func(*Context) error) *Context {
 }
 
 func TestResolvePackage(t *testing.T) {
-	ctx := testContext(t)
-	defer ctx.Destroy()
-	_, err := ctx.ResolvePackage("a")
-	if err != nil {
-		t.Fatal(err)
+	var tests = []struct {
+		pkg  string // package name
+		opts []func(*Context) error
+		err  error
+	}{{
+		pkg: "a",
+	}, {
+		pkg: "localimport",
+		err: fmt.Errorf(`import "../localimport": relative import not supported`),
+	}}
+	proj := testProject(t)
+	for _, tt := range tests {
+		ctx, err := proj.NewContext(tt.opts...)
+		defer ctx.Destroy()
+		_, err = ctx.ResolvePackage(tt.pkg)
+		if !reflect.DeepEqual(err, tt.err) {
+			t.Errorf("ResolvePackage(%q): want: %v, got %v", tt.pkg, tt.err, err)
+		}
 	}
 }
 
@@ -101,7 +115,7 @@ func TestPackageIsMain(t *testing.T) {
 		want bool
 	}{{
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "main",
 			},
@@ -109,7 +123,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: true,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "a",
 				ImportPath: "main",
 			},
@@ -117,7 +131,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: false,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "a",
 			},
@@ -125,7 +139,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: true,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "testmain",
 			},
@@ -133,7 +147,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: true,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "main",
 			},
@@ -142,7 +156,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: false,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "a",
 				ImportPath: "main",
 			},
@@ -151,7 +165,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: false,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "a",
 			},
@@ -160,7 +174,7 @@ func TestPackageIsMain(t *testing.T) {
 		want: false,
 	}, {
 		pkg: &Package{
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       "main",
 				ImportPath: "testmain",
 			},
@@ -179,10 +193,10 @@ func TestPackageIsMain(t *testing.T) {
 
 func TestNewPackage(t *testing.T) {
 	tests := []struct {
-		pkg  build.Package
+		pkg  importer.Package
 		want Package
 	}{{
-		build.Package{
+		importer.Package{
 			Name:       "C",
 			ImportPath: "C",
 			Goroot:     true,

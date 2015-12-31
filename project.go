@@ -16,14 +16,6 @@ type Project struct {
 	srcdirs []Srcdir
 }
 
-func togopath(srcdirs []string) string {
-	var s []string
-	for _, srcdir := range srcdirs {
-		s = append(s, filepath.Dir(srcdir))
-	}
-	return joinlist(s)
-}
-
 func SourceDir(root string) func(*Project) {
 	return func(p *Project) {
 		p.srcdirs = append(p.srcdirs, Srcdir{Root: root})

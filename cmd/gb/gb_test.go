@@ -789,10 +789,7 @@ func helloworld() {
 `)
 	gb.cd(gb.tempdir)
 	gb.runFail("build", "pkg2")
-	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg2": cannot find package "pkg2" in any of:`, "expected FATAL")
-	gb.grepStderr(regexp.QuoteMeta(filepath.Join(runtime.GOROOT(), "src", "pkg2")), "expected GOROOT")
-	gb.grepStderr(regexp.QuoteMeta(filepath.Join(gb.tempdir, "src", "pkg2")), "expected GOPATH")
-	gb.grepStderr(regexp.QuoteMeta(filepath.Join(gb.tempdir, "vendor", "src", "pkg2")), "expected GOPATH")
+	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg2": import "pkg2": not a directory`, "expected FATAL")
 }
 
 func TestBuildPackageNoSource(t *testing.T) {
@@ -1086,7 +1083,6 @@ func TestGbListSrcTopLevel(t *testing.T) {
 	gb.grepStderrNot(".", "expected no output")
 }
 
-// gb list with a project with source in a top level directory called will fail.
 func TestGbListSrcCmd(t *testing.T) {
 	gb := T{T: t}
 	defer gb.cleanup()
@@ -1094,9 +1090,8 @@ func TestGbListSrcCmd(t *testing.T) {
 	gb.tempDir("src/cmd")
 	gb.tempFile("src/cmd/main.go", "package main; func main() { println() }")
 	gb.cd(gb.tempdir)
-	gb.runFail("list")
-	gb.grepStdoutNot(".", "expected no output")
-	gb.grepStderr(`unable to resolve: failed to resolve import path "cmd": no buildable Go source files in `+regexp.QuoteMeta(filepath.Join(runtime.GOROOT(), "src", "cmd")), "expected FATAL")
+	gb.run("list")
+	gb.grepStdout("cmd", "expected cmd")
 }
 
 func mklistfixture(gb *T) {
@@ -1403,7 +1398,7 @@ func main() { println("hello world") }
 }
 
 // https://github.com/constabulary/gb/issues/416
-func TestGbBuildRejectsPackgeCalledCmd(t *testing.T) {
+func TestGbBuildBuildsPackgeCalledCmd(t *testing.T) {
 	gb := T{T: t}
 	defer gb.cleanup()
 	gb.tempDir("src/cmd")
@@ -1413,11 +1408,15 @@ func main() { println("hello world") }
 	gb.cd(gb.tempdir)
 	tmpdir := gb.tempDir("tmp")
 	gb.setenv("TMP", tmpdir)
-	gb.runFail("build")
+	gb.run("build")
 	gb.mustBeEmpty(tmpdir)
-	gb.grepStderr(regexp.QuoteMeta(`FATAL: command "build" failed: failed to resolve import path "cmd": no buildable Go source files in `+filepath.Join(runtime.GOROOT(), "src", "cmd")), "expected $GOROOT/src/cmd")
-	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
-	gb.mustNotExist(filepath.Join(gb.tempdir, "bin")) // ensure no bin directory is created
+	gb.grepStdout("^cmd$", "expected cmd")
+	name := "cmd"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	gb.mustExist(gb.path("bin", name))
+	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/"+name)
 }
 
 // https://github.com/constabulary/gb/issues/492

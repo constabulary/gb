@@ -2,15 +2,16 @@ package gb
 
 import (
 	"fmt"
-	"go/build"
 	"path/filepath"
 	"strings"
+
+	"github.com/constabulary/gb/importer"
 )
 
 // Package represents a resolved package from the Project with respect to the Context.
 type Package struct {
 	*Context
-	*build.Package
+	*importer.Package
 	Scope         string // scope: build, test, etc
 	ExtraIncludes string // hook for test
 	Stale         bool   // is the package out of date wrt. its cached copy
@@ -18,7 +19,7 @@ type Package struct {
 }
 
 // NewPackage creates a resolved Package.
-func NewPackage(ctx *Context, p *build.Package) *Package {
+func NewPackage(ctx *Context, p *importer.Package) *Package {
 	pkg := Package{
 		Context: ctx,
 		Package: p,

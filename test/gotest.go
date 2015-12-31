@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"errors"
 	"go/ast"
-	"go/build"
 	"go/doc"
 	"go/parser"
 	"go/scanner"
@@ -25,6 +24,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/importer"
 )
 
 type coverInfo struct {
@@ -88,7 +88,7 @@ func isTest(name, prefix string) bool {
 }
 
 // loadTestFuncs returns the testFuncs describing the tests that will be run.
-func loadTestFuncs(ptest *build.Package) (*testFuncs, error) {
+func loadTestFuncs(ptest *importer.Package) (*testFuncs, error) {
 	t := &testFuncs{
 		Package: ptest,
 	}
@@ -147,7 +147,7 @@ type testFuncs struct {
 	Benchmarks  []testFunc
 	Examples    []testFunc
 	TestMain    *testFunc
-	Package     *build.Package
+	Package     *importer.Package
 	ImportTest  bool
 	NeedTest    bool
 	ImportXtest bool

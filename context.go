@@ -2,7 +2,6 @@ package gb
 
 import (
 	"fmt"
-	"go/build"
 	"io"
 	"io/ioutil"
 	"os"
@@ -16,12 +15,16 @@ import (
 	"time"
 
 	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/importer"
 )
 
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	*Project
-	importer
+
+	importers []interface {
+		Import(path string) (*importer.Package, error)
+	}
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -151,20 +154,27 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	// sort build tags to ensure the ctxSring and Suffix is stable
 	sort.Strings(ctx.buildtags)
 
-	// backfill enbedded go/build.Context
-	ctx.importer.srcdir = filepath.Join(ctx.Projectdir(), "src")
-	ctx.importer.bc = &build.Context{
-		GOOS:     ctx.gotargetos,
-		GOARCH:   ctx.gotargetarch,
-		GOROOT:   runtime.GOROOT(),
-		GOPATH:   togopath(p.Srcdirs()),
-		Compiler: runtime.Compiler, // TODO(dfc) probably unused
-
-		// Make sure we use the same set of release tags as go/build
-		ReleaseTags: build.Default.ReleaseTags,
+	ic := importer.Context{
+		GOOS:        ctx.gotargetos,
+		GOARCH:      ctx.gotargetarch,
+		CgoEnabled:  cgoEnabled(ctx.gohostos, ctx.gohostarch, ctx.gotargetos, ctx.gotargetarch),
+		ReleaseTags: releaseTags, // from go/build, see gb.go
 		BuildTags:   ctx.buildtags,
+	}
 
-		CgoEnabled: build.Default.CgoEnabled,
+	ctx.importers = append(ctx.importers,
+		&importer.Importer{
+			Context: &ic,
+			Root:    runtime.GOROOT(),
+		},
+	)
+
+	for _, dir := range p.Srcdirs() {
+		ctx.importers = append(ctx.importers,
+			&importer.Importer{
+				Context: &ic,
+				Root:    filepath.Dir(dir), // strip off "src"
+			})
 	}
 
 	// C and unsafe are fake packages synthesised by the compiler.
@@ -174,7 +184,7 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 			Context:  &ctx,
 			Scope:    "build",
 			Standard: true, // synthetic packages belong to the stdlib
-			Package: &build.Package{
+			Package: &importer.Package{
 				Name:       name,
 				ImportPath: name,
 				Goroot:     true,
@@ -228,9 +238,8 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 // loadPackage recursively resolves path as a package. If successful loadPackage
 // records the package in the Context's internal package cache.
 func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
-	// sanity check
 	if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
-		return nil, fmt.Errorf("%q is not a valid import path", path)
+		return nil, fmt.Errorf("import %q: relative import not supported", path)
 	}
 	if pkg, ok := c.pkgs[path]; ok {
 		// already loaded, just return
@@ -252,7 +261,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return false
 	}
 
-	p, err := c.Import(path)
+	p, err := c.importPackage(path)
 	if err != nil {
 		return nil, err
 	}
@@ -284,6 +293,25 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	pkg.Stale = stale || isStale(&pkg)
 	c.pkgs[p.ImportPath] = &pkg
 	return &pkg, nil
+}
+
+// importPackage loads a package using the backing set of importers.
+func (c *Context) importPackage(path string) (*importer.Package, error) {
+	pkg, err := c.importers[0].Import(path)
+	if err == nil {
+		return pkg, nil
+	}
+	pkg, err2 := c.importers[1].Import(path)
+	if err2 == nil {
+		return pkg, nil
+	}
+	if len(c.importers) > 2 {
+		pkg, err3 := c.importers[2].Import(path)
+		if err3 == nil {
+			return pkg, nil
+		}
+	}
+	return nil, err2
 }
 
 // Destroy removes the temporary working files of this context.
@@ -437,14 +465,16 @@ func matchPackages(c *Context, pattern string) []string {
 			if !match(name) {
 				return nil
 			}
-			_, err = c.importer.bc.Import(".", path, 0)
-			if err != nil {
-				if _, noGo := err.(*build.NoGoError); noGo {
-					return nil
-				}
+			_, err = c.ResolvePackage(name)
+			switch err.(type) {
+			case nil:
+				pkgs = append(pkgs, name)
+				return nil
+			case *importer.NoGoError:
+				return nil // skip
+			default:
+				return err
 			}
-			pkgs = append(pkgs, name)
-			return nil
 		})
 	}
 	return pkgs
@@ -477,4 +507,40 @@ NextVar:
 		out = append(out, inkv)
 	}
 	return out
+}
+
+func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
+	switch os.Getenv("CGO_ENABLED") {
+	case "1":
+		return true
+	case "0":
+		return false
+	default:
+		// cgo must be explicitly enabled for cross compilation builds
+		if gohostos == gotargetos && gohostarch == gotargetarch {
+			switch gotargetos + "/" + gotargetarch {
+			case "darwin/386", "darwin/amd64", "darwin/arm", "darwin/arm64":
+				return true
+			case "dragonfly/amd64":
+				return true
+			case "freebsd/386", "freebsd/amd64", "freebsd/arm":
+				return true
+			case "linux/386", "linux/amd64", "linux/arm", "linux/arm64", "linux/ppc64le":
+				return true
+			case "android/386", "android/amd64", "android/arm":
+				return true
+			case "netbsd/386", "netbsd/amd64", "netbsd/arm":
+				return true
+			case "openbsd/386", "openbsd/amd64":
+				return true
+			case "solaris/amd64":
+				return true
+			case "windows/386", "windows/amd64":
+				return true
+			default:
+				return false
+			}
+		}
+		return false
+	}
 }
