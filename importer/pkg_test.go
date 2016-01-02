@@ -52,23 +52,6 @@ func TestGoodOSArch(t *testing.T) {
 	}
 }
 
-func TestExt(t *testing.T) {
-	tests := []struct {
-		name, want string
-	}{
-		{"file.go", ".go"},
-		{"file", ""},
-		{".go", ".go"},
-	}
-
-	for _, tt := range tests {
-		got := ext(tt.name)
-		if got != tt.want {
-			t.Errorf("ext(%q): got %q, want %q", tt.name, got, tt.want)
-		}
-	}
-}
-
 func TestSplitQuoted(t *testing.T) {
 	tests := []struct {
 		str  string

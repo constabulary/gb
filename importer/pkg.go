@@ -107,15 +107,6 @@ func goodOSArchFile(goos, goarch, name string, allTags map[string]bool) bool {
 	}
 }
 
-// ext returns the extension to a file named name
-func ext(name string) string {
-	i := strings.LastIndex(name, ".")
-	if i < 0 {
-		i = len(name)
-	}
-	return name[i:]
-}
-
 func loadPackage(p *Package) error {
 	var Sfiles []string // files with ".S" (capital S)
 	var firstFile string

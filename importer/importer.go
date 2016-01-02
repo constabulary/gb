@@ -110,7 +110,7 @@ func (i *Importer) matchFile(path string, allTags map[string]bool) (match bool, 
 		return data, err
 	}
 
-	switch ext(name) {
+	switch filepath.Ext(name) {
 	case ".go":
 		data, err = read(path, readImports)
 		if err != nil {
