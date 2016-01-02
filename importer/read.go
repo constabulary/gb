@@ -16,7 +16,6 @@ type importReader struct {
 	peek byte
 	err  error
 	eof  bool
-	nerr int
 }
 
 func isIdent(c byte) bool {
@@ -60,9 +59,6 @@ func (r *importReader) readByte() byte {
 // If skipSpace is set, peekByte skips leading spaces and comments.
 func (r *importReader) peekByte(skipSpace bool) byte {
 	if r.err != nil {
-		if r.nerr++; r.nerr > 10000 {
-			panic("go/build: import reader looping")
-		}
 		return 0
 	}
 

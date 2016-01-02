@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"bufio"
 	"fmt"
 	"go/ast" // for build.Default
 	"go/parser"
@@ -289,9 +290,10 @@ func loadPackage(p *Package) error {
 // These lines set CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS and pkg-config directives
 // that affect the way cgo's C code is built.
 func saveCgo(di *Package, filename string, cg *ast.CommentGroup) error {
-	text := cg.Text()
-	for _, line := range strings.Split(text, "\n") {
-		orig := line
+	r := strings.NewReader(cg.Text())
+	sc := bufio.NewScanner(r)
+	for sc.Scan() {
+		line := sc.Text()
 
 		// Line is
 		//	#cgo [GOOS/GOARCH...] LDFLAGS: stuff
@@ -305,14 +307,14 @@ func saveCgo(di *Package, filename string, cg *ast.CommentGroup) error {
 		line = strings.TrimSpace(line[4:])
 		i := strings.Index(line, ":")
 		if i < 0 {
-			return fmt.Errorf("%s: invalid #cgo line: %s", filename, orig)
+			return fmt.Errorf("%s: invalid #cgo line: %s", filename, sc.Text())
 		}
 		line, argstr := line[:i], line[i+1:]
 
 		// Parse GOOS/GOARCH stuff.
 		f := strings.Fields(line)
 		if len(f) < 1 {
-			return fmt.Errorf("%s: invalid #cgo line: %s", filename, orig)
+			return fmt.Errorf("%s: invalid #cgo line: %s", filename, sc.Text())
 		}
 
 		cond, verb := f[:len(f)-1], f[len(f)-1]
@@ -331,11 +333,11 @@ func saveCgo(di *Package, filename string, cg *ast.CommentGroup) error {
 
 		args, err := splitQuoted(argstr)
 		if err != nil {
-			return fmt.Errorf("%s: invalid #cgo line: %s", filename, orig)
+			return fmt.Errorf("%s: invalid #cgo line: %s", filename, sc.Text())
 		}
-		var ok bool
 		for i, arg := range args {
-			if arg, ok = expandSrcDir(arg, di.Dir); !ok {
+			arg, ok := expandSrcDir(arg, di.Dir)
+			if !ok {
 				return fmt.Errorf("%s: malformed #cgo argument: %s", filename, arg)
 			}
 			args[i] = arg
@@ -353,10 +355,10 @@ func saveCgo(di *Package, filename string, cg *ast.CommentGroup) error {
 		case "pkg-config":
 			di.CgoPkgConfig = append(di.CgoPkgConfig, args...)
 		default:
-			return fmt.Errorf("%s: invalid #cgo verb: %s", filename, orig)
+			return fmt.Errorf("%s: invalid #cgo verb: %s", filename, sc.Text())
 		}
 	}
-	return nil
+	return sc.Err()
 }
 
 func cleanImports(m map[string][]token.Position) ([]string, map[string][]token.Position) {
