@@ -2,6 +2,7 @@ package gb
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -81,8 +82,8 @@ func (pkg *Package) Binfile() string {
 		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
 	}
 
-	// if this is a cross compile or there are build tags, add ctxString.
-	if pkg.isCrossCompile() {
+	// if this is a cross compile or GOOS/GOARCH are both defined or there are build tags, add ctxString.
+	if pkg.isCrossCompile() || (len(os.Getenv("GOOS")) > 0 && len(os.Getenv("GOARCH")) > 0) {
 		target += "-" + pkg.ctxString()
 	} else if len(pkg.buildtags) > 0 {
 		target += "-" + strings.Join(pkg.buildtags, "-")
