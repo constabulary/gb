@@ -83,7 +83,7 @@ func (pkg *Package) Binfile() string {
 	}
 
 	// if this is a cross compile or GOOS/GOARCH are both defined or there are build tags, add ctxString.
-	if pkg.isCrossCompile() || (len(os.Getenv("GOOS")) > 0 && len(os.Getenv("GOARCH")) > 0) {
+	if pkg.isCrossCompile() || (os.Getenv("GOOS") != "" && os.Getenv("GOARCH") != "") {
 		target += "-" + pkg.ctxString()
 	} else if len(pkg.buildtags) > 0 {
 		target += "-" + strings.Join(pkg.buildtags, "-")

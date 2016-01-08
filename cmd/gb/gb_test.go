@@ -1511,24 +1511,28 @@ func main() { println("hello world") }
 `)
 	gb.cd(gb.tempdir)
 	tmpdir := gb.tempDir("tmp")
-
 	gb.setenv("TMP", tmpdir)
+
+	goos := runtime.GOOS
 
 	// scenario 1: GOOS/GOARCH not set
 	name := "p"
+	if goos == "windows" {
+		name += ".exe"
+	}
 	gb.unsetenv("GOOS")
 	gb.unsetenv("GOARCH")
 	gb.run("build")
-	gb.mustExist(gb.path("bin", name))
 	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/p")
 
 	// scenario 2: GOOS/GOARCH are both set
-	goos := runtime.GOOS
 	name = fmt.Sprintf("p-%s-%s", goos, runtime.GOARCH)
+	if goos == "windows" {
+		name += ".exe"
+	}
 	gb.setenv("GOOS", goos)
 	gb.setenv("GOARCH", runtime.GOARCH)
 	gb.run("build")
-	gb.mustExist(gb.path("bin", name))
 	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/p-$GOOS-$GOARCH")
 
 	// scenario 3: just GOOS is set
