@@ -1501,3 +1501,43 @@ package doctest
 	gb.run("doc", "doctest")
 	gb.grepStdout("Package doctest tests gb doc$", "expected Package doctest tests gb doc")
 }
+
+func TestIssue346(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src/p")
+	gb.tempFile("src/p/main.go", `package main
+func main() { println("hello world") }
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+
+	goos := runtime.GOOS
+
+	// scenario 1: GOOS/GOARCH not set
+	name := "p"
+	if goos == "windows" {
+		name += ".exe"
+	}
+	gb.unsetenv("GOOS")
+	gb.unsetenv("GOARCH")
+	gb.run("build")
+	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/p")
+
+	// scenario 2: GOOS/GOARCH are both set
+	name = fmt.Sprintf("p-%s-%s", goos, runtime.GOARCH)
+	if goos == "windows" {
+		name += ".exe"
+	}
+	gb.setenv("GOOS", goos)
+	gb.setenv("GOARCH", runtime.GOARCH)
+	gb.run("build")
+	gb.wantExecutable(gb.path("bin", name), "expected $PROJECT/bin/p-$GOOS-$GOARCH")
+
+	// scenario 3: just GOOS is set
+	os.Remove(gb.path("bin", name))
+	gb.unsetenv("GOARCH")
+	gb.run("build")
+	gb.mustNotExist(gb.path("bin", name))
+}
