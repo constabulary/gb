@@ -2,14 +2,11 @@ package gb
 
 import (
 	"fmt"
-	"path/filepath"
 	"reflect"
 	"runtime"
 	"runtime/debug"
 	"strings"
 	"testing"
-
-	"github.com/constabulary/gb/importer"
 )
 
 func testImportCycle(pkg string, t *testing.T) {
@@ -216,7 +213,6 @@ func TestContextImportPackage(t *testing.T) {
 	proj := testProject(t)
 	tests := []struct {
 		path string
-		err  error
 	}{{
 		path: "a",
 	}, {
@@ -225,7 +221,8 @@ func TestContextImportPackage(t *testing.T) {
 		path: "net/http", // loaded from GOROOT
 	}, {
 		path: "cmd",
-		err:  &importer.NoGoError{Dir: filepath.Join(proj.Projectdir(), "src", "cmd")},
+	}, {
+		path: "cmd/f",
 	}}
 
 	for _, tt := range tests {
@@ -234,8 +231,8 @@ func TestContextImportPackage(t *testing.T) {
 			t.Fatal(err)
 		}
 		_, err = ctx.importPackage(tt.path)
-		if !reflect.DeepEqual(err, tt.err) {
-			t.Errorf("importPackage(%q): got %v, want %v", tt.path, err, tt.err)
+		if err != nil {
+			t.Errorf("importPackage(%q): got %v, want %v", tt.path, err, nil)
 		}
 	}
 }
@@ -252,7 +249,7 @@ func TestContextMatchPackages(t *testing.T) {
 		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain"},
 	}, {
 		pattern: "cmd/...",
-		want:    []string{"cmd/f"},
+		want:    []string{"cmd", "cmd/f"},
 	}, {
 		pattern: ".../f",
 		want:    []string{"cmd/f"},

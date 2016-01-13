@@ -180,15 +180,18 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
 	for _, name := range []string{"C", "unsafe"} {
-		pkg := &Package{
-			Context: &ctx,
-			Package: &importer.Package{
-				Name:       name,
-				ImportPath: name,
-				Standard:   true,
-			},
+		pkg, err := ctx.NewPackage(&importer.Package{
+			Name:       name,
+			ImportPath: name,
+			Standard:   true,
+			Dir:        name, // fake, but helps diagnostics
+		})
+		if err != nil {
+			return nil, err
 		}
-		pkg.Stale = isStale(pkg)
+		if pkg.Stale {
+			panic("isStale computed wrong value for fake package: " + name)
+		}
 		ctx.pkgs[pkg.ImportPath] = pkg
 	}
 
@@ -303,21 +306,20 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 // importPackage loads a package using the backing set of importers.
 func (c *Context) importPackage(path string) (*importer.Package, error) {
-	pkg, err := c.importers[0].Import(path)
-	if err == nil {
-		return pkg, nil
-	}
-	pkg, err2 := c.importers[1].Import(path)
-	if err2 == nil {
-		return pkg, nil
-	}
-	if len(c.importers) > 2 {
-		pkg, err3 := c.importers[2].Import(path)
-		if err3 == nil {
-			return pkg, nil
+	for _, im := range c.importers {
+		pkg, err := im.Import(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, err
 		}
+		if pkg.IsEmpty() {
+			continue
+		}
+		return pkg, nil
 	}
-	return nil, err2
+	return nil, fmt.Errorf("could not import package %q", path)
 }
 
 // Destroy removes the temporary working files of this context.
@@ -471,13 +473,13 @@ func matchPackages(c *Context, pattern string) []string {
 			if !match(name) {
 				return nil
 			}
-			_, err = c.ResolvePackage(name)
+			pkg, err := c.ResolvePackage(name)
 			switch err.(type) {
 			case nil:
-				pkgs = append(pkgs, name)
+				if !pkg.IsEmpty() {
+					pkgs = append(pkgs, name)
+				}
 				return nil
-			case *importer.NoGoError:
-				return nil // skip
 			default:
 				return err
 			}

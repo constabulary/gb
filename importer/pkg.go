@@ -264,9 +264,6 @@ func loadPackage(p *Package) error {
 			}
 		}
 	}
-	if len(p.GoFiles)+len(p.CgoFiles)+len(p.TestGoFiles)+len(p.XTestGoFiles) == 0 {
-		return &NoGoError{p.Dir}
-	}
 
 	for tag := range allTags {
 		p.AllTags = append(p.AllTags, tag)

@@ -18,7 +18,7 @@ func TestResolvePackages(t *testing.T) {
 	}{
 		{paths: []string{"a"}},
 		{paths: []string{"."}, err: fmt.Errorf("failed to resolve import path %q: %q is not a package", ".", root)},
-		{paths: []string{"h"}, err: fmt.Errorf("failed to resolve import path %q: no buildable Go source files in %s", "h", filepath.Join(root, "blank"))},
+		{paths: []string{"h"}, err: fmt.Errorf("failed to resolve import path %q: could not import package %q", "h", "blank")},
 	}
 
 	for _, tt := range tests {

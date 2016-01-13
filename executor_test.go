@@ -4,11 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"path/filepath"
 	"reflect"
 	"testing"
-
-	"github.com/constabulary/gb/importer"
 )
 
 func TestExecuteBuildAction(t *testing.T) {
@@ -32,7 +29,7 @@ func TestExecuteBuildAction(t *testing.T) {
 		err: errors.New("import cycle detected: x -> y -> x"),
 	}, {
 		pkg: "h", // imports "blank", which is blank, see issue #131
-		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "blank")},
+		err: fmt.Errorf("could not import package %q", "blank"),
 	}}
 
 	for _, tt := range tests {

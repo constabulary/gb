@@ -2,9 +2,11 @@ package importer
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"syscall"
 	"testing"
 )
 
@@ -49,7 +51,7 @@ func TestImporter(t *testing.T) {
 		path: "errors",
 		want: &Package{
 			ImportPath: "errors",
-			Name:       "errors", // no yet
+			Name:       "errors",
 			Dir:        filepath.Join(runtime.GOROOT(), "src", "errors"),
 			Root:       filepath.Join(runtime.GOROOT()),
 			SrcRoot:    filepath.Join(runtime.GOROOT(), "src"),
@@ -59,6 +61,53 @@ func TestImporter(t *testing.T) {
 			XTestGoFiles: []string{"errors_test.go", "example_test.go"},
 			XTestImports: []string{"errors", "fmt", "testing", "time"},
 		},
+	}, {
+		Importer: Importer{
+			Context: &Context{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			Root: filepath.Join(runtime.GOROOT()),
+		},
+		path: "database",
+		want: &Package{
+			ImportPath: "database",
+			Name:       "", // won't be set if there are no source files with a package decl
+			Dir:        filepath.Join(runtime.GOROOT(), "src", "database"),
+			Root:       filepath.Join(runtime.GOROOT()),
+			SrcRoot:    filepath.Join(runtime.GOROOT(), "src"),
+			Standard:   true,
+		},
+	}, {
+		Importer: Importer{
+			Context: &Context{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			Root: filepath.Join(runtime.GOROOT()),
+		},
+		path: "missing",
+		err:  &os.PathError{Op: "stat", Path: filepath.Join(runtime.GOROOT(), "src", "missing"), Err: syscall.ENOENT},
+	}, {
+		Importer: Importer{
+			Context: &Context{
+				GOOS:       "linux",
+				GOARCH:     "amd64",
+				CgoEnabled: true,
+			},
+			Root: filepath.Join(runtime.GOROOT()),
+		},
+		path: "net",
+	}, {
+		Importer: Importer{
+			Context: &Context{
+				GOOS:       "linux",
+				GOARCH:     "amd64",
+				CgoEnabled: true,
+			},
+			Root: filepath.Join(runtime.GOROOT()),
+		},
+		path: "os/user",
 	}}
 
 	for _, tt := range tests {
@@ -68,6 +117,11 @@ func TestImporter(t *testing.T) {
 		}
 
 		if err != nil {
+			continue
+		}
+
+		if tt.want == nil {
+			t.Logf("Import(%q): skipping package contents check", tt.path)
 			continue
 		}
 
