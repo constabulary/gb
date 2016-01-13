@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"os"
@@ -92,7 +92,7 @@ func TestImportPaths(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got := ImportPaths(&tt.ctx, tt.cwd, tt.args)
+		got := importPaths(&tt.ctx, tt.cwd, tt.args)
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("ImportPaths(%v): got %v, want %v", tt.args, got, tt.want)
 		}

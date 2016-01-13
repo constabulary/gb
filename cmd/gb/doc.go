@@ -21,7 +21,7 @@ Doc shows documentation for a package or symbol.
 See 'go help doc'.
 `,
 		Run: func(ctx *gb.Context, args []string) error {
-			env := cmd.MergeEnv(os.Environ(), map[string]string{
+			env := mergeEnv(os.Environ(), map[string]string{
 				"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),
 			})
 			if len(args) == 0 {

@@ -1,19 +1,33 @@
 package main
 
-import "github.com/constabulary/gb/cmd"
+import (
+	"fmt"
+	"log"
+	"os"
+	"strings"
+)
 
-func init() {
-	registerCommand(EnvCmd)
+func mustGetwd() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("unable to determine current working directory: %v", err)
+	}
+	return wd
 }
 
-var EnvCmd = &cmd.Command{
-	Name:      "env",
-	UsageLine: `env [var ...]`,
-	Short:     "print project environment variables",
-	Long: `
-Env prints project environment variables. If one or more variable names is 
-given as arguments, env prints the value of each named variable on its own line.
-`,
-	Run:           info,
-	SkipParseArgs: true,
+// mergeEnv merges args into env, overwriting entries.
+func mergeEnv(env []string, args map[string]string) []string {
+	m := make(map[string]string)
+	for _, e := range env {
+		v := strings.SplitN(e, "=", 2)
+		m[v[0]] = v[1]
+	}
+	for k, v := range args {
+		m[k] = v
+	}
+	env = make([]string, 0, len(m))
+	for k, v := range m {
+		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
+	return env
 }
