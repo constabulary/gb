@@ -160,7 +160,7 @@ func main() {
 	}
 
 	if !command.SkipParseArgs {
-		args = cmd.ImportPaths(ctx, cwd, args)
+		args = importPaths(ctx, cwd, args)
 	}
 
 	debug.Debugf("args: %v", args)

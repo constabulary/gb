@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"path"
@@ -44,7 +44,7 @@ func importPathsNoDotExpansion(ctx Context, cwd string, args []string) []string 
 }
 
 // importPaths returns the import paths to use for the given command line.
-func ImportPaths(ctx Context, cwd string, args []string) []string {
+func importPaths(ctx Context, cwd string, args []string) []string {
 	args = importPathsNoDotExpansion(ctx, cwd, args)
 	var out []string
 	for _, a := range args {
