@@ -86,7 +86,3 @@ func NewContext(projectroot string, options ...func(*gb.Context) error) (*gb.Con
 	debug.Debugf("project root %q", project.Projectdir())
 	return project.NewContext(options...)
 }
-
-func mkdir(path string) error {
-	return os.MkdirAll(path, 0755)
-}
