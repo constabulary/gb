@@ -25,7 +25,7 @@ const (
 )
 
 func init() {
-	fs.StringVar(&cwd, "R", cmd.MustGetwd(), "set the project root") // actually the working directory to start the project root search
+	fs.StringVar(&cwd, "R", mustGetwd(), "set the project root") // actually the working directory to start the project root search
 	fs.Usage = usage
 }
 
@@ -75,7 +75,7 @@ func main() {
 			Run: func(ctx *gb.Context, args []string) error {
 				args = append([]string{plugin}, args...)
 
-				env := cmd.MergeEnv(os.Environ(), map[string]string{
+				env := mergeEnv(os.Environ(), map[string]string{
 					"GB_PROJECT_DIR": ctx.Projectdir(),
 				})
 
