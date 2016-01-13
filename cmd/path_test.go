@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -56,15 +57,8 @@ func TestFindProjectroot(t *testing.T) {
 
 	for _, tt := range tests {
 		got, err := FindProjectroot(tt.path)
-		if got != tt.want || !sameErr(err, tt.err) {
+		if got != tt.want || !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("FindProjectroot(%v): want: %v, %v, got %v, %v", tt.path, tt.want, tt.err, got, err)
 		}
 	}
-}
-
-func sameErr(e1, e2 error) bool {
-	if e1 != nil && e2 != nil {
-		return e1.Error() == e2.Error()
-	}
-	return e1 == e2
 }
