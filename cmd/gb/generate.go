@@ -28,7 +28,7 @@ See 'go help generate'.
 `,
 	Run: func(ctx *gb.Context, args []string) error {
 		env := mergeEnv(os.Environ(), map[string]string{
-			"GOPATH": fmt.Sprintf("%s:%s", ctx.Projectdir(), filepath.Join(ctx.Projectdir(), "vendor")),
+			"GOPATH": fmt.Sprintf("%s%c%s", ctx.Projectdir(), filepath.ListSeparator, filepath.Join(ctx.Projectdir(), "vendor")),
 		})
 
 		cmd := exec.Command("go", append([]string{"generate"}, args...)...)
