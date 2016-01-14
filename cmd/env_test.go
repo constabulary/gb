@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import "testing"
 
@@ -26,16 +26,24 @@ func TestMergeEnv(t *testing.T) {
 	}
 
 	for _, tt := range envTests {
-		got := mergeEnv(tt.env, tt.args)
+		got := MergeEnv(tt.env, tt.args)
 		compare(t, tt.want, got)
 	}
 }
 
 func compare(t *testing.T, want, got []string) {
-	w, g := set(want...), set(got...)
+	w, g := set(want), set(got)
 	for k := range w {
 		if w[k] != g[k] {
 			t.Errorf("want %v, got %v", k, g[k])
 		}
 	}
+}
+
+func set(v []string) map[string]bool {
+	m := make(map[string]bool)
+	for _, s := range v {
+		m[s] = true
+	}
+	return m
 }
