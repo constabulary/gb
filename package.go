@@ -19,16 +19,6 @@ type Package struct {
 	Imports       []*Package
 }
 
-// NewPackage creates a resolved Package.
-func NewPackage(ctx *Context, p *importer.Package) (*Package, error) {
-	pkg, err := newPackage(ctx, p)
-	if err != nil {
-		return nil, err
-	}
-	pkg.Stale = isStale(pkg)
-	return pkg, nil
-}
-
 // newPackage creates a resolved Package without setting pkg.Stale.
 func newPackage(ctx *Context, p *importer.Package) (*Package, error) {
 	pkg := &Package{

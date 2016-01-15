@@ -209,7 +209,7 @@ func TestNewPackage(t *testing.T) {
 		ctx, _ := proj.NewContext()
 		defer ctx.Destroy()
 
-		got, err := NewPackage(ctx, &tt.pkg)
+		got, err := ctx.NewPackage(&tt.pkg)
 		if err != nil {
 			t.Error(err)
 			continue

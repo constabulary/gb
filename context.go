@@ -203,6 +203,16 @@ func (c *Context) IncludePaths() []string {
 	}
 }
 
+// NewPackage creates a resolved Package for p.
+func (c *Context) NewPackage(p *importer.Package) (*Package, error) {
+	pkg, err := newPackage(c, p)
+	if err != nil {
+		return nil, err
+	}
+	pkg.Stale = isStale(pkg)
+	return pkg, nil
+}
+
 // Pkgdir returns the path to precompiled packages.
 func (c *Context) Pkgdir() string {
 	return filepath.Join(c.Project.Pkgdir(), c.ctxString())
