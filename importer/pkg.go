@@ -245,7 +245,7 @@ func loadPackage(p *Package) error {
 		switch {
 		case isCgo:
 			allTags["cgo"] = true
-			if p.CgoEnabled {
+			if p.importer.(*Importer).CgoEnabled {
 				p.CgoFiles = append(p.CgoFiles, name)
 			} else {
 				p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)

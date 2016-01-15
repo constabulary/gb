@@ -52,7 +52,7 @@ func (i *Importer) Import(path string) (*Package, error) {
 	}
 
 	p := &Package{
-		Importer:   i,
+		importer:   i,
 		ImportPath: path,
 		Standard:   i.Root == runtime.GOROOT(),
 	}
