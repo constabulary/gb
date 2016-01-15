@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/constabulary/gb/importer"
 )
 
 func TestExecuteBuildAction(t *testing.T) {
@@ -30,14 +32,14 @@ func TestExecuteBuildAction(t *testing.T) {
 		err: errors.New("import cycle detected: x -> y -> x"),
 	}, {
 		pkg: "h", // imports "blank", which is blank, see issue #131
-		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "blank")),
+		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "blank")},
 	}}
 
 	for _, tt := range tests {
 		ctx := testContext(t)
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
-		if !sameErr(err, tt.err) {
+		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("ctx.ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue
 		}
@@ -49,7 +51,7 @@ func TestExecuteBuildAction(t *testing.T) {
 			t.Errorf("BuildAction(%v): ", tt.pkg, err)
 			continue
 		}
-		if err := Execute(action); !sameErr(err, tt.err) {
+		if err := Execute(action); !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("Execute(%v): want: %v, got %v", action.Name, tt.err, err)
 		}
 	}

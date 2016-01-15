@@ -59,7 +59,7 @@ func TestBuildAction(t *testing.T) {
 		ctx := testContext(t)
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
-		if !sameErr(err, tt.err) {
+		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("ctx.ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue
 		}
@@ -67,7 +67,7 @@ func TestBuildAction(t *testing.T) {
 			continue
 		}
 		got, err := BuildPackages(pkg)
-		if !sameErr(err, tt.err) {
+		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("BuildAction(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue
 		}

@@ -130,7 +130,7 @@ func TestTestPackage(t *testing.T) {
 			continue
 		}
 		targets := make(map[string]*gb.Action)
-		if _, err := TestPackage(targets, pkg, nil); !sameErr(err, tt.err) {
+		if _, err := TestPackage(targets, pkg, nil); !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("TestPackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 		}
 	}
@@ -175,7 +175,7 @@ func TestTestPackages(t *testing.T) {
 			pkgs = append(pkgs, pkg)
 		}
 		a, err := TestPackages(nil, pkgs...)
-		if !sameErr(err, tt.err) {
+		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("TestPackages(%v): want %v, got %v", pkgs, tt.err, err)
 		}
 		var actual []string
@@ -225,11 +225,4 @@ func testContext(t *testing.T, opts ...func(*gb.Context) error) *gb.Context {
 	}
 	ctx.Force = true
 	return ctx
-}
-
-func sameErr(e1, e2 error) bool {
-	if e1 != nil && e2 != nil {
-		return e1.Error() == e2.Error()
-	}
-	return e1 == e2
 }

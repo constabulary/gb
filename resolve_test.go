@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -24,7 +25,7 @@ func TestResolvePackages(t *testing.T) {
 		ctx := testContext(t)
 		defer ctx.Destroy()
 		_, err := ResolvePackages(ctx, tt.paths...)
-		if !sameErr(err, tt.err) {
+		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("ResolvePackage(%v): want: %v, got %v", tt.paths, tt.err, err)
 		}
 	}

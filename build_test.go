@@ -2,7 +2,6 @@ package gb
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -57,16 +56,16 @@ func TestBuild(t *testing.T) {
 		err: nil,
 	}, {
 		pkg: "h", // imports "blank", which is blank, see issue #131
-		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "blank")),
+		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "blank")},
 	}, {
 		pkg: "cppmain",
 	}, {
 		pkg:  "tags1",
 		opts: opts(Tags("x")), // excludes the test file in package
-		err:  fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "tags1")),
+		err:  &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "tags1")},
 	}, {
 		pkg: "tags2",
-		err: fmt.Errorf("no buildable Go source files in %s", filepath.Join(getwd(t), "testdata", "src", "tags2")),
+		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "tags2")},
 	}, {
 		pkg:  "tags2",
 		opts: opts(Tags("x")),
@@ -81,14 +80,14 @@ func TestBuild(t *testing.T) {
 		ctx.Force = true
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
-		if !sameErr(err, tt.err) {
+		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("ctx.ResolvePackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 			continue
 		}
 		if err != nil {
 			continue
 		}
-		if err := Build(pkg); !sameErr(err, tt.err) {
+		if err := Build(pkg); !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("ctx.Build(%v): want %v, got %v", tt.pkg, tt.err, err)
 		}
 	}
@@ -139,7 +138,7 @@ func TestBuildPackage(t *testing.T) {
 			continue
 		}
 		targets := make(map[string]*Action)
-		if _, err := BuildPackage(targets, pkg); !sameErr(err, tt.err) {
+		if _, err := BuildPackage(targets, pkg); !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("ctx.BuildPackage(%v): want %v, got %v", tt.pkg, tt.err, err)
 		}
 	}
@@ -176,7 +175,7 @@ func TestBuildPackages(t *testing.T) {
 			pkgs = append(pkgs, pkg)
 		}
 		a, err := BuildPackages(pkgs...)
-		if !sameErr(err, tt.err) {
+		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("ctx.BuildPackages(%v): want %v, got %v", pkgs, tt.err, err)
 		}
 		var names []string
@@ -355,13 +354,6 @@ func TestPkgname(t *testing.T) {
 			t.Errorf("pkgname(Package{Name:%q, ImportPath: %q, TestScope:%v}): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.TestScope, got, tt.want)
 		}
 	}
-}
-
-func sameErr(e1, e2 error) bool {
-	if e1 != nil && e2 != nil {
-		return e1.Error() == e2.Error()
-	}
-	return e1 == e2
 }
 
 func getwd(t *testing.T) string {
