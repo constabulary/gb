@@ -7,10 +7,6 @@ import (
 )
 
 func TestBuildAction(t *testing.T) {
-	actions := func(a ...*Action) []*Action {
-		return a
-	}
-
 	var tests = []struct {
 		pkg    string
 		action *Action
@@ -19,7 +15,7 @@ func TestBuildAction(t *testing.T) {
 		pkg: "a",
 		action: &Action{
 			Name: "build: a",
-			Deps: actions(&Action{Name: "compile: a"}),
+			Deps: []*Action{&Action{Name: "compile: a"}},
 		},
 	}, {
 		pkg: "b",
@@ -74,7 +70,7 @@ func TestBuildAction(t *testing.T) {
 		deleteTasks(got)
 
 		if !reflect.DeepEqual(tt.action, got) {
-			t.Errorf("BuildAction(%v): want %#v, got %#v", tt.pkg, tt.action, got)
+			t.Errorf("BuildAction(%v): want %#+v, got %#+v", tt.pkg, tt.action, got)
 		}
 
 		// double underpants

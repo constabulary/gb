@@ -226,7 +226,7 @@ func logInfoFn(fn func() error, s string) func() error {
 // to build all dependant packages of this package.
 func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, error) {
 	var deps []*Action
-	pkgs := pkg.Imports()
+	pkgs := pkg.Imports
 
 	var extra []string
 	switch {

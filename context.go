@@ -282,13 +282,10 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	}
 	pop(p.ImportPath)
 
-	pkg := Package{
-		Context: c,
-		Package: p,
-	}
-	pkg.Stale = stale || isStale(&pkg)
-	c.pkgs[p.ImportPath] = &pkg
-	return &pkg, nil
+	pkg := newPackage(c, p)
+	pkg.Stale = stale || isStale(pkg)
+	c.pkgs[p.ImportPath] = pkg
+	return pkg, nil
 }
 
 // importPackage loads a package using the backing set of importers.
