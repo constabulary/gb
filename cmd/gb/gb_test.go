@@ -709,6 +709,7 @@ func helloworld() {
 	gb.cd(gb.tempdir)
 	tmpdir := gb.tempDir("tmp")
 	gb.setenv("TMP", tmpdir)
+	gb.setenv("DEBUG", ".")
 	gb.run("build")
 	gb.grepStdout("^pkg1$", `expected "pkg1"`)
 	gb.mustBeEmpty(tmpdir)
@@ -789,7 +790,7 @@ func helloworld() {
 `)
 	gb.cd(gb.tempdir)
 	gb.runFail("build", "pkg2")
-	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg2": import "pkg2": not a directory`, "expected FATAL")
+	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg2": stat `+regexp.QuoteMeta(filepath.Join(gb.tempdir, "src", "pkg2"))+`: no such file or directory`, "expected FATAL")
 }
 
 func TestBuildPackageNoSource(t *testing.T) {

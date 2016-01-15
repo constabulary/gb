@@ -19,6 +19,10 @@ func ResolvePackages(r Resolver, paths ...string) ([]*Package, error) {
 		if err != nil {
 			return pkgs, fmt.Errorf("failed to resolve import path %q: %v", path, err)
 		}
+		if pkg.IsEmpty() {
+			// TODO(dfc) do we return an error if we were given a path that doesn't exist?
+			continue
+		}
 		pkgs = append(pkgs, pkg)
 	}
 	return pkgs, nil

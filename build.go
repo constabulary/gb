@@ -86,6 +86,10 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 		return nil, nil
 	}
 
+	if pkg.IsEmpty() {
+		return nil, fmt.Errorf("no buildable Go source files in %s", pkg.Dir)
+	}
+
 	// step 1. build dependencies
 	deps, err := BuildDependencies(targets, pkg)
 	if err != nil {

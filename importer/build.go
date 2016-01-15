@@ -67,15 +67,10 @@ type Package struct {
 	XTestImportPos map[string][]token.Position // line information for XTestImports
 }
 
-// NoGoError is the error used by Import to describe a directory
-// containing no buildable Go source files. (It may still contain
-// test files, files hidden by build tags, and so on.)
-type NoGoError struct {
-	Dir string
-}
-
-func (e *NoGoError) Error() string {
-	return "no buildable Go source files in " + e.Dir
+// IsEmpty returns true if the directory represented by this package did not contain any
+// buildable Go source code.
+func (p *Package) IsEmpty() bool {
+	return len(p.GoFiles)+len(p.CgoFiles)+len(p.TestGoFiles)+len(p.XTestGoFiles) == 0
 }
 
 // MultiplePackageError describes a directory containing

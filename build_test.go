@@ -2,6 +2,7 @@ package gb
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -56,22 +57,22 @@ func TestBuild(t *testing.T) {
 		err: nil,
 	}, {
 		pkg: "h", // imports "blank", which is blank, see issue #131
-		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "blank")},
+		err: fmt.Errorf("could not import package %q", "blank"),
 	}, {
 		pkg: "cppmain",
 	}, {
 		pkg:  "tags1",
 		opts: opts(Tags("x")), // excludes the test file in package
-		err:  &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "tags1")},
+		err:  fmt.Errorf("could not import package %q", "tags1"),
 	}, {
 		pkg: "tags2",
-		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "tags2")},
+		err: fmt.Errorf("could not import package %q", "tags2"),
 	}, {
 		pkg:  "tags2",
 		opts: opts(Tags("x")),
 	}, {
 		pkg: "nosource",
-		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "nosource")},
+		err: fmt.Errorf("could not import package %q", "nosource"),
 	}}
 
 	proj := testProject(t)
@@ -169,7 +170,11 @@ func TestBuildPackages(t *testing.T) {
 		for _, pkg := range tt.pkgs {
 			pkg, err := ctx.ResolvePackage(pkg)
 			if err != nil {
-				t.Errorf("ctx.ResolvePackage(%v):  %v", pkg, err)
+				t.Errorf("ctx.ResolvePackage(%q): %v", pkg, err)
+				continue
+			}
+			if pkg.IsEmpty() {
+				t.Errorf("ctx.ResolvePackage(%q): IsEmpty: %v", pkg, pkg.IsEmpty())
 				continue
 			}
 			pkgs = append(pkgs, pkg)

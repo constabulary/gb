@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	pathpkg "path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -33,11 +32,6 @@ type Importer struct {
 	Root string // root directory
 }
 
-func isDir(path string) bool {
-	fi, err := os.Stat(path)
-	return err == nil && fi.IsDir()
-}
-
 func (i *Importer) Import(path string) (*Package, error) {
 	if path == "" {
 		return nil, fmt.Errorf("import %q: invalid import path", path)
@@ -56,30 +50,32 @@ func (i *Importer) Import(path string) (*Package, error) {
 		ImportPath: path,
 		Standard:   i.Root == runtime.GOROOT(),
 	}
-	dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
-	if isDir(dir) {
-		p.Dir = dir
-		p.Root = i.Root
-	} else if p.Standard {
-		path := pathpkg.Join("vendor", path)
-		dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
-		if isDir(dir) {
+
+	// if this is the stdlib, then search vendor first.
+	// this isn't real vendor support, just enough to make net/http compile.
+	if p.Standard {
+		dir := filepath.Join(i.Root, "src", "vendor", filepath.FromSlash(path))
+		fi, err := os.Stat(dir)
+		if err == nil && fi.IsDir() {
 			p.Dir = dir
 			p.Root = i.Root
 			p.ImportPath = path
-		} else {
-			return nil, fmt.Errorf("import %q: not a directory", path)
+			p.SrcRoot = filepath.Join(p.Root, "src")
+			err = loadPackage(p)
+			return p, err
 		}
-	} else {
-		return nil, fmt.Errorf("import %q: not a directory", path)
 	}
 
-	if p.Root != "" {
+	dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
+	fi, err := os.Stat(dir)
+	if err == nil && fi.IsDir() {
+		p.Dir = dir
+		p.Root = i.Root
 		p.SrcRoot = filepath.Join(p.Root, "src")
+		err = loadPackage(p)
+		return p, err
 	}
-
-	err := loadPackage(p)
-	return p, err
+	return nil, err
 }
 
 // matchFile determines whether the file with the given name in the given directory
