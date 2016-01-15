@@ -99,7 +99,7 @@ func isStale(pkg *Package) bool {
 	}
 
 	// Package is stale if a dependency is newer.
-	for _, p := range pkg.Imports() {
+	for _, p := range pkg.Imports {
 		if p.ImportPath == "C" || p.ImportPath == "unsafe" {
 			continue // ignore stale imports of synthetic packages
 		}

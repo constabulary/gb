@@ -16,16 +16,30 @@ type Package struct {
 	TestScope     bool
 	ExtraIncludes string // hook for test
 	Stale         bool   // is the package out of date wrt. its cached copy
+	Imports       []*Package
 }
 
 // NewPackage creates a resolved Package.
 func NewPackage(ctx *Context, p *importer.Package) *Package {
-	pkg := Package{
+	pkg := newPackage(ctx, p)
+	pkg.Stale = isStale(pkg)
+	return pkg
+}
+
+// newPackage creates a resolved Package without setting pkg.Stale {
+func newPackage(ctx *Context, p *importer.Package) *Package {
+	pkg := &Package{
 		Context: ctx,
 		Package: p,
 	}
-	pkg.Stale = isStale(&pkg)
-	return &pkg
+	for _, i := range p.Imports {
+		dep, ok := ctx.pkgs[i]
+		if !ok {
+			panic("could not locate depedant package: " + i + " for package " + p.Name)
+		}
+		pkg.Imports = append(pkg.Imports, dep)
+	}
+	return pkg
 }
 
 // isMain returns true if this is a command, not being built in test scope, and
@@ -35,19 +49,6 @@ func (p *Package) isMain() bool {
 		return strings.HasSuffix(p.ImportPath, "testmain")
 	}
 	return p.Name == "main"
-}
-
-// Imports returns the Pacakges that this Package depends on.
-func (p *Package) Imports() []*Package {
-	pkgs := make([]*Package, 0, len(p.Package.Imports))
-	for _, i := range p.Package.Imports {
-		pkg, ok := p.pkgs[i]
-		if !ok {
-			panic("could not locate package: " + i)
-		}
-		pkgs = append(pkgs, pkg)
-	}
-	return pkgs
 }
 
 func (p *Package) String() string {
