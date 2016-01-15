@@ -282,7 +282,10 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	}
 	pop(p.ImportPath)
 
-	pkg := newPackage(c, p)
+	pkg, err := newPackage(c, p)
+	if err != nil {
+		return nil, fmt.Errorf("loadPackage(%q): %v", path, err)
+	}
 	pkg.Stale = stale || isStale(pkg)
 	c.pkgs[p.ImportPath] = pkg
 	return pkg, nil

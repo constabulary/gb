@@ -209,7 +209,11 @@ func TestNewPackage(t *testing.T) {
 		ctx, _ := proj.NewContext()
 		defer ctx.Destroy()
 
-		got := NewPackage(ctx, &tt.pkg)
+		got, err := NewPackage(ctx, &tt.pkg)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
 		want := tt.want // deep copy
 		want.Package = &tt.pkg
 		want.Context = ctx

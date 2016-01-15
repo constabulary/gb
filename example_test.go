@@ -7,7 +7,7 @@ import (
 	"github.com/constabulary/gb"
 )
 
-func ExampleNewPackage() {
+func ExampleNewProject() {
 
 	// Every project begins with a project root.
 	// Normally you'd check this out of source control.

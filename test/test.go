@@ -89,7 +89,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	}
 
 	// internal tests
-	testpkg := gb.NewPackage(pkg.Context, &importer.Package{
+	testpkg, err := gb.NewPackage(pkg.Context, &importer.Package{
 		Name:       name,
 		ImportPath: pkg.ImportPath,
 		Dir:        pkg.Dir,
@@ -109,8 +109,11 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 		Imports: imports,
 	})
+	if err != nil {
+		return nil, err
+	}
 	testpkg.TestScope = true
-	testpkg.Stale = true
+	testpkg.Stale = true // TODO(dfc) NewPackage should get this right
 
 	// only build the internal test if there is Go source or
 	// internal test files.
@@ -131,13 +134,17 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
-		xtestpkg := gb.NewPackage(pkg.Context, &importer.Package{
+		xtestpkg, err := gb.NewPackage(pkg.Context, &importer.Package{
 			Name:       name,
 			ImportPath: pkg.ImportPath + "_test",
 			Dir:        pkg.Dir,
 			GoFiles:    pkg.XTestGoFiles,
 			Imports:    pkg.XTestImports,
 		})
+		if err != nil {
+			return nil, err
+		}
+
 		// build external test dependencies
 		deps, err := gb.BuildDependencies(targets, xtestpkg)
 		if err != nil {
@@ -229,7 +236,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if err := writeTestmain(filepath.Join(dir, "_testmain.go"), tests); err != nil {
 		return nil, err
 	}
-	testmain := gb.NewPackage(pkg.Context, &importer.Package{
+	testmain, err := gb.NewPackage(pkg.Context, &importer.Package{
 		Name:       pkg.Name,
 		ImportPath: path.Join(pkg.ImportPath, "testmain"),
 		Dir:        dir,
@@ -239,6 +246,12 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 
 		Imports: pkg.Package.Imports,
 	})
+	if err != nil {
+		return nil, err
+	}
+	if !testmain.Stale {
+		panic("testmain not marked stale")
+	}
 	testmain.TestScope = true
 	testmain.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 	return testmain, nil
