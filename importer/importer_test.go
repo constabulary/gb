@@ -73,7 +73,7 @@ func TestImporter(t *testing.T) {
 
 		// fixups
 		want := tt.want
-		want.Importer = got.Importer
+		want.importer = got.importer
 		got.ImportPos = nil
 		got.TestImportPos = nil
 		got.XTestImportPos = nil

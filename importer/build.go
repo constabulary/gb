@@ -14,9 +14,16 @@ import (
 	"unicode"
 )
 
+// importer is a private interface defined here so public *Importer
+// types can be embedded in *Package with exposing them to the caller.
+type importer interface {
+	matchFile(path string, allTags map[string]bool) (match bool, data []byte, err error)
+	match(name string, allTags map[string]bool) bool
+}
+
 // A Package describes the Go package found in a directory.
 type Package struct {
-	*Importer              // the importer context that loaded this package
+	importer               // the importer context that loaded this package
 	Dir           string   // directory containing package sources
 	Name          string   // package name
 	ImportPath    string   // import path of package ("" if unknown)
