@@ -108,7 +108,24 @@ func goodOSArchFile(goos, goarch, name string, allTags map[string]bool) bool {
 	}
 }
 
+type byName []os.FileInfo
+
+func (x byName) Len() int           { return len(x) }
+func (x byName) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func (x byName) Less(i, j int) bool { return x[i].Name() < x[j].Name() }
+
 func loadPackage(p *Package) error {
+	dir, err := os.Open(p.Dir)
+	if err != nil {
+		return fmt.Errorf("loadPackage: unable open directory: %v", err)
+	}
+	defer dir.Close()
+
+	dents, err := dir.Readdir(-1)
+	if err != nil {
+		return fmt.Errorf("loadPackage: unable read directory: %v", err)
+	}
+
 	var Sfiles []string // files with ".S" (capital S)
 	var firstFile string
 	imported := make(map[string][]token.Position)
@@ -116,17 +133,16 @@ func loadPackage(p *Package) error {
 	xTestImported := make(map[string][]token.Position)
 	allTags := make(map[string]bool)
 	fset := token.NewFileSet()
-	err := filepath.Walk(p.Dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() && path != p.Dir {
-			return filepath.SkipDir
+
+	// cmd/gb expects file names to be sorted ... this seems artificial
+	sort.Sort(byName(dents))
+	for _, fi := range dents {
+		if fi.IsDir() {
+			continue
 		}
 
-		name := filepath.Base(path)
-
-		filename := filepath.Join(p.Dir, name)
+		name := fi.Name()
+		path := filepath.Join(p.Dir, name)
 		match, data, err := p.matchFile(path, allTags)
 		if err != nil {
 			return err
@@ -136,131 +152,117 @@ func loadPackage(p *Package) error {
 			if ext == ".go" {
 				p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
 			}
-			return nil
+			continue
 		}
 
-		// Going to save the file.  For non-Go files, can stop here.
 		switch ext {
 		case ".c":
 			p.CFiles = append(p.CFiles, name)
-			return nil
 		case ".cc", ".cpp", ".cxx":
 			p.CXXFiles = append(p.CXXFiles, name)
-			return nil
 		case ".m":
 			p.MFiles = append(p.MFiles, name)
-			return nil
 		case ".h", ".hh", ".hpp", ".hxx":
 			p.HFiles = append(p.HFiles, name)
-			return nil
 		case ".s":
 			p.SFiles = append(p.SFiles, name)
-			return nil
 		case ".S":
 			Sfiles = append(Sfiles, name)
-			return nil
 		case ".swig":
 			p.SwigFiles = append(p.SwigFiles, name)
-			return nil
 		case ".swigcxx":
 			p.SwigCXXFiles = append(p.SwigCXXFiles, name)
-			return nil
 		case ".syso":
 			// binary objects to add to package archive
 			// Likely of the form foo_windows.syso, but
 			// the name was vetted above with goodOSArchFile.
 			p.SysoFiles = append(p.SysoFiles, name)
-			return nil
-		}
-
-		pf, err := parser.ParseFile(fset, filename, data, parser.ImportsOnly|parser.ParseComments)
-		if err != nil {
-			return err
-		}
-
-		pkg := pf.Name.Name
-		if pkg == "documentation" {
-			p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
-			return nil
-		}
-
-		isTest := strings.HasSuffix(name, "_test.go")
-		isXTest := false
-		if isTest && strings.HasSuffix(pkg, "_test") {
-			isXTest = true
-			pkg = pkg[:len(pkg)-len("_test")]
-		}
-
-		if p.Name == "" {
-			p.Name = pkg
-			firstFile = name
-		} else if pkg != p.Name {
-			return &MultiplePackageError{
-				Dir:      p.Dir,
-				Packages: []string{p.Name, pkg},
-				Files:    []string{firstFile, name},
+		default:
+			pf, err := parser.ParseFile(fset, path, data, parser.ImportsOnly|parser.ParseComments)
+			if err != nil {
+				return err
 			}
-		}
-		// Record imports and information about cgo.
-		isCgo := false
-		for _, decl := range pf.Decls {
-			d, ok := decl.(*ast.GenDecl)
-			if !ok {
+
+			pkg := pf.Name.Name
+			if pkg == "documentation" {
+				p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
 				continue
 			}
-			for _, dspec := range d.Specs {
-				spec, ok := dspec.(*ast.ImportSpec)
+
+			isTest := strings.HasSuffix(name, "_test.go")
+			isXTest := false
+			if isTest && strings.HasSuffix(pkg, "_test") {
+				isXTest = true
+				pkg = pkg[:len(pkg)-len("_test")]
+			}
+
+			if p.Name == "" {
+				p.Name = pkg
+				firstFile = name
+			} else if pkg != p.Name {
+				return &MultiplePackageError{
+					Dir:      p.Dir,
+					Packages: []string{p.Name, pkg},
+					Files:    []string{firstFile, name},
+				}
+			}
+			// Record imports and information about cgo.
+			isCgo := false
+			for _, decl := range pf.Decls {
+				d, ok := decl.(*ast.GenDecl)
 				if !ok {
 					continue
 				}
-				quoted := spec.Path.Value
-				path, err := strconv.Unquote(quoted)
-				if err != nil {
-					return fmt.Errorf("%s: parser returned invalid quoted string: <%s>", filename, quoted)
-				}
-				if isXTest {
-					xTestImported[path] = append(xTestImported[path], fset.Position(spec.Pos()))
-				} else if isTest {
-					testImported[path] = append(testImported[path], fset.Position(spec.Pos()))
-				} else {
-					imported[path] = append(imported[path], fset.Position(spec.Pos()))
-				}
-				if path == "C" {
-					if isTest {
-						return fmt.Errorf("use of cgo in test %s not supported", filename)
+				for _, dspec := range d.Specs {
+					spec, ok := dspec.(*ast.ImportSpec)
+					if !ok {
+						continue
 					}
-					cg := spec.Doc
-					if cg == nil && len(d.Specs) == 1 {
-						cg = d.Doc
+					quoted := spec.Path.Value
+					path, err := strconv.Unquote(quoted)
+					if err != nil {
+						return fmt.Errorf("%s: parser returned invalid quoted string: <%s>", path, quoted)
 					}
-					if cg != nil {
-						if err := saveCgo(p, filename, cg); err != nil {
-							return err
+					if isXTest {
+						xTestImported[path] = append(xTestImported[path], fset.Position(spec.Pos()))
+					} else if isTest {
+						testImported[path] = append(testImported[path], fset.Position(spec.Pos()))
+					} else {
+						imported[path] = append(imported[path], fset.Position(spec.Pos()))
+					}
+					if path == "C" {
+						if isTest {
+							return fmt.Errorf("use of cgo in test %s not supported", path)
 						}
+						cg := spec.Doc
+						if cg == nil && len(d.Specs) == 1 {
+							cg = d.Doc
+						}
+						if cg != nil {
+							if err := saveCgo(p, path, cg); err != nil {
+								return err
+							}
+						}
+						isCgo = true
 					}
-					isCgo = true
 				}
 			}
-		}
-		switch {
-		case isCgo:
-			allTags["cgo"] = true
-			if p.importer.(*Importer).CgoEnabled {
-				p.CgoFiles = append(p.CgoFiles, name)
-			} else {
-				p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
+			switch {
+			case isCgo:
+				allTags["cgo"] = true
+				if p.importer.(*Importer).CgoEnabled {
+					p.CgoFiles = append(p.CgoFiles, name)
+				} else {
+					p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
+				}
+			case isXTest:
+				p.XTestGoFiles = append(p.XTestGoFiles, name)
+			case isTest:
+				p.TestGoFiles = append(p.TestGoFiles, name)
+			default:
+				p.GoFiles = append(p.GoFiles, name)
 			}
-		case isXTest:
-			p.XTestGoFiles = append(p.XTestGoFiles, name)
-		case isTest:
-			p.TestGoFiles = append(p.TestGoFiles, name)
-		default:
-			p.GoFiles = append(p.GoFiles, name)
 		}
-		return nil
-	})
-	if err != nil {
-		return err
 	}
 	if len(p.GoFiles)+len(p.CgoFiles)+len(p.TestGoFiles)+len(p.XTestGoFiles) == 0 {
 		return &NoGoError{p.Dir}
@@ -282,7 +284,6 @@ func loadPackage(p *Package) error {
 		p.SFiles = append(p.SFiles, Sfiles...)
 		sort.Strings(p.SFiles)
 	}
-
 	return nil
 }
 
