@@ -20,14 +20,17 @@ type Package struct {
 }
 
 // NewPackage creates a resolved Package.
-func NewPackage(ctx *Context, p *importer.Package) *Package {
-	pkg := newPackage(ctx, p)
+func NewPackage(ctx *Context, p *importer.Package) (*Package, error) {
+	pkg, err := newPackage(ctx, p)
+	if err != nil {
+		return nil, err
+	}
 	pkg.Stale = isStale(pkg)
-	return pkg
+	return pkg, nil
 }
 
-// newPackage creates a resolved Package without setting pkg.Stale {
-func newPackage(ctx *Context, p *importer.Package) *Package {
+// newPackage creates a resolved Package without setting pkg.Stale.
+func newPackage(ctx *Context, p *importer.Package) (*Package, error) {
 	pkg := &Package{
 		Context: ctx,
 		Package: p,
@@ -35,11 +38,11 @@ func newPackage(ctx *Context, p *importer.Package) *Package {
 	for _, i := range p.Imports {
 		dep, ok := ctx.pkgs[i]
 		if !ok {
-			panic("could not locate depedant package: " + i + " for package " + p.Name)
+			return nil, fmt.Errorf("newPackage(%q): could not locate dependant package %q ", p.Name, i)
 		}
 		pkg.Imports = append(pkg.Imports, dep)
 	}
-	return pkg
+	return pkg, nil
 }
 
 // isMain returns true if this is a command, not being built in test scope, and
