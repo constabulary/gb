@@ -180,15 +180,16 @@ func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
 	for _, name := range []string{"C", "unsafe"} {
-		pkg := &Package{
-			Context: &ctx,
-			Package: &importer.Package{
-				Name:       name,
-				ImportPath: name,
-				Standard:   true,
-			},
+		pkg, err := newPackage(&ctx, &importer.Package{
+			Name:       name,
+			ImportPath: name,
+			Standard:   true,
+			Dir:        name, // fake, but helps diagnostics
+		})
+		if err != nil {
+			return nil, err
 		}
-		pkg.Stale = isStale(pkg)
+		pkg.Stale = false
 		ctx.pkgs[pkg.ImportPath] = pkg
 	}
 
