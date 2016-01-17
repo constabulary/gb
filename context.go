@@ -241,33 +241,18 @@ func (c *Context) ResolvePackage(path string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
+	if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
+		return nil, fmt.Errorf("import %q: relative import not supported", path)
+	}
 	return c.loadPackage(nil, path)
 }
 
 // loadPackage recursively resolves path as a package. If successful loadPackage
 // records the package in the Context's internal package cache.
 func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
-	if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
-		return nil, fmt.Errorf("import %q: relative import not supported", path)
-	}
 	if pkg, ok := c.pkgs[path]; ok {
 		// already loaded, just return
 		return pkg, nil
-	}
-
-	push := func(path string) {
-		stack = append(stack, path)
-	}
-	pop := func(path string) {
-		stack = stack[:len(stack)-1]
-	}
-	onStack := func(path string) bool {
-		for _, p := range stack {
-			if p == path {
-				return true
-			}
-		}
-		return false
 	}
 
 	p, err := c.importPackage(path)
@@ -275,12 +260,13 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return nil, err
 	}
 
-	push(p.ImportPath)
+	stack = append(stack, p.ImportPath)
 	var stale bool
 	for i, im := range p.Imports {
-		if onStack(im) {
-			push(im)
-			return nil, fmt.Errorf("import cycle detected: %s", strings.Join(stack, " -> "))
+		for _, p := range stack {
+			if p == im {
+				return nil, fmt.Errorf("import cycle detected: %s", strings.Join(append(stack, im), " -> "))
+			}
 		}
 		pkg, err := c.loadPackage(stack, im)
 		if err != nil {
@@ -291,7 +277,6 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		p.Imports[i] = pkg.ImportPath
 		stale = stale || pkg.Stale
 	}
-	pop(p.ImportPath)
 
 	pkg, err := newPackage(c, p)
 	if err != nil {
