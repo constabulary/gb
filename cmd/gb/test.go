@@ -60,7 +60,7 @@ Flags:
 		// stable order.
 		sort.Strings(args)
 
-		pkgs, err := gb.ResolvePackages(r, args...)
+		pkgs, err := resolvePackages(r, args...)
 		if err != nil {
 			return err
 		}

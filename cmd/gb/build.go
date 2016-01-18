@@ -107,7 +107,7 @@ For more about where packages and binaries are installed, run 'gb help project'.
 		ctx.Force = F
 		ctx.Install = !FF
 
-		pkgs, err := gb.ResolvePackages(ctx, args...)
+		pkgs, err := resolvePackages(ctx, args...)
 		if err != nil {
 			return err
 		}

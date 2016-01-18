@@ -4,14 +4,18 @@ import (
 	"github.com/constabulary/gb"
 )
 
-// TestResolver returns a gb.Resolver that resolves packages, their
+type Resolver interface {
+	ResolvePackage(string) (*gb.Package, error)
+}
+
+// TestResolver returns a Resolver that resolves packages, their
 // dependencies including any internal or external test dependencies.
-func TestResolver(r gb.Resolver) gb.Resolver {
+func TestResolver(r Resolver) Resolver {
 	return &testResolver{r}
 }
 
 type testResolver struct {
-	gb.Resolver
+	Resolver
 }
 
 func (r *testResolver) ResolvePackage(path string) (*gb.Package, error) {

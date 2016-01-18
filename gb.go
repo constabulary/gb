@@ -71,3 +71,16 @@ func mkdir(path string) error {
 func stripext(path string) string {
 	return path[:len(path)-len(filepath.Ext(path))]
 }
+
+func relImportPath(root, path string) (string, error) {
+	if isRel(path) {
+		return filepath.Rel(root, path)
+	}
+	return path, nil
+}
+
+// isRel returns if an import path is relative or absolute.
+func isRel(path string) bool {
+	// TODO(dfc) should this be strings.StartsWith(".")
+	return path == "."
+}
