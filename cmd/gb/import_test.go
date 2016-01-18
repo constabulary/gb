@@ -14,8 +14,8 @@ type context struct {
 
 func (c *context) Projectdir() string { return c.projectdir }
 
-func (c *context) AllPackages(pattern string) []string {
-	return c.allpkgs
+func (c *context) AllPackages(pattern string) ([]string, error) {
+	return c.allpkgs, nil
 }
 
 func testdata(args ...string) string {

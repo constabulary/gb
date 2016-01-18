@@ -263,7 +263,11 @@ func TestContextMatchPackages(t *testing.T) {
 
 	for _, tt := range tests {
 		ctx := testContext(t)
-		got := matchPackages(ctx, tt.pattern)
+		got, err := matchPackages(ctx, tt.pattern)
+		if err != nil {
+			t.Errorf("matchPackages(..., %q): %v", err)
+			continue
+		}
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("matchPackages(..., %q): got %#v, want %#v", tt.pattern, got, tt.want)
 		}

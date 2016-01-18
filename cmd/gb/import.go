@@ -10,7 +10,7 @@ import (
 
 type Context interface {
 	Projectdir() string
-	AllPackages(string) []string
+	AllPackages(string) ([]string, error)
 }
 
 // importPathsNoDotExpansion returns the import paths to use for the given
@@ -34,7 +34,11 @@ func importPathsNoDotExpansion(ctx Context, cwd string, args []string) []string 
 		}
 
 		if a == "all" || a == "std" {
-			out = append(out, ctx.AllPackages(a)...)
+			pkgs, err := ctx.AllPackages(a)
+			if err != nil {
+				fatalf("could not load all packages: %v", err)
+			}
+			out = append(out, pkgs...)
 			continue
 		}
 		a = path.Join(srcdir, path.Clean(a))
@@ -49,7 +53,11 @@ func importPaths(ctx Context, cwd string, args []string) []string {
 	var out []string
 	for _, a := range args {
 		if strings.Contains(a, "...") {
-			out = append(out, ctx.AllPackages(a)...)
+			pkgs, err := ctx.AllPackages(a)
+			if err != nil {
+				fatalf("could not load all packages: %v", err)
+			}
+			out = append(out, pkgs...)
 			continue
 		}
 		out = append(out, a)
