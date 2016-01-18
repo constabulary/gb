@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
@@ -50,6 +51,12 @@ func restore(ctx *gb.Context) error {
 		}
 		dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
 		src := filepath.Join(wc.Dir(), dep.Path)
+
+		if _, err := os.Stat(dst); err == nil {
+			if err := fileutils.RemoveAll(dst); err != nil {
+				return fmt.Errorf("dependency could not be deleted: %v", err)
+			}
+		}
 
 		if err := fileutils.Copypath(dst, src); err != nil {
 			return err
