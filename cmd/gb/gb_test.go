@@ -1560,3 +1560,32 @@ func init() {
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(gb.path("pkg"))
 }
+
+func TestIssue550(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/x")
+	gb.tempFile("src/x/x.go", `package main
+
+import (
+    "log"
+    "this/is/a/bad/path"
+)
+
+func main() {
+    log.Println("Hello World.")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+
+	gb.setenv("TMP", tmpdir)
+	name := "x"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	gb.runFail("build")
+	gb.mustBeEmpty(tmpdir)
+	gb.grepStderr(`FATAL: command "build" failed: failed to resolve import path "x": import "this/is/a/bad/path": not a directory`, "expected FATAL")
+}
