@@ -457,7 +457,7 @@ func matchPackages(c *Context, pattern string) []string {
 			if !match(name) {
 				return nil
 			}
-			_, err = c.ResolvePackage(name)
+			_, err = c.importers[1].Import(name)
 			switch err.(type) {
 			case nil:
 				pkgs = append(pkgs, name)

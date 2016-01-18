@@ -1541,3 +1541,22 @@ func main() { println("hello world") }
 	gb.run("build")
 	gb.mustNotExist(gb.path("bin", name))
 }
+
+func TestGbBuildCannotReferencePackagesOutsideProjectSrc(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/vendor/src/net/http")
+	gb.tempFile("src/vendor/src/net/http/http.go", `package http
+func init() {
+	println("I should not compile")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+
+	gb.setenv("TMP", tmpdir)
+	gb.run("build", "net/http")
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(gb.path("pkg"))
+}
