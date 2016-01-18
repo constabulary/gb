@@ -246,10 +246,10 @@ func TestContextMatchPackages(t *testing.T) {
 		want    []string
 	}{{
 		pattern: "all",
-		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain"},
+		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain", "cycle0", "cycle1/a", "cycle1/b", "cycle2/a", "cycle2/b", "cycle2/c", "cycle2/d", "d.v1", "e", "external_only_test", "extest", "extestonly", "f", "g", "h", "ldflags", "localimport", "main", "mainnoruntime", "nested/a", "nested/b", "notestfiles", "tags1", "testflags", "testonly", "x", "y"},
 	}, {
 		pattern: "...",
-		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain"},
+		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain", "cycle0", "cycle1/a", "cycle1/b", "cycle2/a", "cycle2/b", "cycle2/c", "cycle2/d", "d.v1", "e", "external_only_test", "extest", "extestonly", "f", "g", "h", "ldflags", "localimport", "main", "mainnoruntime", "nested/a", "nested/b", "notestfiles", "tags1", "testflags", "testonly", "x", "y"},
 	}, {
 		pattern: "cmd/...",
 		want:    []string{"cmd/f"},
@@ -265,7 +265,7 @@ func TestContextMatchPackages(t *testing.T) {
 		ctx := testContext(t)
 		got := matchPackages(ctx, tt.pattern)
 		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("matchPackages(..., %q): got %v, want %v", tt.pattern, got, tt.want)
+			t.Errorf("matchPackages(..., %q): got %#v, want %#v", tt.pattern, got, tt.want)
 		}
 	}
 }
