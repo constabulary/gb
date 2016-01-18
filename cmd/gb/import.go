@@ -9,14 +9,14 @@ import (
 )
 
 type Context interface {
-	Srcdirs() []string
+	Projectdir() string
 	AllPackages(string) []string
 }
 
 // importPathsNoDotExpansion returns the import paths to use for the given
 // command line, but it does no ... expansion.
 func importPathsNoDotExpansion(ctx Context, cwd string, args []string) []string {
-	srcdir, _ := filepath.Rel(ctx.Srcdirs()[0], cwd)
+	srcdir, _ := filepath.Rel(filepath.Join(ctx.Projectdir(), "src"), cwd)
 	debug.Debugf("%s %s", cwd, srcdir)
 	if srcdir == ".." {
 		srcdir = "."

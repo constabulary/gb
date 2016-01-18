@@ -8,12 +8,11 @@ import (
 )
 
 type context struct {
-	srcdirs, allpkgs []string
+	projectdir string
+	allpkgs    []string
 }
 
-func (c *context) Srcdirs() []string {
-	return c.srcdirs
-}
+func (c *context) Projectdir() string { return c.projectdir }
 
 func (c *context) AllPackages(pattern string) []string {
 	return c.allpkgs
@@ -43,7 +42,6 @@ func TestImportPaths(t *testing.T) {
 	}{
 		{
 			ctx: context{
-				srcdirs: l(testdata("src")),
 				allpkgs: l("a", "b", "c", p("c", "d")),
 			},
 			cwd:  testdata("src"),
@@ -51,7 +49,6 @@ func TestImportPaths(t *testing.T) {
 			want: l("a", "b", "c", p("c", "d")),
 		}, {
 			ctx: context{
-				srcdirs: l(testdata("src")),
 				allpkgs: l("a", "b", "c", p("c", "d")),
 			},
 			cwd:  testdata("src"),
@@ -59,7 +56,6 @@ func TestImportPaths(t *testing.T) {
 			want: l("a", "b", "c", p("c", "d")),
 		}, {
 			ctx: context{
-				srcdirs: l(testdata("src")),
 				allpkgs: l("c", p("c", "d")),
 			},
 			cwd:  testdata("src", "c"),
@@ -67,7 +63,6 @@ func TestImportPaths(t *testing.T) {
 			want: l("c", p("c", "d")),
 		}, {
 			ctx: context{
-				srcdirs: l(testdata("src")),
 				allpkgs: l("a", "b", "c", p("c", "d")),
 			},
 			cwd:  testdata("src"),
@@ -75,7 +70,6 @@ func TestImportPaths(t *testing.T) {
 			want: l("c"),
 		}, {
 			ctx: context{
-				srcdirs: l(testdata("src")),
 				allpkgs: l("a", "b", "c", p("c", "d")),
 			},
 			cwd:  testdata("src"),
@@ -83,7 +77,6 @@ func TestImportPaths(t *testing.T) {
 			want: l("c", "b"),
 		}, {
 			ctx: context{
-				srcdirs: l(testdata("src")),
 				allpkgs: l("c", p("c", "d")),
 			},
 			cwd:  testdata("src"),
