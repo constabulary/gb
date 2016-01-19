@@ -431,7 +431,7 @@ func (c *Context) isCrossCompile() bool {
 }
 
 func matchPackages(c *Context, pattern string) ([]string, error) {
-	debug.Debugf("matchPackages: %v %v", c.srcdirs[0].Root, pattern)
+	debug.Debugf("matchPackages: %v", pattern)
 	match := func(string) bool { return true }
 	treeCanMatch := func(string) bool { return true }
 	if pattern != "all" && pattern != "std" {
@@ -441,40 +441,50 @@ func matchPackages(c *Context, pattern string) ([]string, error) {
 
 	var pkgs []string
 
-	src := filepath.Join(c.Projectdir(), "src") + string(filepath.Separator)
-	err := filepath.Walk(src, func(path string, fi os.FileInfo, err error) error {
-		if err != nil || !fi.IsDir() || path == src {
-			return nil
-		}
+	srcs := []string{
+		filepath.Join(c.Projectdir(), "src") + string(filepath.Separator),
+		filepath.Join(c.Projectdir(), "vendor", "src") + string(filepath.Separator),
+	}
+	for _, src := range srcs {
+		err := filepath.Walk(src, func(path string, fi os.FileInfo, err error) error {
+			if err != nil || !fi.IsDir() || path == src {
+				return nil
+			}
 
-		// Avoid .foo, _foo, and testdata directory trees.
-		_, elem := filepath.Split(path)
-		if strings.HasPrefix(elem, ".") || strings.HasPrefix(elem, "_") || elem == "testdata" {
-			return filepath.SkipDir
-		}
+			// Avoid .foo, _foo, and testdata directory trees.
+			elem := fi.Name()
+			if strings.HasPrefix(elem, ".") || strings.HasPrefix(elem, "_") || elem == "testdata" {
+				return filepath.SkipDir
+			}
 
-		name := filepath.ToSlash(path[len(src):])
-		if pattern == "std" && strings.Contains(name, ".") {
-			return filepath.SkipDir
+			name := filepath.ToSlash(path[len(src):])
+			if pattern == "std" && strings.Contains(name, ".") {
+				return filepath.SkipDir
+			}
+			if !treeCanMatch(name) {
+				return filepath.SkipDir
+			}
+			if !match(name) {
+				return nil
+			}
+			_, err = c.importers[1].Import(name)
+			switch err.(type) {
+			case nil:
+				pkgs = append(pkgs, name)
+				return nil
+			case *importer.NoGoError:
+				return nil // skip
+			case *os.PathError:
+				return nil // skip
+			default:
+				return err
+			}
+		})
+		if err != nil {
+			return nil, err
 		}
-		if !treeCanMatch(name) {
-			return filepath.SkipDir
-		}
-		if !match(name) {
-			return nil
-		}
-		_, err = c.importers[1].Import(name)
-		switch err.(type) {
-		case nil:
-			pkgs = append(pkgs, name)
-			return nil
-		case *importer.NoGoError:
-			return nil // skip
-		default:
-			return err
-		}
-	})
-	return pkgs, err
+	}
+	return pkgs, nil
 }
 
 // envForDir returns a copy of the environment
