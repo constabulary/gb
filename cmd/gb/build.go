@@ -151,9 +151,8 @@ func resolveRootPackages(r Resolver, paths ...string) ([]*gb.Package, error) {
 		if err != nil {
 			return pkgs, fmt.Errorf("failed to resolve import path %q: %v", path, err)
 		}
-		if pkg.SrcRoot != filepath.Join(r.Projectdir(), "src") {
-			fmt.Println("reolvePackage, pkg.SrcRoot", pkg.SrcRoot, "Projectdir", r.Projectdir())
-			// skip package roots that are not from $PROJECT/src
+		if pkg.SrcRoot == filepath.Join(runtime.GOROOT(), "src") {
+			// skip package roots that are not part of this project.
 			// TODO(dfc) should gb return an error here?
 			continue
 		}

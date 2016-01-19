@@ -1542,25 +1542,50 @@ func main() { println("hello world") }
 	gb.mustNotExist(gb.path("bin", name))
 }
 
-func TestGbBuildCannotReferencePackagesOutsideProjectSrc(t *testing.T) {
+func TestGbBuildCannotReferencePackagesInGoroot(t *testing.T) {
 	gb := T{T: t}
 	defer gb.cleanup()
 
-	gb.tempDir("src/vendor/src/net/http")
-	gb.tempFile("src/vendor/src/net/http/http.go", `package http
+	gb.tempDir("src")
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+
+	gb.setenv("TMP", tmpdir)
+	gb.runFail("build", "net/http") // net/http will be excluded by resolveRootPackages
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(gb.path("pkg"))
+	gb.grepStderr(`FATAL: command "build" failed: no packages supplied`, "expected FATAL")
+}
+
+func TestGbBuildWillResolvePackagesInVendorAsRoots(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src")
+	gb.tempDir("vendor/src/test/test1")
+	gb.tempFile("vendor/src/test/test1/test1.go", `package http
 func init() {
-	println("I should not compile")
+        println("Hello, world!")
 }
 `)
 	gb.cd(gb.tempdir)
 	tmpdir := gb.tempDir("tmp")
 
 	gb.setenv("TMP", tmpdir)
-	gb.setenv("DEBUG", ".")
-	gb.runFail("build", "net/http") // net/http will be excluded by resolveRootPackages
+	gb.runFail("build") // should fail, nothing supplied
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(gb.path("pkg"))
 	gb.grepStderr(`FATAL: command "build" failed: no packages supplied`, "expected FATAL")
+
+	gb.runFail("build", "test/...") // should fail, globbing does not match $PROJECT/vendor/src
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(gb.path("pkg"))
+	gb.grepStderr(`FATAL: command "build" failed: no packages supplied`, "expected FATAL")
+
+	gb.run("build", "test/test1") // should resolve to vendor/src/test/test1
+	gb.mustBeEmpty(tmpdir)
+	gb.wantArchive(filepath.Join(gb.tempdir, "pkg", runtime.GOOS+"-"+runtime.GOARCH, "test", "test1.a"))
+	gb.grepStdout(`^test/test`, "expected test/test1")
 }
 
 func TestIssue550(t *testing.T) {
