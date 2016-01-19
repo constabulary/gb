@@ -303,7 +303,14 @@ func (c *Context) importPackage(path string) (*importer.Package, error) {
 			return pkg, nil
 		}
 	}
-	return nil, err2
+	switch err2.(type) {
+	case *importer.NoGoError:
+		return nil, err2
+	case *os.PathError:
+		return nil, fmt.Errorf("import %q: not found", path)
+	default:
+		return nil, err2
+	}
 }
 
 // Destroy removes the temporary working files of this context.

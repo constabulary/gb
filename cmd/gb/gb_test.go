@@ -789,7 +789,7 @@ func helloworld() {
 `)
 	gb.cd(gb.tempdir)
 	gb.runFail("build", "pkg2")
-	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg2": import "pkg2": not a directory`, "expected FATAL")
+	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg2": import "pkg2": not found`, "expected FATAL")
 }
 
 func TestBuildPackageNoSource(t *testing.T) {
@@ -1556,9 +1556,11 @@ func init() {
 	tmpdir := gb.tempDir("tmp")
 
 	gb.setenv("TMP", tmpdir)
-	gb.run("build", "net/http")
+	gb.setenv("DEBUG", ".")
+	gb.runFail("build", "net/http") // net/http will be excluded by resolveRootPackages
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(gb.path("pkg"))
+	gb.grepStderr(`FATAL: command "build" failed: no packages supplied`, "expected FATAL")
 }
 
 func TestIssue550(t *testing.T) {
@@ -1587,5 +1589,5 @@ func main() {
 	}
 	gb.runFail("build")
 	gb.mustBeEmpty(tmpdir)
-	gb.grepStderr(`FATAL: command "build" failed: failed to resolve import path "x": import "this/is/a/bad/path": not a directory`, "expected FATAL")
+	gb.grepStderr(`FATAL: command "build" failed: failed to resolve import path "x": import "this/is/a/bad/path": not found`, "expected FATAL")
 }

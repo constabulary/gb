@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/constabulary/gb"
@@ -107,7 +109,7 @@ For more about where packages and binaries are installed, run 'gb help project'.
 		ctx.Force = F
 		ctx.Install = !FF
 
-		pkgs, err := resolvePackages(ctx, args...)
+		pkgs, err := resolveRootPackages(ctx, args...)
 		if err != nil {
 			return err
 		}
@@ -130,4 +132,32 @@ For more about where packages and binaries are installed, run 'gb help project'.
 		return gb.ExecuteConcurrent(build, P, interrupted)
 	},
 	AddFlags: addBuildFlags,
+}
+
+// Resolver resolves packages.
+type Resolver interface {
+	Projectdir() string
+	// ResolvePackage resolves the import path to a *Package
+	ResolvePackage(path string) (*gb.Package, error)
+}
+
+// resolveRootPackages resolves import paths into packages.
+// Only packages which exist inside $PROJECT/src are elegable to be
+// roots to build or test. Other import paths are discarded.
+func resolveRootPackages(r Resolver, paths ...string) ([]*gb.Package, error) {
+	var pkgs []*gb.Package
+	for _, path := range paths {
+		pkg, err := r.ResolvePackage(path)
+		if err != nil {
+			return pkgs, fmt.Errorf("failed to resolve import path %q: %v", path, err)
+		}
+		if pkg.SrcRoot != filepath.Join(r.Projectdir(), "src") {
+			fmt.Println("reolvePackage, pkg.SrcRoot", pkg.SrcRoot, "Projectdir", r.Projectdir())
+			// skip package roots that are not from $PROJECT/src
+			// TODO(dfc) should gb return an error here?
+			continue
+		}
+		pkgs = append(pkgs, pkg)
+	}
+	return pkgs, nil
 }

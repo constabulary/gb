@@ -5,6 +5,7 @@ import (
 )
 
 type Resolver interface {
+	Projectdir() string
 	ResolvePackage(string) (*gb.Package, error)
 }
 
