@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	pathpkg "path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -53,7 +54,8 @@ func (i *Importer) Import(path string) (*Package, error) {
 	// if this is the stdlib, then search vendor first.
 	// this isn't real vendor support, just enough to make net/http compile.
 	if p.Standard {
-		dir := filepath.Join(i.Root, "src", "vendor", filepath.FromSlash(path))
+		path := pathpkg.Join("vendor", path)
+		dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
 		fi, err := os.Stat(dir)
 		if err == nil && fi.IsDir() {
 			p.Dir = dir
