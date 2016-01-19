@@ -2,13 +2,26 @@ package importer
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"syscall"
 	"testing"
 )
 
 func TestImporter(t *testing.T) {
+	patherr := func(path string) error {
+		op := "stat"
+		if runtime.GOOS == "windows" {
+			op = "GetFileAttributesEx"
+		}
+		return &os.PathError{
+			Op:   op,
+			Path: path,
+			Err:  syscall.ENOENT,
+		}
+	}
 	tests := []struct {
 		Importer
 		path string
@@ -59,6 +72,46 @@ func TestImporter(t *testing.T) {
 			XTestGoFiles: []string{"errors_test.go", "example_test.go"},
 			XTestImports: []string{"errors", "fmt", "testing", "time"},
 		},
+	}, {
+		Importer: Importer{
+			Context: &Context{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			Root: filepath.Join(runtime.GOROOT()),
+		},
+		path: "database",
+		err:  &NoGoError{filepath.Join(runtime.GOROOT(), "src", "database")},
+	}, {
+		Importer: Importer{
+			Context: &Context{
+				GOOS:   "linux",
+				GOARCH: "amd64",
+			},
+			Root: filepath.Join(runtime.GOROOT()),
+		},
+		path: "missing",
+		err:  patherr(filepath.Join(runtime.GOROOT(), "src", "missing")),
+	}, {
+		Importer: Importer{
+			Context: &Context{
+				GOOS:       "linux",
+				GOARCH:     "amd64",
+				CgoEnabled: true,
+			},
+			Root: filepath.Join(runtime.GOROOT()),
+		},
+		path: "net",
+	}, {
+		Importer: Importer{
+			Context: &Context{
+				GOOS:       "linux",
+				GOARCH:     "amd64",
+				CgoEnabled: true,
+			},
+			Root: filepath.Join(runtime.GOROOT()),
+		},
+		path: "os/user",
 	}}
 
 	for _, tt := range tests {
@@ -68,6 +121,11 @@ func TestImporter(t *testing.T) {
 		}
 
 		if err != nil {
+			continue
+		}
+
+		if tt.want == nil {
+			t.Logf("Import(%q): skipping package contents check", tt.path)
 			continue
 		}
 
