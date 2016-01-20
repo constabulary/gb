@@ -448,7 +448,7 @@ func matchPackages(c *Context, pattern string) ([]string, error) {
 		}
 
 		// Avoid .foo, _foo, and testdata directory trees.
-		_, elem := filepath.Split(path)
+		elem := fi.Name()
 		if strings.HasPrefix(elem, ".") || strings.HasPrefix(elem, "_") || elem == "testdata" {
 			return filepath.SkipDir
 		}
