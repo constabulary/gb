@@ -1354,7 +1354,9 @@ func TestRaceMapRW(t *testing.T) {
 	tmpdir := gb.tempDir("tmp")
 	gb.setenv("TMP", tmpdir)
 	gb.runFail("test", "-race")
-	gb.grepStderr(regexp.QuoteMeta(fmt.Sprintf("FATAL: go installation at %s is missing race support", runtime.GOROOT())), "expected missing race support message")
+	raceError1 := fmt.Sprintf("FATAL: go installation at %s is missing race support", runtime.GOROOT())
+	raceError2 := fmt.Sprintf("FATAL: race detector not supported on %s/%s", runtime.GOOS, runtime.GOARCH)
+	gb.grepStderr(regexp.QuoteMeta(raceError1)+"|"+regexp.QuoteMeta(raceError2), "expected missing race support message")
 	gb.mustBeEmpty(tmpdir)
 }
 
