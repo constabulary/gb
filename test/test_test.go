@@ -15,10 +15,12 @@ import (
 
 func TestTest(t *testing.T) {
 	tests := []struct {
-		pkg      string
-		testArgs []string
-		ldflags  []string
-		err      error
+		pkg        string
+		testArgs   []string
+		ldflags    []string
+		err        error
+		minversion float64 // minimum go version that supports this feature
+		maxversion float64 // maximum go version that supports this feature
 	}{
 		{
 			pkg: "a",
@@ -57,8 +59,13 @@ func TestTest(t *testing.T) {
 			pkg: "g", // test that _test files can modify the internal package under test
 			err: nil,
 		}, {
-			pkg:     "ldflags",
-			ldflags: []string{"-X", "ldflags.gitTagInfo", "banana", "-X", "ldflags.gitRevision", "f7926af2"},
+			pkg:        "ldflags",
+			ldflags:    []string{"-X", "ldflags.gitTagInfo=banana", "-X", "ldflags.gitRevision=f7926af2"},
+			minversion: 1.5,
+		}, {
+			pkg:        "ldflags",
+			ldflags:    []string{"-X", "ldflags.gitTagInfo", "banana", "-X", "ldflags.gitRevision", "f7926af2"},
+			maxversion: 1.5,
 		}, {
 			pkg: "cgotest",
 		}, {
@@ -69,6 +76,14 @@ func TestTest(t *testing.T) {
 		}}
 
 	for _, tt := range tests {
+		if tt.minversion != 0 && goversion < tt.minversion {
+			t.Logf("skipping test, goversion %f is below mingoversion %f", goversion, tt.minversion)
+			continue
+		}
+		if tt.maxversion != 0 && goversion > tt.maxversion {
+			t.Logf("skipping test, goversion %f is above maxgoversion %f", goversion, tt.maxversion)
+			continue
+		}
 		ctx := testContext(t, gb.Ldflags(tt.ldflags...))
 		defer ctx.Destroy()
 		r := TestResolver(ctx)
