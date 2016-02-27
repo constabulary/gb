@@ -1385,11 +1385,16 @@ func main() { println("hello world") }
 	if runtime.GOOS == goos {
 		goos = "linux"
 	}
+	goarch := "386"
+	if runtime.GOARCH == goarch {
+		goarch = "amd64"
+	}
 	gb.setenv("TMP", tmpdir)
 	gb.setenv("GOOS", goos)
+	gb.setenv("GOARCH", goarch)
 	gb.run("build")
 	gb.mustBeEmpty(tmpdir)
-	name := fmt.Sprintf("p-%s-%s", goos, runtime.GOARCH)
+	name := fmt.Sprintf("p-%s-%s", goos, goarch)
 	if goos == "windows" {
 		name += ".exe"
 	}
