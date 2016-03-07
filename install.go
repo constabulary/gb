@@ -98,6 +98,13 @@ func isStale(pkg *Package) bool {
 		}
 	}
 
+	if pkg.Standard && !pkg.isCrossCompile() {
+		// if this is a standard lib package, and we are not cross compiling
+		// then assume the package is up to date. This also works around
+		// golang/go#13769.
+		return false
+	}
+
 	// Package is stale if a dependency is newer.
 	for _, p := range pkg.Imports {
 		if p.ImportPath == "C" || p.ImportPath == "unsafe" {
@@ -114,13 +121,6 @@ func isStale(pkg *Package) bool {
 	if pkg.isMain() && newerThan(pkg.Binfile()) {
 		debug.Debugf("%s is newer than %s", pkgpath(pkg), pkg.Binfile())
 		return true
-	}
-
-	if pkg.Standard && !pkg.isCrossCompile() {
-		// if this is a standard lib package, and we are not cross compiling
-		// then assume the package is up to date. This also works around
-		// golang/go#13769.
-		return false
 	}
 
 	srcs := stringList(pkg.GoFiles, pkg.CFiles, pkg.CXXFiles, pkg.MFiles, pkg.HFiles, pkg.SFiles, pkg.CgoFiles, pkg.SysoFiles, pkg.SwigFiles, pkg.SwigCXXFiles)
