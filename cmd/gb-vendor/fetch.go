@@ -13,7 +13,7 @@ import (
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/fileutils"
-	"github.com/constabulary/gb/vendor"
+	"github.com/sc0rp1us/gb/vendor"
 )
 
 var (
