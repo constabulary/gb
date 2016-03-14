@@ -18,7 +18,6 @@ func init() {
 
 var (
 	tfs           []string // Arguments passed to the test binary
-	testProfile   bool
 	testCover     bool
 	testCoverMode string
 	testCoverPkg  string

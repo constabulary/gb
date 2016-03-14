@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-var isReadonlyError = func(error) bool { return false }
-
 func TestRemoveAll(t *testing.T) {
 	tmpDir := os.TempDir()
 	// Work directory.
