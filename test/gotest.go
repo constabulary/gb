@@ -273,7 +273,7 @@ var benchmarks = []testing.InternalBenchmark{
 
 var examples = []testing.InternalExample{
 {{range .Examples}}
-	{"{{.Name}}", {{.Package}}.{{.Name}}, {{.Output | printf "%q"}}},
+	{Name: "{{.Name}}", F: {{.Package}}.{{.Name}}, Output: {{.Output | printf "%q"}}},
 {{end}}
 }
 
