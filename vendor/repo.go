@@ -486,10 +486,6 @@ func cleanPath(path string) error {
 	return cleanPath(parent)
 }
 
-func mkdir(path string) error {
-	return os.MkdirAll(path, 0755)
-}
-
 func mktmp() (string, error) {
 	return ioutil.TempDir("", "gb-vendor-")
 }

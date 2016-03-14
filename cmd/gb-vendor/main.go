@@ -14,7 +14,6 @@ import (
 var (
 	fs          = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	projectroot = os.Getenv("GB_PROJECT_DIR")
-	args        []string
 )
 
 func init() {

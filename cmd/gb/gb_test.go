@@ -26,11 +26,8 @@ import (
 var (
 	canRun  = true  // whether we can run go or ./testgb
 	canRace = false // whether we can run the race detector
-	canCgo  = false // whether we can use cgo
 
 	exeSuffix string // ".exe" on Windows
-
-	skipExternalBuilder = false // skip external tests on this builder
 
 	testgb string = "testgb"
 )

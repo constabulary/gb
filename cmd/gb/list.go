@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	projectroot string
 	format      string
 	formatStdin bool
 	jsonOutput  bool

@@ -14,9 +14,8 @@ import (
 )
 
 var (
-	fs   = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	cwd  string
-	args []string
+	fs  = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	cwd string
 )
 
 const (
