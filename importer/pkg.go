@@ -28,17 +28,26 @@ var knownOS = map[string]bool{
 }
 
 var knownArch = map[string]bool{
-	"386":      true,
-	"amd64":    true,
-	"amd64p32": true,
-	"arm":      true,
-	"arm64":    true,
-	"ppc64":    true,
-	"ppc64le":  true,
-	"mips":     true,
-	"mipsle":   true,
-	"mips64":   true,
-	"mips64le": true,
+	"386":         true,
+	"amd64":       true,
+	"amd64p32":    true,
+	"arm":         true,
+	"armbe":       true,
+	"arm64":       true,
+	"arm64be":     true,
+	"mips":        true,
+	"mipsle":      true,
+	"mips64":      true,
+	"mips64le":    true,
+	"mips64p32":   true,
+	"mips64p32le": true,
+	"ppc":         true,
+	"ppc64":       true,
+	"ppc64le":     true,
+	"s390":        true,
+	"s390x":       true,
+	"sparc":       true,
+	"sparc64":     true,
 }
 
 // goodOSArchFile returns false if the name contains a $GOOS or $GOARCH
