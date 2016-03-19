@@ -110,7 +110,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 		return err
 	}
 
-	branch, err := wc.Branch()
+	b, err := wc.Branch()
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 		Importpath: path,
 		Repository: repo.URL(),
 		Revision:   rev,
-		Branch:     branch,
+		Branch:     b,
 		Path:       extra,
 	}
 
