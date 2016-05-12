@@ -63,6 +63,11 @@ func main() {
 		exit(0)
 	}
 
+	if name == "version" {
+		version()
+		exit(0)
+	}
+
 	command, ok := commands[name]
 	if (command != nil && !command.Runnable()) || !ok {
 		plugin, err := lookupPlugin(name)
