@@ -62,17 +62,6 @@ func TestDeduceRemoteRepo(t *testing.T) {
 				extra: "/cmd/main",
 		*/
 	}, {
-		path: "code.google.com/p/goauth2/oauth",
-		want: &hgrepo{
-			url: "https://code.google.com/p/goauth2",
-		},
-		extra: "/oauth",
-	}, {
-		path: "code.google.com/p/gami",
-		want: &gitrepo{
-			url: "https://code.google.com/p/gami",
-		},
-	}, {
 		path: "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
 		want: &gitrepo{
 			url: "https://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
@@ -123,18 +112,6 @@ func TestDeduceRemoteRepo(t *testing.T) {
 			url: "git://github.com/pkg/sftp",
 		},
 		insecure: true,
-	}, {
-		path: "code.google.com/p/google-api-go-client/bigquery/v2",
-		want: &hgrepo{
-			url: "https://code.google.com/p/google-api-go-client",
-		},
-		extra: "/bigquery/v2",
-	}, {
-		path: "code.google.com/p/go-sqlite/go1/sqlite3",
-		want: &hgrepo{
-			url: "https://code.google.com/p/go-sqlite",
-		},
-		extra: "/go1/sqlite3",
 	}}
 
 	for _, tt := range tests {
