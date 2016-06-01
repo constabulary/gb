@@ -821,7 +821,7 @@ func helloworld() {
 }
 
 // test that compiling A in test scope compiles B in regular scope
-func TestTestDepdenantPackage(t *testing.T) {
+func TestTestDependantPackage(t *testing.T) {
 	gb := T{T: t}
 	defer gb.cleanup()
 	gb.tempDir("src")
@@ -866,6 +866,27 @@ func TestTest(t *testing.T) {
 	tmpdir := gb.tempDir("tmp")
 	gb.setenv("TMP", tmpdir)
 	gb.run("test", "pkg1")
+	gb.grepStdout("^pkg1$", `expected "pkg1"`)
+	gb.mustBeEmpty(tmpdir)
+	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
+}
+
+func TestTestPackageNopeMode(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+	gb.tempDir("src")
+	gb.tempDir("src/pkg1")
+	gb.tempFile("src/pkg1/pkg_test.go", `package pkg1
+import "testing"
+
+func TestTest(t *testing.T) {
+	t.Log("hello")
+}
+`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.setenv("TMP", tmpdir)
+	gb.run("test", "-n", "pkg1")
 	gb.grepStdout("^pkg1$", `expected "pkg1"`)
 	gb.mustBeEmpty(tmpdir)
 	gb.mustNotExist(filepath.Join(gb.tempdir, "pkg")) // ensure no pkg directory is created
