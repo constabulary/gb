@@ -200,7 +200,7 @@ Test packages
 
 Usage:
 
-        gb test [build flags] -v [packages] [flags for test binary]
+        gb test [build flags] -n -v [packages] [flags for test binary]
 
 Test automates testing the packages named by the import paths.
 
@@ -211,6 +211,8 @@ Flags:
 
         -v
                 print output from test subprocess.
+	-n
+		do not execute test binaries, compile only
 
 
 */

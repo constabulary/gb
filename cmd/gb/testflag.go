@@ -27,6 +27,7 @@ var testFlagDefn = map[string]*testFlagSpec{
 	"r":         {boolVar: true},
 	"f":         {boolVar: true},
 	"F":         {boolVar: true},
+	"n":         {},
 	"P":         {},
 	"ldflags":   {},
 	"gcflags":   {},

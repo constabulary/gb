@@ -188,12 +188,15 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 			var output bytes.Buffer
 			err := testmain.Run() // compile and link
 			if err == nil {
-				cmd := exec.Command(testmainpkg.Binfile(), flags...)
-				cmd.Dir = pkg.Dir // tests run in the original source directory
-				cmd.Stdout = &output
-				cmd.Stderr = &output
-				debug.Debugf("%s", cmd.Args)
-				err = cmd.Run() // run test
+				// nope mode means we stop at the compile and link phase.
+				if !pkg.Nope {
+					cmd := exec.Command(testmainpkg.Binfile(), flags...)
+					cmd.Dir = pkg.Dir // tests run in the original source directory
+					cmd.Stdout = &output
+					cmd.Stderr = &output
+					debug.Debugf("%s", cmd.Args)
+					err = cmd.Run() // run test
+				}
 
 				// test binaries can be very large, so always unlink the
 				// binary after the test has run to free up temporary space

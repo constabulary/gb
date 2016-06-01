@@ -22,6 +22,7 @@ var (
 	testCoverMode string
 	testCoverPkg  string
 	testVerbose   bool // enable verbose output of test commands
+	testNope      bool // do not execute test binaries, compile and link only
 )
 
 func addTestFlags(fs *flag.FlagSet) {
@@ -30,11 +31,12 @@ func addTestFlags(fs *flag.FlagSet) {
 	fs.StringVar(&testCoverMode, "covermode", "set", "Set covermode: set (default), count, atomic")
 	fs.StringVar(&testCoverPkg, "coverpkg", "", "enable coverage analysis")
 	fs.BoolVar(&testVerbose, "v", false, "enable verbose output of subcommands")
+	fs.BoolVar(&testNope, "n", false, "do not execute test binaries, compile only")
 }
 
 var TestCmd = &cmd.Command{
 	Name:      "test",
-	UsageLine: "test [build flags] -v [packages] [flags for test binary]",
+	UsageLine: "test [build flags] -n -v [packages] [flags for test binary]",
 	Short:     "test packages",
 	Long: `
 Test automates testing the packages named by the import paths.
@@ -46,11 +48,14 @@ Flags:
 
         -v
                 print output from test subprocess.
+	-n
+		do not execute test binaries, compile only
 `,
 	Run: func(ctx *gb.Context, args []string) error {
 		ctx.Force = F
 		ctx.Install = !FF
 		ctx.Verbose = testVerbose
+		ctx.Nope = testNope
 		r := test.TestResolver(ctx)
 
 		// gb build builds packages in dependency order, however
