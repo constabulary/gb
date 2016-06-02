@@ -16,6 +16,7 @@ import (
 
 	"github.com/constabulary/gb/internal/debug"
 	"github.com/constabulary/gb/internal/importer"
+	"github.com/pkg/errors"
 )
 
 // Context represents an execution of one or more Targets inside a Project.
@@ -112,7 +113,7 @@ func WithRace(c *Context) error {
 // host's GOOS and GOARCH values.
 func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
 	if len(p.srcdirs) == 0 {
-		return nil, fmt.Errorf("no source directories supplied")
+		return nil, errors.New("no source directories supplied")
 	}
 	envOr := func(key, def string) string {
 		if v := os.Getenv(key); v != "" {
@@ -236,14 +237,14 @@ func (c *Context) Workdir() string { return c.workdir }
 // ResolvePackage resolves the package at path using the current context.
 func (c *Context) ResolvePackage(path string) (*Package, error) {
 	if path == "." {
-		return nil, fmt.Errorf("%q is not a package", filepath.Join(c.rootdir, "src"))
+		return nil, errors.Errorf("%q is not a package", filepath.Join(c.rootdir, "src"))
 	}
 	path, err := relImportPath(filepath.Join(c.rootdir, "src"), path)
 	if err != nil {
 		return nil, err
 	}
 	if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
-		return nil, fmt.Errorf("import %q: relative import not supported", path)
+		return nil, errors.Errorf("import %q: relative import not supported", path)
 	}
 	return c.loadPackage(nil, path)
 }
@@ -281,7 +282,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 	pkg, err := newPackage(c, p)
 	if err != nil {
-		return nil, fmt.Errorf("loadPackage(%q): %v", path, err)
+		return nil, errors.Wrapf(err, "loadPackage(%q)", path)
 	}
 	pkg.Stale = stale || isStale(pkg)
 	c.pkgs[p.ImportPath] = pkg
@@ -308,7 +309,7 @@ func (c *Context) importPackage(path string) (*importer.Package, error) {
 	case *importer.NoGoError:
 		return nil, err2
 	case *os.PathError:
-		return nil, fmt.Errorf("import %q: not found", path)
+		return nil, errors.Wrapf(err2, "import %q: not found", path)
 	default:
 		return nil, err2
 	}

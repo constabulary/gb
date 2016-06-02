@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/internal/fileutils"
 	"github.com/constabulary/gb/internal/vendor"
+	"github.com/pkg/errors"
 )
 
 var cmdPurge = &cmd.Command{
@@ -21,12 +21,12 @@ var cmdPurge = &cmd.Command{
 	Run: func(ctx *gb.Context, args []string) error {
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
-			return fmt.Errorf("could not load manifest: %v", err)
+			return errors.Wrap(err, "could not load manifest")
 		}
 
 		imports, err := vendor.ParseImports(ctx.Projectdir())
 		if err != nil {
-			return fmt.Errorf("import could not be parsed: %v", err)
+			return errors.Wrap(err, "import could not be parsed")
 		}
 
 		var hasImportWithPrefix = func(d string) bool {
@@ -45,15 +45,15 @@ var cmdPurge = &cmd.Command{
 			if !hasImportWithPrefix(d.Importpath) {
 				dep, err := m.GetDependencyForImportpath(d.Importpath)
 				if err != nil {
-					return fmt.Errorf("could not get get dependency: %v", err)
+					return errors.Wrap(err, "could not get get dependency")
 				}
 
 				if err := m.RemoveDependency(dep); err != nil {
-					return fmt.Errorf("dependency could not be removed: %v", err)
+					return errors.Wrap(err, "dependency could not be removed")
 				}
 				if err := fileutils.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath))); err != nil {
 					// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
-					return fmt.Errorf("dependency could not be deleted: %v", err)
+					return errors.Wrap(err, "dependency could not be deleted")
 				}
 			}
 		}

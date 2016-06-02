@@ -13,6 +13,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -78,7 +79,7 @@ func list(ctx *gb.Context, args []string) error {
 		}
 		encoder := json.NewEncoder(os.Stdout)
 		if err := encoder.Encode(views); err != nil {
-			return fmt.Errorf("Error occurred during json encoding: %v", err)
+			return errors.Wrap(err, "json encoding failed")
 		}
 	} else {
 		fm := template.FuncMap{
@@ -86,12 +87,12 @@ func list(ctx *gb.Context, args []string) error {
 		}
 		tmpl, err := template.New("list").Funcs(fm).Parse(format)
 		if err != nil {
-			return fmt.Errorf("unable to parse template %q: %v", format, err)
+			return errors.Wrapf(err, "unable to parse template %q", format)
 		}
 
 		for _, pkg := range pkgs {
 			if err := tmpl.Execute(os.Stdout, pkg); err != nil {
-				return fmt.Errorf("unable to execute template: %v", err)
+				return errors.Wrap(err, "unable to execute template")
 			}
 			fmt.Fprintln(os.Stdout)
 		}

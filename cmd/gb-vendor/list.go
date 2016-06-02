@@ -10,6 +10,7 @@ import (
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/internal/vendor"
+	"github.com/pkg/errors"
 )
 
 var format string
@@ -31,16 +32,16 @@ Flags:
 	Run: func(ctx *gb.Context, args []string) error {
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
-			return fmt.Errorf("could not load manifest: %v", err)
+			return errors.Wrap(err, "could not load manifest")
 		}
 		tmpl, err := template.New("list").Parse(format)
 		if err != nil {
-			return fmt.Errorf("unable to parse template %q: %v", format, err)
+			return errors.Wrapf(err, "unable to parse template %q", format)
 		}
 		w := tabwriter.NewWriter(os.Stdout, 1, 2, 1, ' ', 0)
 		for _, dep := range m.Dependencies {
 			if err := tmpl.Execute(w, dep); err != nil {
-				return fmt.Errorf("unable to execute template: %v", err)
+				return errors.Wrap(err, "unable to execute template")
 			}
 			fmt.Fprintln(w)
 		}

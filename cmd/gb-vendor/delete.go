@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/internal/fileutils"
 	"github.com/constabulary/gb/internal/vendor"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -35,14 +35,14 @@ Flags:
 `,
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 && !deleteAll {
-			return fmt.Errorf("delete: import path or --all flag is missing")
+			return errors.New("delete: import path or --all flag is missing")
 		} else if len(args) == 1 && deleteAll {
-			return fmt.Errorf("delete: you cannot specify path and --all flag at once")
+			return errors.New("delete: you cannot specify path and --all flag at once")
 		}
 
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
-			return fmt.Errorf("could not load manifest: %v", err)
+			return errors.Errorf("could not load manifest: %v", err)
 		}
 
 		var dependencies []vendor.Dependency
@@ -53,7 +53,7 @@ Flags:
 			p := args[0]
 			dependency, err := m.GetDependencyForImportpath(p)
 			if err != nil {
-				return fmt.Errorf("could not get dependency: %v", err)
+				return errors.Wrap(err, "could not get dependency")
 			}
 			dependencies = append(dependencies, dependency)
 		}
@@ -62,12 +62,12 @@ Flags:
 			path := d.Importpath
 
 			if err := m.RemoveDependency(d); err != nil {
-				return fmt.Errorf("dependency could not be deleted: %v", err)
+				return errors.Wrap(err, "dependency could not be deleted")
 			}
 
 			if err := fileutils.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(path))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
-				return fmt.Errorf("dependency could not be deleted: %v", err)
+				return errors.Wrap(err, "dependency could not be deleted")
 			}
 		}
 		return vendor.WriteManifest(manifestFile(ctx), m)

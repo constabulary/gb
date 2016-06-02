@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -28,7 +29,7 @@ func Build(pkgs ...*Package) error {
 // and any of its dependencies
 func BuildPackages(pkgs ...*Package) (*Action, error) {
 	if len(pkgs) < 1 {
-		return nil, fmt.Errorf("no packages supplied")
+		return nil, errors.New("no packages supplied")
 	}
 
 	targets := make(map[string]*Action) // maps package importpath to build action

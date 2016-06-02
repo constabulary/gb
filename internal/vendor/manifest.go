@@ -3,11 +3,12 @@ package vendor
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"reflect"
 	"sort"
+
+	"github.com/pkg/errors"
 )
 
 // gb-vendor manifest support
@@ -25,7 +26,7 @@ type Manifest struct {
 // If the dependency exists already then it returns and error.
 func (m *Manifest) AddDependency(dep Dependency) error {
 	if m.HasImportpath(dep.Importpath) {
-		return fmt.Errorf("already registered")
+		return errors.New("already registered")
 	}
 	m.Dependencies = append(m.Dependencies, dep)
 	return nil
@@ -40,7 +41,7 @@ func (m *Manifest) RemoveDependency(dep Dependency) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("dependency does not exist")
+	return errors.New("dependency does not exist")
 }
 
 // HasImportpath reports whether the Manifest contains the import path.
@@ -57,7 +58,7 @@ func (m *Manifest) GetDependencyForImportpath(path string) (Dependency, error) {
 			return d, nil
 		}
 	}
-	return Dependency{}, fmt.Errorf("dependency for %s does not exist", path)
+	return Dependency{}, errors.Errorf("dependency for %s does not exist", path)
 }
 
 // Dependency describes one vendored import path of code

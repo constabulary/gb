@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // ParseImports parses Go packages from a specific root returning a set of import paths.
@@ -48,7 +50,7 @@ func ParseImports(root string) (map[string]bool, error) {
 func FetchMetadata(path string, insecure bool) (rc io.ReadCloser, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("unable to determine remote metadata protocol: %s", err)
+			err = errors.Wrap(err, "unable to determine remote metadata protocol")
 		}
 	}()
 	// try https first

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const debugCopypath = false
@@ -52,16 +54,16 @@ func Copypath(dst string, src string) error {
 func Copyfile(dst, src string) error {
 	err := mkdir(filepath.Dir(dst))
 	if err != nil {
-		return fmt.Errorf("copyfile: mkdirall: %v", err)
+		return errors.Wrap(err, "copyfile: mkdirall")
 	}
 	r, err := os.Open(src)
 	if err != nil {
-		return fmt.Errorf("copyfile: open(%q): %v", src, err)
+		return errors.Wrapf(err, "copyfile: open(%q)", src)
 	}
 	defer r.Close()
 	w, err := os.Create(dst)
 	if err != nil {
-		return fmt.Errorf("copyfile: create(%q): %v", dst, err)
+		return errors.Wrapf(err, "copyfile: create(%q)", dst)
 	}
 	defer w.Close()
 	if debugCopyfile {
