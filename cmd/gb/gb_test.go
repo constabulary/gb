@@ -1639,3 +1639,23 @@ func main() {
 	gb.mustBeEmpty(tmpdir)
 	gb.grepStderr(`FATAL: command "build" failed: failed to resolve import path "x": import "this/is/a/bad/path": not found`, "expected FATAL")
 }
+
+func TestIssue530(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/main")
+	gb.tempFile("src/main/main.go", `package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("hello gb")
+}
+`)
+
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.run("build")
+	gb.mustBeEmpty(tmpdir)
+}
