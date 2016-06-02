@@ -47,9 +47,6 @@ Flags:
 		do not cache packages, cached packages will still be used for
 		incremental compilation. -f -F is advised to disable the package
 		caching system.
-	-q
-		decreases verbosity, effectively raising the output level to ERROR.
-		In a successful build, no output will be displayed.
 	-P
 		The number of build jobs to run in parallel, including test execution.
 		By default this is the number of CPUs visible to gb.
