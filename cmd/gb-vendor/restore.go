@@ -19,7 +19,7 @@ var cmdRestore = &cmd.Command{
 	Name:      "restore",
 	UsageLine: "restore [-precaire]",
 	Short:     "restore dependencies from the manifest",
-	Long: `Restore vendor dependecies.
+	Long: `Restore vendor dependencies.
 
 Flags:
 	-precaire
