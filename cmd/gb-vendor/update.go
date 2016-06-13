@@ -9,6 +9,7 @@ import (
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/fileutils"
 	"github.com/constabulary/gb/vendor"
+"net/url"
 )
 
 var (
@@ -74,8 +75,12 @@ Flags:
 			if err != nil {
 				return fmt.Errorf("dependency could not be deleted from manifest: %v", err)
 			}
-
-			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath, insecure)
+			depPath := d.Importpath
+			//if user passed ssh as schema during fetch, we must use this schema during update
+			if url, err := url.Parse(d.Repository); err==nil && url.Scheme == "ssh" {
+				depPath = d.Repository
+			}
+			repo, extra, err := vendor.DeduceRemoteRepo(depPath, insecure)
 			if err != nil {
 				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
 			}
