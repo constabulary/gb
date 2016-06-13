@@ -9,7 +9,6 @@ import (
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/fileutils"
 	"github.com/constabulary/gb/vendor"
-	"net/url"
 )
 
 func addRestoreFlags(fs *flag.FlagSet) {
@@ -41,12 +40,7 @@ func restore(ctx *gb.Context) error {
 
 	for _, dep := range m.Dependencies {
 		fmt.Printf("Getting %s\n", dep.Importpath)
-		depPath := dep.Importpath
-		//if user passed ssh as schema during fetch, we must use this schema during restore
-		if url, err := url.Parse(dep.Repository); err==nil && url.Scheme == "ssh" {
-			depPath = dep.Repository
-		}
-		repo, _, err := vendor.DeduceRemoteRepo(depPath, insecure)
+		repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, insecure)
 		if err != nil {
 			return fmt.Errorf("Could not process dependency: %s", err)
 		}
