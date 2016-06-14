@@ -75,6 +75,13 @@ func TestFlags(testArgs []string) []string {
 				}
 				if val.passToTest || val.passToAll {
 					fArg = "-test." + nArg
+					if val.boolVar {
+						// boolean variables can be either -bool, or -bool=true
+						// some code, see issue 605, expects the latter form, so
+						// when present, expand boolean args to their canonical
+						// form.
+						nVal = "true"
+					}
 					if nVal != "" {
 						fArg = fArg + "=" + nVal
 					}
