@@ -1661,3 +1661,34 @@ func main() {
 	gb.run("build")
 	gb.mustBeEmpty(tmpdir)
 }
+
+// goconvey (and probably others) do not parse flags passed to the
+// test binary, they just expect them to be present in their raw form
+// in os.Args. As such -test.v and -test.v=true are not the same.
+// Assert that gb is passing the latter form.
+func TestIssue605(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempDir("src/issue605")
+	gb.tempFile("src/issue605/issue_test.go", `package issue605
+
+import (
+        "os"
+        "testing"
+)
+
+func TestFlags(t *testing.T) {
+        for _, f := range os.Args {
+                if f == "-test.v=true" {
+                        return
+                }
+        }
+        t.Fatalf("could not find test flag: %q", os.Args)
+}`)
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.run("test", "-v") // should translate into -test.v=true
+	gb.mustBeEmpty(tmpdir)
+
+}

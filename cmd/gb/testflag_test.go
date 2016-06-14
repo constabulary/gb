@@ -146,10 +146,10 @@ func TestTestFlags(t *testing.T) {
 	}{
 		{
 			eargs: []string{"-q", "-debug"},
-			targs: []string{"-test.v", "-debug"},
+			targs: []string{"-test.v=true", "-debug"},
 		}, {
 			eargs: []string{"-v", "-debug"},
-			targs: []string{"-test.v", "-debug"},
+			targs: []string{"-test.v=true", "-debug"},
 		}, {
 			eargs: []string{"-bench"},
 			targs: []string{"-test.bench"},
@@ -161,7 +161,7 @@ func TestTestFlags(t *testing.T) {
 			targs: []string{"-test.bench='Test*'"},
 		}, {
 			eargs: []string{"-benchmem"},
-			targs: []string{"-test.benchmem"},
+			targs: []string{"-test.benchmem=true"},
 		}, {
 			eargs: []string{"-benchtime"},
 			targs: []string{"-test.benchtime"},
@@ -188,7 +188,7 @@ func TestTestFlags(t *testing.T) {
 			targs: []string{"-test.memprofile"},
 		}, {
 			eargs: []string{"-short"},
-			targs: []string{"-test.short"},
+			targs: []string{"-test.short=true"},
 		}, {
 			eargs: []string{"-memprofilerate", "1"},
 			targs: []string{"-test.memprofilerate", "1"},
