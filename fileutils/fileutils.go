@@ -32,14 +32,12 @@ func Copypath(dst string, src string) error {
 			return nil
 		}
 
+		dst := filepath.Join(dst, path[len(src):])
+
 		if info.Mode()&os.ModeSymlink != 0 {
-			if debugCopypath {
-				fmt.Printf("skipping symlink: %v\n", path)
-			}
-			return nil
+			return Copylink(dst, path)
 		}
 
-		dst := filepath.Join(dst, path[len(src):])
 		return Copyfile(dst, path)
 	})
 	if err != nil {
@@ -69,6 +67,23 @@ func Copyfile(dst, src string) error {
 	}
 	_, err = io.Copy(w, r)
 	return err
+}
+
+func Copylink(dst, src string) error {
+	target, err := os.Readlink(src)
+	if err != nil {
+		return fmt.Errorf("copylink: readlink: %v", err)
+	}
+	if err := mkdir(filepath.Dir(dst)); err != nil {
+		return fmt.Errorf("copylink: mkdirall: %v", err)
+	}
+	if err := os.Symlink(target, dst); err != nil {
+		return fmt.Errorf("copylink: symlink: %v", err)
+	}
+	if debugCopyfile {
+		fmt.Printf("copylink(dst: %v, src: %v, tgt: %s)\n", dst, src, target)
+	}
+	return nil
 }
 
 // RemoveAll removes path and any children it contains. Unlike os.RemoveAll it
