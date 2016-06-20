@@ -14,6 +14,7 @@ import (
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/internal/debug"
 	"github.com/constabulary/gb/internal/importer"
+	"github.com/pkg/errors"
 )
 
 // Test returns a Target representing the result of compiling the
@@ -31,7 +32,7 @@ func Test(flags []string, pkgs ...*gb.Package) error {
 // and test the supplied packages.
 func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
 	if len(pkgs) < 1 {
-		return nil, fmt.Errorf("no test packages provided")
+		return nil, errors.New("no test packages provided")
 	}
 	targets := make(map[string]*gb.Action) // maps package import paths to their test run action
 
@@ -195,7 +196,8 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 					cmd.Stdout = &output
 					cmd.Stderr = &output
 					debug.Debugf("%s", cmd.Args)
-					err = cmd.Run() // run test
+					err = cmd.Run()                         // run test
+					err = errors.Wrapf(err, "%s", cmd.Args) // wrap error if failed
 				}
 
 				// test binaries can be very large, so always unlink the
@@ -221,11 +223,11 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if !pkg.TestScope {
-		return nil, fmt.Errorf("package %q is not test scoped", pkg.Name)
+		return nil, errors.Errorf("package %q is not test scoped", pkg.Name)
 	}
 	dir := gb.Workdir(pkg)
 	if err := mkdir(dir); err != nil {
-		return nil, fmt.Errorf("buildTestmain: %v", err)
+		return nil, err
 	}
 	tests, err := loadTestFuncs(pkg.Package)
 	if err != nil {
@@ -261,5 +263,5 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 }
 
 func mkdir(path string) error {
-	return os.MkdirAll(path, 0755)
+	return errors.Wrap(os.MkdirAll(path, 0755), "mkdir")
 }

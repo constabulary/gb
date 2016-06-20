@@ -3,12 +3,12 @@ package cmd
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/internal/debug"
+	"github.com/pkg/errors"
 )
 
 // Command represents a subcommand, or plugin that is executed within
@@ -60,7 +60,7 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 
 	ctx, err := NewContext(projectroot, gb.GcToolchain())
 	if err != nil {
-		return fmt.Errorf("unable to construct context: %v", err)
+		return errors.Wrap(err, "unable to construct context")
 	}
 	defer ctx.Destroy()
 
@@ -71,12 +71,12 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 // NewContext creates a gb.Context for the project root.
 func NewContext(projectroot string, options ...func(*gb.Context) error) (*gb.Context, error) {
 	if projectroot == "" {
-		return nil, fmt.Errorf("project root is blank")
+		return nil, errors.New("project root is blank")
 	}
 
 	root, err := FindProjectroot(projectroot)
 	if err != nil {
-		return nil, fmt.Errorf("could not locate project root: %v", err)
+		return nil, errors.Wrap(err, "could not locate project root")
 	}
 	project := gb.NewProject(root,
 		gb.SourceDir(filepath.Join(root, "src")),

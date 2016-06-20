@@ -14,6 +14,7 @@ import (
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/internal/fileutils"
 	"github.com/constabulary/gb/internal/vendor"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -68,13 +69,13 @@ Flags:
 	Run: func(ctx *gb.Context, args []string) error {
 		switch len(args) {
 		case 0:
-			return fmt.Errorf("fetch: import path missing")
+			return errors.New("fetch: import path missing")
 		case 1:
 			path := args[0]
 			recurse = !noRecurse
 			return fetch(ctx, path, recurse)
 		default:
-			return fmt.Errorf("more than one import path supplied")
+			return errors.New("more than one import path supplied")
 		}
 	},
 	AddFlags: addFetchFlags,
@@ -83,7 +84,7 @@ Flags:
 func fetch(ctx *gb.Context, path string, recurse bool) error {
 	m, err := vendor.ReadManifest(manifestFile(ctx))
 	if err != nil {
-		return fmt.Errorf("could not load manifest: %v", err)
+		return errors.Wrap(err, "could not load manifest")
 	}
 
 	repo, extra, err := vendor.DeduceRemoteRepo(path, insecure)
@@ -96,7 +97,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 	path = stripscheme(path)
 
 	if m.HasImportpath(path) {
-		return fmt.Errorf("%s is already vendored", path)
+		return errors.Errorf("%s is already vendored", path)
 	}
 
 	wc, err := repo.Checkout(branch, tag, revision)
@@ -175,7 +176,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 
 		is, ok := dsm[filepath.Join(ctx.Projectdir(), "vendor", "src", path)]
 		if !ok {
-			return fmt.Errorf("unable to locate depset for %q", path)
+			return errors.Errorf("unable to locate depset for %q", path)
 		}
 
 		missing := findMissing(pkgs(is.Pkgs), dsm)

@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // ParseFile parses path into a tagged key value map.
@@ -14,7 +16,7 @@ import (
 func ParseFile(path string) (map[string]map[string]string, error) {
 	r, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("%s:%v", path, err)
+		return nil, errors.Wrapf(err, "ParseFile")
 	}
 	defer r.Close()
 	return Parse(r)

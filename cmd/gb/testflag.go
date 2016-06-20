@@ -1,12 +1,11 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/constabulary/gb/internal/debug"
+	"github.com/pkg/errors"
 )
 
 // testFlagSpec defines a flag we know about.
@@ -183,7 +182,7 @@ func setArgFound(arg string) error {
 	nArg := strings.TrimPrefix(arg, "-")
 	if val, ok := testFlagDefn[nArg]; ok {
 		if val.present {
-			err = fmt.Errorf("%q flag may be set only once", arg)
+			err = errors.Errorf("%q flag may be set only once", arg)
 		} else {
 			testFlagDefn[nArg].present = true
 		}

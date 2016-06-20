@@ -29,6 +29,7 @@ install:
   # TODO(tianon) - git clone --depth 1 https://github.com/constabulary/integration-tests.git
 
 build_script:
+  - go get github.com/pkg/errors
   - go install -v ./...
 
 test_script:

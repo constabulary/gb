@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/constabulary/gb/internal/importer"
+	"github.com/pkg/errors"
 )
 
 // Package represents a resolved package from the Project with respect to the Context.
@@ -28,7 +29,7 @@ func newPackage(ctx *Context, p *importer.Package) (*Package, error) {
 	for _, i := range p.Imports {
 		dep, ok := ctx.pkgs[i]
 		if !ok {
-			return nil, fmt.Errorf("newPackage(%q): could not locate dependant package %q ", p.Name, i)
+			return nil, errors.Errorf("newPackage(%q): could not locate dependant package %q ", p.Name, i)
 		}
 		pkg.Imports = append(pkg.Imports, dep)
 	}

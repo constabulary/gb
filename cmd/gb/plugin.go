@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os/exec"
 
 	"github.com/constabulary/gb/cmd"
+	"github.com/pkg/errors"
 )
 
 func init() {
@@ -31,8 +31,5 @@ GB_PROJECT_DIR environment key.
 func lookupPlugin(arg string) (string, error) {
 	plugin := "gb-" + arg
 	path, err := exec.LookPath(plugin)
-	if err != nil {
-		return "", fmt.Errorf("plugin: unable to locate %q: %v", plugin, err)
-	}
-	return path, nil
+	return path, errors.Wrapf(err, "plugin: unable to locate %q", plugin)
 }

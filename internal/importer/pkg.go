@@ -2,7 +2,6 @@ package importer
 
 import (
 	"bufio"
-	"fmt"
 	"go/ast" // for build.Default
 	"go/parser"
 	"go/token"
@@ -11,6 +10,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var knownOS = map[string]bool{
@@ -126,13 +127,13 @@ func (x byName) Less(i, j int) bool { return x[i].Name() < x[j].Name() }
 func loadPackage(p *Package) error {
 	dir, err := os.Open(p.Dir)
 	if err != nil {
-		return fmt.Errorf("loadPackage: unable open directory: %v", err)
+		return errors.Wrap(err, "unable open directory")
 	}
 	defer dir.Close()
 
 	dents, err := dir.Readdir(-1)
 	if err != nil {
-		return fmt.Errorf("loadPackage: unable read directory: %v", err)
+		return errors.Wrap(err, "unable read directory")
 	}
 
 	var Sfiles []string // files with ".S" (capital S)
@@ -230,7 +231,7 @@ func loadPackage(p *Package) error {
 					quoted := spec.Path.Value
 					path, err := strconv.Unquote(quoted)
 					if err != nil {
-						return fmt.Errorf("%s: parser returned invalid quoted string: <%s>", path, quoted)
+						return errors.Errorf("%q: invalid quoted string: %q", path, quoted)
 					}
 					if isXTest {
 						xTestImported[path] = append(xTestImported[path], fset.Position(spec.Pos()))
@@ -241,7 +242,7 @@ func loadPackage(p *Package) error {
 					}
 					if path == "C" {
 						if isTest {
-							return fmt.Errorf("use of cgo in test %s not supported", path)
+							return errors.Errorf("use of cgo in test %s not supported", path)
 						}
 						cg := spec.Doc
 						if cg == nil && len(d.Specs) == 1 {
@@ -317,14 +318,14 @@ func saveCgo(di *Package, filename string, cg *ast.CommentGroup) error {
 		line = strings.TrimSpace(line[4:])
 		i := strings.Index(line, ":")
 		if i < 0 {
-			return fmt.Errorf("%s: invalid #cgo line: %s", filename, sc.Text())
+			return errors.Errorf("%s: invalid #cgo line: %s", filename, sc.Text())
 		}
 		line, argstr := line[:i], line[i+1:]
 
 		// Parse GOOS/GOARCH stuff.
 		f := strings.Fields(line)
 		if len(f) < 1 {
-			return fmt.Errorf("%s: invalid #cgo line: %s", filename, sc.Text())
+			return errors.Errorf("%s: invalid #cgo line: %s", filename, sc.Text())
 		}
 
 		cond, verb := f[:len(f)-1], f[len(f)-1]
@@ -343,12 +344,12 @@ func saveCgo(di *Package, filename string, cg *ast.CommentGroup) error {
 
 		args, err := splitQuoted(argstr)
 		if err != nil {
-			return fmt.Errorf("%s: invalid #cgo line: %s", filename, sc.Text())
+			return errors.Wrapf(err, "%s: invalid #cgo line: %s", filename, sc.Text())
 		}
 		for i, arg := range args {
 			arg, ok := expandSrcDir(arg, di.Dir)
 			if !ok {
-				return fmt.Errorf("%s: malformed #cgo argument: %s", filename, arg)
+				return errors.Errorf("%s: malformed #cgo argument: %s", filename, arg)
 			}
 			args[i] = arg
 		}
@@ -365,7 +366,7 @@ func saveCgo(di *Package, filename string, cg *ast.CommentGroup) error {
 		case "pkg-config":
 			di.CgoPkgConfig = append(di.CgoPkgConfig, args...)
 		default:
-			return fmt.Errorf("%s: invalid #cgo verb: %s", filename, sc.Text())
+			return errors.Errorf("%s: invalid #cgo verb: %s", filename, sc.Text())
 		}
 	}
 	return sc.Err()

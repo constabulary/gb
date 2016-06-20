@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/pkg/errors"
 )
 
 func init() {
@@ -146,7 +146,7 @@ func resolveRootPackages(r Resolver, paths ...string) ([]*gb.Package, error) {
 	for _, path := range paths {
 		pkg, err := r.ResolvePackage(path)
 		if err != nil {
-			return pkgs, fmt.Errorf("failed to resolve import path %q: %v", path, err)
+			return pkgs, errors.Wrapf(err, "failed to resolve import path %q", path)
 		}
 		if pkg.SrcRoot == filepath.Join(runtime.GOROOT(), "src") {
 			// skip package roots that are not part of this project.

@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // gc toolchain
@@ -25,7 +27,7 @@ func GcToolchain() func(c *Context) error {
 
 		if goversion == 1.4 && (c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch) {
 			// cross-compliation is not supported yet #31
-			return fmt.Errorf("cross compilation from host %s/%s to target %s/%s not supported with Go 1.4", c.gohostos, c.gohostarch, c.gotargetos, c.gotargetarch)
+			return errors.Errorf("cross compilation from host %s/%s to target %s/%s not supported with Go 1.4", c.gohostos, c.gohostarch, c.gotargetos, c.gotargetarch)
 		}
 
 		tooldir := filepath.Join(goroot, "pkg", "tool", c.gohostos+"_"+c.gohostarch)
@@ -54,7 +56,7 @@ func GcToolchain() func(c *Context) error {
 				pack: filepath.Join(tooldir, "pack"+exe),
 			}
 		default:
-			return fmt.Errorf("unsupported Go version: %v", runtime.Version)
+			return errors.Errorf("unsupported Go version: %v", runtime.Version)
 		}
 		return nil
 	}
@@ -71,11 +73,11 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 		includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
 		args = append(args, "-I", odir, "-I", includedir)
 	default:
-		return fmt.Errorf("unsupported Go version: %v", runtime.Version)
+		return errors.Errorf("unsupported Go version: %v", runtime.Version)
 	}
 	args = append(args, sfile)
 	if err := mkdir(filepath.Dir(ofile)); err != nil {
-		return fmt.Errorf("gc:asm: %v", err)
+		return errors.Errorf("gc:asm: %v", err)
 	}
 	var buf bytes.Buffer
 	err := runOut(&buf, srcdir, nil, t.as, args...)
@@ -122,7 +124,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 	if goversion > 1.4 {
-		return fmt.Errorf("gc %f does not support cc", goversion)
+		return errors.Errorf("gc %f does not support cc", goversion)
 	}
 	args := []string{
 		"-F", "-V", "-w",
@@ -193,7 +195,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 
 	args = append(args, files...)
 	if err := mkdir(filepath.Join(filepath.Dir(outfile), pkg.Name)); err != nil {
-		return fmt.Errorf("gc:gc: %v", err)
+		return errors.Wrap(err, "mkdir")
 	}
 	var buf bytes.Buffer
 	err := runOut(&buf, srcdir, nil, t.gc, args...)

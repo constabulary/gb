@@ -1,11 +1,12 @@
 package vendor
 
 import (
-	"fmt"
 	"go/build"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Pkg describes a Go package.
@@ -54,7 +55,7 @@ func LoadTree(root string, prefix string) (*Depset, error) {
 			if _, ok := err.(*build.NoGoError); ok {
 				return nil
 			}
-			return fmt.Errorf("loadPackage(%q, %q): %v", dir, importpath, err)
+			return errors.Wrapf(err, "loadPackage(%q, %q)", dir, importpath)
 		}
 		p.ImportPath = filepath.ToSlash(importpath)
 		if p != nil {

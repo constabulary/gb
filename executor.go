@@ -1,8 +1,9 @@
 package gb
 
 import (
-	"errors"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 // Execute executes a tree of *Actions sequentually in depth first order.

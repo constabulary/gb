@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
 	"github.com/constabulary/gb/internal/fileutils"
 	"github.com/constabulary/gb/internal/vendor"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -46,14 +46,14 @@ Flags:
 `,
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 && !updateAll {
-			return fmt.Errorf("update: import path or --all flag is missing")
+			return errors.New("update: import path or --all flag is missing")
 		} else if len(args) == 1 && updateAll {
-			return fmt.Errorf("update: you cannot specify path and --all flag at once")
+			return errors.New("update: you cannot specify path and --all flag at once")
 		}
 
 		m, err := vendor.ReadManifest(manifestFile(ctx))
 		if err != nil {
-			return fmt.Errorf("could not load manifest: %v", err)
+			return errors.Wrap(err, "could not load manifest")
 		}
 
 		var dependencies []vendor.Dependency
@@ -64,20 +64,19 @@ Flags:
 			p := args[0]
 			dependency, err := m.GetDependencyForImportpath(p)
 			if err != nil {
-				return fmt.Errorf("could not get dependency: %v", err)
+				return errors.Wrap(err, "could not get dependency")
 			}
 			dependencies = append(dependencies, dependency)
 		}
 
 		for _, d := range dependencies {
-			err = m.RemoveDependency(d)
-			if err != nil {
-				return fmt.Errorf("dependency could not be deleted from manifest: %v", err)
+			if err := m.RemoveDependency(d); err != nil {
+				return errors.Wrap(err, "dependency could not be deleted from manifest")
 			}
 
 			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath, insecure)
 			if err != nil {
-				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
+				return errors.Wrapf(err, "could not determine repository for import %q", d.Importpath)
 			}
 
 			wc, err := repo.Checkout(d.Branch, "", "")
@@ -105,7 +104,8 @@ Flags:
 
 			if err := fileutils.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
-				return fmt.Errorf("dependency could not be deleted: %v", err)
+				return errors.Wrap(err, "dependency could not be deleted")
+
 			}
 
 			dst := filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(dep.Importpath))

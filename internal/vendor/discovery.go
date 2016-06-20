@@ -6,9 +6,10 @@ package vendor
 
 import (
 	"encoding/xml"
-	"fmt"
 	"io"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // charsetReader returns a reader for the given charset. Currently
@@ -22,7 +23,7 @@ func charsetReader(charset string, input io.Reader) (io.Reader, error) {
 	case "ascii":
 		return input, nil
 	default:
-		return nil, fmt.Errorf("can't decode XML document using charset %q", charset)
+		return nil, errors.Errorf("can't decode XML document using charset %q", charset)
 	}
 }
 
