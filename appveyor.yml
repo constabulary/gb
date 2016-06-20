@@ -23,7 +23,7 @@ install:
   - gcc --version
   - g++ --version
   # need bzr for several tests
-  - choco install bzr
+  - choco install -y --force bzr
   - set PATH=C:\Program Files (x86)\Bazaar;%PATH%
   - bzr --version
   # TODO(tianon) - git clone --depth 1 https://github.com/constabulary/integration-tests.git
