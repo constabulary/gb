@@ -434,12 +434,8 @@ func (c *Context) isCrossCompile() bool {
 
 func matchPackages(c *Context, pattern string) ([]string, error) {
 	debug.Debugf("matchPackages: %v", pattern)
-	match := func(string) bool { return true }
-	treeCanMatch := func(string) bool { return true }
-	if pattern != "all" && pattern != "std" {
-		match = matchPattern(pattern)
-		treeCanMatch = treeCanMatchPattern(pattern)
-	}
+	match := matchPattern(pattern)
+	treeCanMatch := treeCanMatchPattern(pattern)
 
 	var pkgs []string
 
