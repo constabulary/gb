@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/constabulary/gb/importer"
+	"github.com/constabulary/gb/internal/importer"
 )
 
 func testProject(t *testing.T) *Project {
