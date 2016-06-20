@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/constabulary/gb/debug"
-	"github.com/constabulary/gb/importer"
+	"github.com/constabulary/gb/internal/debug"
+	"github.com/constabulary/gb/internal/importer"
 )
 
 // Context represents an execution of one or more Targets inside a Project.

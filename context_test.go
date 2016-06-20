@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/constabulary/gb/importer"
+	"github.com/constabulary/gb/internal/importer"
 )
 
 func testImportCycle(pkg string, t *testing.T) {

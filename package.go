@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/constabulary/gb/importer"
+	"github.com/constabulary/gb/internal/importer"
 )
 
 // Package represents a resolved package from the Project with respect to the Context.

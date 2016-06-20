@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/internal/debug"
 )
 
 // pkgpath returns the destination for object cached for this Package.

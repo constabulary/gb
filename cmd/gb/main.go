@@ -10,7 +10,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
-	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/internal/debug"
 )
 
 var (
