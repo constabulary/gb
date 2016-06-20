@@ -9,10 +9,6 @@ import (
 	"github.com/constabulary/gb/internal/debug"
 )
 
-type Context interface {
-	AllPackages(string) ([]string, error)
-}
-
 // importPathsNoDotExpansion returns the import paths to use for the given
 // command line, but it does no ... expansion.
 func importPathsNoDotExpansion(srcdir string, cwd string, args []string) []string {
@@ -39,12 +35,12 @@ func importPathsNoDotExpansion(srcdir string, cwd string, args []string) []strin
 }
 
 // ImportPaths returns the import paths to use for the given command line.
-func ImportPaths(srcdir string, ctx Context, cwd string, args []string) []string {
+func ImportPaths(srcdir, cwd string, args []string) []string {
 	args = importPathsNoDotExpansion(srcdir, cwd, args)
 	var out []string
 	for _, a := range args {
 		if strings.Contains(a, "...") {
-			pkgs, err := ctx.AllPackages(a)
+			pkgs, err := matchPackages(srcdir, a)
 			if err != nil {
 				fmt.Println("could not load all packages: %v", err)
 			}

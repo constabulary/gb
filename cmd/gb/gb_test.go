@@ -796,7 +796,7 @@ func TestBuildPackageNoSource(t *testing.T) {
 	gb.tempDir("src/pkg1")
 	gb.cd(gb.tempdir)
 	gb.runFail("build", "pkg1")
-	gb.grepStderr(`^FATAL: command "build" failed: failed to resolve import path "pkg1": no buildable Go source files in `+regexp.QuoteMeta(filepath.Join(gb.tempdir, "src", "pkg1")), "expected FATAL")
+	gb.grepStderr(`^FATAL: command "build" failed: no packages supplied`, "expected FATAL")
 }
 
 func TestTestPackageNoTests(t *testing.T) {

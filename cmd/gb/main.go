@@ -161,7 +161,7 @@ func main() {
 
 	if !command.SkipParseArgs {
 		srcdir := filepath.Join(ctx.Projectdir(), "src")
-		args = match.ImportPaths(srcdir, ctx, cwd, args)
+		args = match.ImportPaths(srcdir, cwd, args)
 	}
 
 	debug.Debugf("args: %v", args)
