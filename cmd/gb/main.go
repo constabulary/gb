@@ -10,6 +10,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/constabulary/gb/cmd/gb/internal/match"
 	"github.com/constabulary/gb/internal/debug"
 )
 
@@ -159,7 +160,8 @@ func main() {
 	}
 
 	if !command.SkipParseArgs {
-		args = importPaths(ctx, cwd, args)
+		srcdir := filepath.Join(ctx.Projectdir(), "src")
+		args = match.ImportPaths(srcdir, ctx, cwd, args)
 	}
 
 	debug.Debugf("args: %v", args)

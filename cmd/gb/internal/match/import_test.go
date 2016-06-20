@@ -1,4 +1,4 @@
-package main
+package match
 
 import (
 	"os"
@@ -8,11 +8,8 @@ import (
 )
 
 type context struct {
-	projectdir string
-	allpkgs    []string
+	allpkgs []string
 }
-
-func (c *context) Projectdir() string { return c.projectdir }
 
 func (c *context) AllPackages(pattern string) ([]string, error) {
 	return c.allpkgs, nil
@@ -85,7 +82,8 @@ func TestImportPaths(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		got := importPaths(&tt.ctx, tt.cwd, tt.args)
+		srcdir := p("src")
+		got := ImportPaths(srcdir, &tt.ctx, tt.cwd, tt.args)
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("ImportPaths(%v): got %v, want %v", tt.args, got, tt.want)
 		}
