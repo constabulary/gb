@@ -23,8 +23,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/debug"
 	"github.com/constabulary/gb/importer"
+	"github.com/constabulary/gb/internal/debug"
 )
 
 type coverInfo struct {

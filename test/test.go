@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/debug"
 	"github.com/constabulary/gb/importer"
+	"github.com/constabulary/gb/internal/debug"
 )
 
 // Test returns a Target representing the result of compiling the

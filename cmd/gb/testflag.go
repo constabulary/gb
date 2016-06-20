@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/internal/debug"
 )
 
 // testFlagSpec defines a flag we know about.

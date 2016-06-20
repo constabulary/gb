@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/internal/debug"
 )
 
 type Context interface {

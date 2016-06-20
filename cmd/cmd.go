@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/debug"
+	"github.com/constabulary/gb/internal/debug"
 )
 
 // Command represents a subcommand, or plugin that is executed within

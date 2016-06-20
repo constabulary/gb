@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/constabulary/gb/debug"
 	"github.com/constabulary/gb/fileutils"
+	"github.com/constabulary/gb/internal/debug"
 )
 
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
