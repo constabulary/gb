@@ -7,7 +7,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
-	"github.com/constabulary/gb/fileutils"
+	"github.com/constabulary/gb/internal/fileutils"
 	"github.com/constabulary/gb/vendor"
 )
 

@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"github.com/constabulary/gb/fileutils"
 )
 
 func mktemp(t *testing.T) string {
@@ -33,7 +31,7 @@ func assertExists(t *testing.T, path string) {
 
 func TestManifest(t *testing.T) {
 	root := mktemp(t)
-	defer fileutils.RemoveAll(root)
+	defer os.RemoveAll(root)
 
 	mf := filepath.Join(root, "vendor")
 
