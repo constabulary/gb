@@ -8,6 +8,7 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
+	"github.com/constabulary/gb/internal/importer"
 	"github.com/pkg/errors"
 )
 
@@ -145,6 +146,13 @@ func resolveRootPackages(r Resolver, paths ...string) ([]*gb.Package, error) {
 	var pkgs []*gb.Package
 	for _, path := range paths {
 		pkg, err := r.ResolvePackage(path)
+		if _, nogo := errors.Cause(err).(*importer.NoGoError); nogo {
+			// if the package is empty, to no Go files are in scope
+			// ignore it.
+			// TODO(dfc) ResolvePackage should return an empty *Package
+			// and build/test should ignore them.
+			continue
+		}
 		if err != nil {
 			return pkgs, errors.Wrapf(err, "failed to resolve import path %q", path)
 		}

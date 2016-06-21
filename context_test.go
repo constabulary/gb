@@ -239,37 +239,3 @@ func TestContextImportPackage(t *testing.T) {
 		}
 	}
 }
-
-func TestContextMatchPackages(t *testing.T) {
-	tests := []struct {
-		pattern string
-		want    []string
-	}{{
-		pattern: "all",
-		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain", "cycle0", "cycle1/a", "cycle1/b", "cycle2/a", "cycle2/b", "cycle2/c", "cycle2/d", "d.v1", "e", "external_only_test", "extest", "extestonly", "f", "g", "h", "ldflags", "localimport", "main", "mainnoruntime", "nested/a", "nested/b", "notestfiles", "tags1", "testflags", "testonly", "x", "y"},
-	}, {
-		pattern: "...",
-		want:    []string{"a", "aprime", "b", "c", "cgomain", "cgoonlynotest", "cgotest", "cmd/f", "cppmain", "cycle0", "cycle1/a", "cycle1/b", "cycle2/a", "cycle2/b", "cycle2/c", "cycle2/d", "d.v1", "e", "external_only_test", "extest", "extestonly", "f", "g", "h", "ldflags", "localimport", "main", "mainnoruntime", "nested/a", "nested/b", "notestfiles", "tags1", "testflags", "testonly", "x", "y"},
-	}, {
-		pattern: "cmd/...",
-		want:    []string{"cmd/f"},
-	}, {
-		pattern: ".../f",
-		want:    []string{"cmd/f"},
-	}, {
-		pattern: "net/http",
-		want:    nil, // should match nothing
-	}}
-
-	for _, tt := range tests {
-		ctx := testContext(t)
-		got, err := matchPackages(ctx, tt.pattern)
-		if err != nil {
-			t.Errorf("matchPackages(..., %q): %v", err)
-			continue
-		}
-		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("matchPackages(..., %q): got %#v, want %#v", tt.pattern, got, tt.want)
-		}
-	}
-}
