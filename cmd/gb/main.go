@@ -113,6 +113,17 @@ func main() {
 	// arguments into import paths.
 	if !command.SkipParseArgs {
 		srcdir := filepath.Join(ctx.Projectdir(), "src")
+		for _, a := range args {
+			// support the "all" build alias. This used to be handled
+			// in match.ImportPaths, but that's too messy, so if "all"
+			// is present in the args, replace it with "..." and set cwd
+			// to srcdir.
+			if a == "all" {
+				args = []string{"..."}
+				cwd = srcdir
+				break
+			}
+		}
 		args = match.ImportPaths(srcdir, cwd, args)
 	}
 
