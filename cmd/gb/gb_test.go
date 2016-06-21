@@ -1692,3 +1692,31 @@ func TestFlags(t *testing.T) {
 	gb.mustBeEmpty(tmpdir)
 
 }
+
+// assert the gb build all alias works.
+func TestBuildAll(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempFile("src/pkg1/main.go", `package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("hello")
+}`)
+	gb.tempFile("src/pkg2/main.go", `package main
+
+import "fmt"
+
+func main() {
+        fmt.Println("hello")
+}`)
+
+	gb.cd(filepath.Join(gb.tempdir, "src/pkg2"))
+	tmpdir := gb.tempDir("tmp")
+	gb.run("build", "all")
+	gb.grepStdout("^pkg1$", "expected pkg1")
+	gb.grepStdout("^pkg2$", "expected pkg2")
+	gb.mustBeEmpty(tmpdir)
+}
