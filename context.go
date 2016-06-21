@@ -287,27 +287,21 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 // importPackage loads a package using the backing set of importers.
 func (c *Context) importPackage(path string) (*importer.Package, error) {
-	pkg, err := c.importers[0].Import(path)
-	if err == nil {
-		return pkg, nil
-	}
-	pkg, err2 := c.importers[1].Import(path)
-	if err2 == nil {
-		return pkg, nil
-	}
-	if len(c.importers) > 2 {
-		pkg, err3 := c.importers[2].Import(path)
-		if err3 == nil {
+	var err error
+	for i, im := range c.importers {
+		pkg, err2 := im.Import(path)
+		if err2 == nil {
 			return pkg, nil
 		}
+		if i < 2 {
+			err = err2
+		}
 	}
-	switch err2.(type) {
-	case *importer.NoGoError:
-		return nil, err2
+	switch err.(type) {
 	case *os.PathError:
-		return nil, errors.Wrapf(err2, "import %q: not found", path)
+		return nil, errors.Wrapf(err, "import %q: not found", path)
 	default:
-		return nil, err2
+		return nil, err
 	}
 }
 
