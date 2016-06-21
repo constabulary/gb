@@ -18,13 +18,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Importer resolves package import paths to *importer.Packages.
+type Importer interface {
+
+	// Import attempts to resolve the package import path, path,
+	// to an *importer.Package.
+	Import(path string) (*importer.Package, error)
+}
+
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	Project
 
-	importers []interface {
-		Import(path string) (*importer.Package, error)
-	}
+	importers []Importer
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -160,19 +166,16 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		BuildTags:   ctx.buildtags,
 	}
 
-	ctx.importers = append(ctx.importers,
-		&importer.Importer{
-			Context: &ic,
-			Root:    runtime.GOROOT(),
-		},
-	)
+	ctx.AddImporter(&importer.Importer{
+		Context: &ic,
+		Root:    runtime.GOROOT(),
+	})
 
 	for _, dir := range p.Srcdirs() {
-		ctx.importers = append(ctx.importers,
-			&importer.Importer{
-				Context: &ic,
-				Root:    filepath.Dir(dir), // strip off "src"
-			})
+		ctx.AddImporter(&importer.Importer{
+			Context: &ic,
+			Root:    filepath.Dir(dir), // strip off "src"
+		})
 	}
 
 	// C and unsafe are fake packages synthesised by the compiler.
@@ -192,6 +195,11 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	}
 
 	return &ctx, nil
+}
+
+// AddImporter adds an additional Importer to the Context.
+func (c *Context) AddImporter(i Importer) {
+	c.importers = append(c.importers, i)
 }
 
 // IncludePaths returns the include paths visible in this context.
@@ -287,27 +295,21 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 // importPackage loads a package using the backing set of importers.
 func (c *Context) importPackage(path string) (*importer.Package, error) {
-	pkg, err := c.importers[0].Import(path)
-	if err == nil {
-		return pkg, nil
-	}
-	pkg, err2 := c.importers[1].Import(path)
-	if err2 == nil {
-		return pkg, nil
-	}
-	if len(c.importers) > 2 {
-		pkg, err3 := c.importers[2].Import(path)
-		if err3 == nil {
+	var err error
+	for i, im := range c.importers {
+		pkg, err2 := im.Import(path)
+		if err2 == nil {
 			return pkg, nil
 		}
+		if i < 2 {
+			err = err2
+		}
 	}
-	switch err2.(type) {
-	case *importer.NoGoError:
-		return nil, err2
+	switch err.(type) {
 	case *os.PathError:
-		return nil, errors.Wrapf(err2, "import %q: not found", path)
+		return nil, errors.Wrapf(err, "import %q: not found", path)
 	default:
-		return nil, err2
+		return nil, err
 	}
 }
 
