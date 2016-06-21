@@ -29,6 +29,7 @@ type Importer interface {
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	Project
+	*importer.Context // TODO(dfc) this is a hack
 
 	importers []Importer
 
@@ -165,6 +166,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		ReleaseTags: releaseTags, // from go/build, see gb.go
 		BuildTags:   ctx.buildtags,
 	}
+	ctx.Context = &ic
 
 	ctx.AddImporter(&importer.Importer{
 		Context: &ic,
