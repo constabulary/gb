@@ -10,17 +10,19 @@ import (
 	"github.com/constabulary/gb/internal/importer"
 )
 
-func testProject(t *testing.T) *Project {
+func testProject(t *testing.T) Project {
 	cwd := getwd(t)
 	root := filepath.Join(cwd, "testdata")
-	return NewProject(root,
-		SourceDir(filepath.Join(root, "src")),
-	)
+	return &project{
+		rootdir: root,
+		srcdirs: []string{
+			filepath.Join(root, "src"),
+		},
+	}
 }
 
 func testContext(t *testing.T, opts ...func(*Context) error) *Context {
-	prj := testProject(t)
-	ctx, err := prj.NewContext(opts...)
+	ctx, err := NewContext(testProject(t), opts...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +43,7 @@ func TestResolvePackage(t *testing.T) {
 	}}
 	proj := testProject(t)
 	for _, tt := range tests {
-		ctx, err := proj.NewContext(tt.opts...)
+		ctx, err := NewContext(proj, tt.opts...)
 		defer ctx.Destroy()
 		_, err = ctx.ResolvePackage(tt.pkg)
 		if !reflect.DeepEqual(err, tt.err) {
@@ -91,7 +93,7 @@ func TestPackageBinfile(t *testing.T) {
 
 	proj := testProject(t)
 	for i, tt := range tests {
-		ctx, _ := proj.NewContext(tt.opts...)
+		ctx, _ := NewContext(proj, tt.opts...)
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)
 		if err != nil {
@@ -206,7 +208,7 @@ func TestNewPackage(t *testing.T) {
 	}}
 	proj := testProject(t)
 	for i, tt := range tests {
-		ctx, _ := proj.NewContext()
+		ctx, _ := NewContext(proj)
 		defer ctx.Destroy()
 
 		got, err := ctx.NewPackage(&tt.pkg)

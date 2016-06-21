@@ -4,7 +4,6 @@ package cmd
 import (
 	"flag"
 	"os"
-	"path/filepath"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/internal/debug"
@@ -78,11 +77,8 @@ func NewContext(projectroot string, options ...func(*gb.Context) error) (*gb.Con
 	if err != nil {
 		return nil, errors.Wrap(err, "could not locate project root")
 	}
-	project := gb.NewProject(root,
-		gb.SourceDir(filepath.Join(root, "src")),
-		gb.SourceDir(filepath.Join(root, "vendor", "src")),
-	)
+	proj := gb.NewProject(root)
 
-	debug.Debugf("project root %q", project.Projectdir())
-	return project.NewContext(options...)
+	debug.Debugf("project root %q", proj.Projectdir())
+	return gb.NewContext(proj, options...)
 }

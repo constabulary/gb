@@ -33,15 +33,15 @@ func TestStale(t *testing.T) {
 	root := mktemp(t)
 	defer os.RemoveAll(root)
 
-	proj := Project{
+	proj := &project{
 		rootdir: root,
-		srcdirs: []Srcdir{{
-			Root: filepath.Join(getwd(t), "testdata", "src"),
-		}},
+		srcdirs: []string{
+			filepath.Join(getwd(t), "testdata", "src"),
+		},
 	}
 
 	newctx := func() *Context {
-		ctx, err := proj.NewContext(
+		ctx, err := NewContext(proj,
 			GcToolchain(),
 		)
 		if err != nil {
