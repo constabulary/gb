@@ -64,6 +64,58 @@ func main() {
 		exit(0)
 	}
 
+	command := lookupCommand(name)
+
+	// add extra flags if necessary
+	if command.AddFlags != nil {
+		command.AddFlags(fs)
+	}
+
+	var err error
+	if command.FlagParse != nil {
+		err = command.FlagParse(fs, args)
+	} else {
+		err = fs.Parse(args[2:])
+	}
+	if err != nil {
+		fatalf("could not parse flags: %v", err)
+	}
+
+	args = fs.Args() // reset args to the leftovers from fs.Parse
+
+	debug.Debugf("args: %v", args)
+
+	if command == commands["plugin"] {
+		args = append([]string{name}, args...)
+	}
+	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
+	if err != nil {
+		fatalf("could not make project root absolute: %v", err)
+	}
+
+	ctx, err := newContext(cwd)
+	if err != nil {
+		fatalf("unable to construct context: %v", err)
+	}
+
+	if !command.SkipParseArgs {
+		srcdir := filepath.Join(ctx.Projectdir(), "src")
+		args = match.ImportPaths(srcdir, cwd, args)
+	}
+
+	debug.Debugf("args: %v", args)
+
+	if destroyContext {
+		atExit = append(atExit, ctx.Destroy)
+	}
+
+	if err := command.Run(ctx, args); err != nil {
+		fatalf("command %q failed: %v", name, err)
+	}
+	exit(0)
+}
+
+func lookupCommand(name string) *cmd.Command {
 	command, ok := commands[name]
 	if (command != nil && !command.Runnable()) || !ok {
 		plugin, err := lookupPlugin(name)
@@ -95,35 +147,11 @@ func main() {
 			SkipParseArgs: true,
 		}
 	}
+	return command
+}
 
-	// add extra flags if necessary
-	if command.AddFlags != nil {
-		command.AddFlags(fs)
-	}
-
-	var err error
-	if command.FlagParse != nil {
-		err = command.FlagParse(fs, args)
-	} else {
-		err = fs.Parse(args[2:])
-	}
-	if err != nil {
-		fatalf("could not parse flags: %v", err)
-	}
-
-	args = fs.Args() // reset args to the leftovers from fs.Parse
-
-	debug.Debugf("args: %v", args)
-
-	if command == commands["plugin"] {
-		args = append([]string{name}, args...)
-	}
-	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
-	if err != nil {
-		fatalf("could not make project root absolute: %v", err)
-	}
-
-	ctx, err := cmd.NewContext(
+func newContext(cwd string) (*gb.Context, error) {
+	return cmd.NewContext(
 		cwd, // project root
 		gb.GcToolchain(),
 		gb.Gcflags(gcflags...),
@@ -154,24 +182,4 @@ func main() {
 			return gb.WithRace(c)
 		},
 	)
-
-	if err != nil {
-		fatalf("unable to construct context: %v", err)
-	}
-
-	if !command.SkipParseArgs {
-		srcdir := filepath.Join(ctx.Projectdir(), "src")
-		args = match.ImportPaths(srcdir, cwd, args)
-	}
-
-	debug.Debugf("args: %v", args)
-
-	if destroyContext {
-		atExit = append(atExit, ctx.Destroy)
-	}
-
-	if err := command.Run(ctx, args); err != nil {
-		fatalf("command %q failed: %v", name, err)
-	}
-	exit(0)
 }
