@@ -34,6 +34,19 @@ var commands = make(map[string]*cmd.Command)
 // registerCommand registers a command for main.
 // registerCommand should only be called from init().
 func registerCommand(command *cmd.Command) {
+
+	// add a dummy default AddFlags field if none provided.
+	if command.AddFlags == nil {
+		command.AddFlags = func(*flag.FlagSet) {}
+	}
+
+	// add the default flag parsing if not overrriden.
+	if command.FlagParse == nil {
+		command.FlagParse = func(fs *flag.FlagSet, args []string) error {
+			return fs.Parse(args[2:])
+		}
+	}
+
 	commands[command.Name] = command
 }
 
@@ -67,37 +80,37 @@ func main() {
 	command := lookupCommand(name)
 
 	// add extra flags if necessary
-	if command.AddFlags != nil {
-		command.AddFlags(fs)
-	}
+	command.AddFlags(fs)
 
-	var err error
-	if command.FlagParse != nil {
-		err = command.FlagParse(fs, args)
-	} else {
-		err = fs.Parse(args[2:])
-	}
+	// parse 'em
+	err := command.FlagParse(fs, args)
 	if err != nil {
 		fatalf("could not parse flags: %v", err)
 	}
 
-	args = fs.Args() // reset args to the leftovers from fs.Parse
+	// reset args to the leftovers from fs.Parse
+	args = fs.Args()
 
-	debug.Debugf("args: %v", args)
-
+	// if this is the plugin command, ensure the name of the
+	// plugin is first in the list of arguments.
 	if command == commands["plugin"] {
 		args = append([]string{name}, args...)
 	}
-	cwd, err := filepath.Abs(cwd) // if cwd was passed in via -R, make sure it is absolute
+
+	// if cwd was passed in via -R, make sure it is absolute
+	cwd, err := filepath.Abs(cwd)
 	if err != nil {
 		fatalf("could not make project root absolute: %v", err)
 	}
 
+	// construct a project context at the current working directory.
 	ctx, err := newContext(cwd)
 	if err != nil {
 		fatalf("unable to construct context: %v", err)
 	}
 
+	// unless the command wants to handle its own arguments, process
+	// arguments into import paths.
 	if !command.SkipParseArgs {
 		srcdir := filepath.Join(ctx.Projectdir(), "src")
 		args = match.ImportPaths(srcdir, cwd, args)
@@ -145,6 +158,8 @@ func lookupCommand(name string) *cmd.Command {
 			},
 			// plugin should not interpret arguments
 			SkipParseArgs: true,
+			AddFlags:      func(*flag.FlagSet) {},
+			FlagParse:     func(fs *flag.FlagSet, args []string) error { return fs.Parse(args[2:]) },
 		}
 	}
 	return command
