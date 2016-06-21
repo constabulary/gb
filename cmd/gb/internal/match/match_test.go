@@ -8,52 +8,156 @@ import (
 
 func TestImportPaths(t *testing.T) {
 	tests := []struct {
+		cwd  string
 		args []string
 		want []string
 	}{{
+		"_testdata/a",
 		nil,
 		[]string{"cmd", "cmd/main", "github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
 	}, {
+		"_testdata/a",
 		[]string{},
 		[]string{"cmd", "cmd/main", "github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
 	}, {
+		"_testdata/a",
 		[]string{"."},
 		[]string{"."},
 	}, {
+		"_testdata/a",
 		[]string{".."},
 		[]string{".."},
 	}, {
+		"_testdata/a",
 		[]string{"./."},
 		[]string{"."},
 	}, {
+		"_testdata/a",
 		[]string{"..."},
 		[]string{"cmd", "cmd/main", "github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
 	}, {
+		"_testdata/a",
 		[]string{".../bar"},
 		[]string{"github.com/foo/bar", "github.com/quxx/bar"},
 	}, {
+		"_testdata/a",
 		[]string{"cmd"},
 		[]string{"cmd"},
 	}, {
+		"_testdata/a",
 		[]string{"cmd/go"},
 		[]string{"cmd/go"},
 	}, {
+		"_testdata/a",
 		[]string{"cmd/main"},
 		[]string{"cmd/main"},
 	}, {
+		"_testdata/a",
 		[]string{"cmd/..."},
 		[]string{"cmd", "cmd/main"},
 	}, {
+		"_testdata/a",
 		[]string{"nonexist"},
 		[]string{"nonexist"}, // passed through because there is no wildcard
+	}, {
+		"_testdata/a/src",
+		nil,
+		[]string{"cmd", "cmd/main", "github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
+	}, {
+		"_testdata/a/src",
+		[]string{},
+		[]string{"cmd", "cmd/main", "github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
+	}, {
+		"_testdata/a/src",
+		[]string{"."},
+		[]string{"."},
+	}, {
+		"_testdata/a/src",
+		[]string{".."},
+		[]string{".."},
+	}, {
+		"_testdata/a/src",
+		[]string{"./."},
+		[]string{"."},
+	}, {
+		"_testdata/a/src",
+		[]string{"..."},
+		[]string{"cmd", "cmd/main", "github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
+	}, {
+		"_testdata/a/src",
+		[]string{".../bar"},
+		[]string{"github.com/foo/bar", "github.com/quxx/bar"},
+	}, {
+		"_testdata/a/src",
+		[]string{"cmd"},
+		[]string{"cmd"},
+	}, {
+		"_testdata/a/src",
+		[]string{"cmd/go"},
+		[]string{"cmd/go"},
+	}, {
+		"_testdata/a/src",
+		[]string{"cmd/main"},
+		[]string{"cmd/main"},
+	}, {
+		"_testdata/a/src",
+		[]string{"cmd/..."},
+		[]string{"cmd", "cmd/main"},
+	}, {
+		"_testdata/a/src",
+		[]string{"nonexist"},
+		[]string{"nonexist"}, // passed through because there is no wildcard
+	}, {
+		"_testdata/a/src/github.com/",
+		nil,
+		[]string{"github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{},
+		[]string{"github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{"."},
+		[]string{"github.com"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{".."},
+		[]string{"."},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{"./."},
+		[]string{"github.com"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{"..."},
+		[]string{"github.com", "github.com/foo", "github.com/foo/bar", "github.com/quxx", "github.com/quxx/bar"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{".../bar"},
+		[]string{"github.com/foo/bar", "github.com/quxx/bar"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{"cmd"},
+		[]string{"github.com/cmd"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{"cmd/go"},
+		[]string{"github.com/cmd/go"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{"cmd/main"},
+		[]string{"github.com/cmd/main"},
+	}, {
+		"_testdata/a/src/github.com/",
+		[]string{"cmd/..."},
+		nil,
 	}}
 
 	for _, tt := range tests {
 		const srcdir = "_testdata/a/src"
-		const cwd = "_testdata/a"
-		got := ImportPaths(srcdir, cwd, tt.args)
+		got := ImportPaths(srcdir, tt.cwd, tt.args)
 		if !reflect.DeepEqual(tt.want, got) {
-			t.Errorf("ImportPaths(%q): got %q, want %q", tt.args, got, tt.want)
+			t.Errorf("ImportPaths(%q, %q): got %q, want %q", tt.cwd, tt.args, got, tt.want)
 		}
 	}
 }
