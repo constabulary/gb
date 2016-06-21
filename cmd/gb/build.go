@@ -134,8 +134,6 @@ For more about where packages and binaries are installed, run 'gb help project'.
 
 // Resolver resolves packages.
 type Resolver interface {
-	Projectdir() string
-	// ResolvePackage resolves the import path to a *Package
 	ResolvePackage(path string) (*gb.Package, error)
 }
 
