@@ -76,7 +76,7 @@ func TestBuild(t *testing.T) {
 
 	proj := testProject(t)
 	for _, tt := range tests {
-		ctx, err := proj.NewContext(tt.opts...)
+		ctx, err := NewContext(proj, tt.opts...)
 		ctx.Force = true
 		defer ctx.Destroy()
 		pkg, err := ctx.ResolvePackage(tt.pkg)

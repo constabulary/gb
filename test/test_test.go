@@ -223,18 +223,15 @@ func getwd(t *testing.T) string {
 	return cwd
 }
 
-func testProject(t *testing.T) *gb.Project {
+func testProject(t *testing.T) gb.Project {
 	cwd := getwd(t)
 	root := filepath.Join(cwd, "..", "testdata")
-	return gb.NewProject(root,
-		gb.SourceDir(filepath.Join(root, "src")),
-	)
+	return gb.NewProject(root)
 }
 
 func testContext(t *testing.T, opts ...func(*gb.Context) error) *gb.Context {
-	prj := testProject(t)
 	opts = append([]func(*gb.Context) error{gb.GcToolchain()}, opts...)
-	ctx, err := prj.NewContext(opts...)
+	ctx, err := gb.NewContext(testProject(t), opts...)
 	if err != nil {
 		t.Fatal(err)
 	}

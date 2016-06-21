@@ -53,10 +53,7 @@ func main() {
 	if err != nil {
 		fatalf("could not locate project root: %v", err)
 	}
-	project := gb.NewProject(root,
-		gb.SourceDir(filepath.Join(root, "src")),
-		gb.SourceDir(filepath.Join(root, "vendor", "src")),
-	)
+	project := gb.NewProject(root)
 
 	debug.Debugf("project root %q", project.Projectdir())
 
@@ -79,9 +76,7 @@ func main() {
 			args = fs.Args() // reset args to the leftovers from fs.Parse
 			debug.Debugf("args: %v", args)
 
-			ctx, err := project.NewContext(
-				gb.GcToolchain(),
-			)
+			ctx, err := gb.NewContext(project, gb.GcToolchain())
 			if err != nil {
 				fatalf("unable to construct context: %v", err)
 			}

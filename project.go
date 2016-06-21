@@ -11,36 +11,44 @@ import (
 //     $PROJECT/                       - the project root
 //     $PROJECT/src/                   - base directory for the source of packages
 //     $PROJECT/bin/                   - base directory for the compiled binaries
-type Project struct {
+type Project interface {
+
+	// Projectdir returns the path root of this project.
+	Projectdir() string
+
+	// Pkgdir returns the path to precompiled packages.
+	Pkgdir() string
+
+	// Bindir returns the path for compiled programs.
+	Bindir() string
+
+	// Srcdirs returns the path to the source directories.
+	Srcdirs() []string
+}
+
+type project struct {
 	rootdir string
-	srcdirs []Srcdir
+	srcdirs []string
 }
 
-func SourceDir(root string) func(*Project) {
-	return func(p *Project) {
-		p.srcdirs = append(p.srcdirs, Srcdir{Root: root})
-	}
-}
-
-func NewProject(root string, options ...func(*Project)) *Project {
-	proj := Project{
+func NewProject(root string) Project {
+	proj := project{
 		rootdir: root,
+		srcdirs: []string{
+			filepath.Join(root, "src"),
+			filepath.Join(root, "vendor", "src"),
+		},
 	}
-
-	for _, opt := range options {
-		opt(&proj)
-	}
-
 	return &proj
 }
 
 // Pkgdir returns the path to precompiled packages.
-func (p *Project) Pkgdir() string {
+func (p *project) Pkgdir() string {
 	return filepath.Join(p.rootdir, "pkg")
 }
 
 // Projectdir returns the path root of this project.
-func (p *Project) Projectdir() string {
+func (p *project) Projectdir() string {
 	return p.rootdir
 }
 
@@ -48,15 +56,11 @@ func (p *Project) Projectdir() string {
 // The first source directory will always be
 // filepath.Join(Projectdir(), "src")
 // but there may be additional directories.
-func (p *Project) Srcdirs() []string {
-	var dirs []string
-	for _, s := range p.srcdirs {
-		dirs = append(dirs, s.Root)
-	}
-	return dirs
+func (p *project) Srcdirs() []string {
+	return p.srcdirs
 }
 
 // Bindir returns the path for compiled programs.
-func (p *Project) Bindir() string {
+func (p *project) Bindir() string {
 	return filepath.Join(p.rootdir, "bin")
 }

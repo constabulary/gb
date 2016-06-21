@@ -20,7 +20,7 @@ import (
 
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
-	*Project
+	Project
 
 	importers []interface {
 		Import(path string) (*importer.Package, error)
@@ -110,10 +110,7 @@ func WithRace(c *Context) error {
 // NewContext returns a new build context from this project.
 // By default this context will use the gc toolchain with the
 // host's GOOS and GOARCH values.
-func (p *Project) NewContext(opts ...func(*Context) error) (*Context, error) {
-	if len(p.srcdirs) == 0 {
-		return nil, errors.New("no source directories supplied")
-	}
+func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	envOr := func(key, def string) string {
 		if v := os.Getenv(key); v != "" {
 			return v
@@ -236,9 +233,9 @@ func (c *Context) Workdir() string { return c.workdir }
 // ResolvePackage resolves the package at path using the current context.
 func (c *Context) ResolvePackage(path string) (*Package, error) {
 	if path == "." {
-		return nil, errors.Errorf("%q is not a package", filepath.Join(c.rootdir, "src"))
+		return nil, errors.Errorf("%q is not a package", filepath.Join(c.Projectdir(), "src"))
 	}
-	path, err := relImportPath(filepath.Join(c.rootdir, "src"), path)
+	path, err := relImportPath(filepath.Join(c.Projectdir(), "src"), path)
 	if err != nil {
 		return nil, err
 	}

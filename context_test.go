@@ -57,7 +57,7 @@ func TestContextCtxString(t *testing.T) {
 
 	proj := testProject(t)
 	for _, tt := range tests {
-		ctx, err := proj.NewContext(tt.opts...)
+		ctx, err := NewContext(proj, tt.opts...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -181,7 +181,7 @@ func TestContextLoadPackage(t *testing.T) {
 
 	proj := testProject(t)
 	for _, tt := range tests {
-		ctx, err := proj.NewContext(tt.opts...)
+		ctx, err := NewContext(proj, tt.opts...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -229,7 +229,7 @@ func TestContextImportPackage(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		ctx, err := proj.NewContext()
+		ctx, err := NewContext(proj)
 		if err != nil {
 			t.Fatal(err)
 		}
