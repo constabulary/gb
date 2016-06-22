@@ -57,7 +57,11 @@ func hash(arg string, args ...string) string {
 }
 
 func cachePath() string {
-	return filepath.Join(envOr("HOME", "/tmp"), ".gb", "cache")
+	return filepath.Join(gbhome(), "cache")
+}
+
+func gbhome() string {
+	return envOr("GB_HOME", filepath.Join(envOr("HOME", "/tmp"), ".gb"))
 }
 
 func envOr(key, def string) string {
