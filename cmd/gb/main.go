@@ -34,19 +34,7 @@ var commands = make(map[string]*cmd.Command)
 // registerCommand registers a command for main.
 // registerCommand should only be called from init().
 func registerCommand(command *cmd.Command) {
-
-	// add a dummy default AddFlags field if none provided.
-	if command.AddFlags == nil {
-		command.AddFlags = func(*flag.FlagSet) {}
-	}
-
-	// add the default flag parsing if not overrriden.
-	if command.FlagParse == nil {
-		command.FlagParse = func(fs *flag.FlagSet, args []string) error {
-			return fs.Parse(args[2:])
-		}
-	}
-
+	setCommandDefaults(command)
 	commands[command.Name] = command
 }
 
@@ -158,11 +146,25 @@ func lookupCommand(name string) *cmd.Command {
 			},
 			// plugin should not interpret arguments
 			SkipParseArgs: true,
-			AddFlags:      func(*flag.FlagSet) {},
-			FlagParse:     func(fs *flag.FlagSet, args []string) error { return fs.Parse(args[2:]) },
 		}
 	}
+	setCommandDefaults(command)
 	return command
+}
+
+func setCommandDefaults(command *cmd.Command) {
+
+	// add a dummy default AddFlags field if none provided.
+	if command.AddFlags == nil {
+		command.AddFlags = func(*flag.FlagSet) {}
+	}
+
+	// add the default flag parsing if not overrriden.
+	if command.FlagParse == nil {
+		command.FlagParse = func(fs *flag.FlagSet, args []string) error {
+			return fs.Parse(args[2:])
+		}
+	}
 }
 
 func newContext(cwd string) (*gb.Context, error) {
