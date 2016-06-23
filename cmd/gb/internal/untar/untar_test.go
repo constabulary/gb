@@ -42,6 +42,15 @@ func TestUntar(t *testing.T) {
 			"pkg-errors-805fb19/stack.go",
 			"pkg-errors-805fb19/stack_test.go",
 		},
+	}, {
+		desc: "symlink.tar.gz",
+		r:    tgz("_testdata/symlink.tar.gz"),
+		want: []string{
+			".",
+			"symlink",
+			"symlink/a",
+			// no symlink/b
+		},
 	}}
 
 	for _, tt := range tests {

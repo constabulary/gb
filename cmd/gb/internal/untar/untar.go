@@ -58,8 +58,13 @@ func untarfile(dest string, h *tar.Header, r io.Reader) error {
 	case tar.TypeXGlobalHeader:
 		// ignore PAX headers
 		return nil
+	case tar.TypeSymlink:
+		// symlinks are not supported by the go tool or windows so
+		// cannot be part of a valie package. Any symlinks in the tarball
+		// will be in parts of the release that we can safely ignore.
+		return nil
 	default:
-		return errors.Errorf("unsuppored header type: %c", rune(h.Typeflag))
+		return errors.Errorf("unsupported header type: %c", rune(h.Typeflag))
 	}
 }
 
