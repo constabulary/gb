@@ -25,7 +25,6 @@ const semverRegex = `^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(\-[0-9A-Za-z-]+(?:\.[0-9A-
 // addDepfileDeps inserts into the Context's importer list
 // a set of importers for entries in the depfile.
 func addDepfileDeps(ctx *gb.Context) {
-	re := regexp.MustCompile(semverRegex)
 	df, err := readDepfile(ctx)
 	if err != nil {
 		if !os.IsNotExist(errors.Cause(err)) {
@@ -34,6 +33,8 @@ func addDepfileDeps(ctx *gb.Context) {
 		debug.Debugf("no depfile, nothing to do.")
 		return
 	}
+
+	re := regexp.MustCompile(semverRegex)
 	for prefix, kv := range df {
 		version, ok := kv["version"]
 		if !ok {
