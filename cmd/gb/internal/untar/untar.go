@@ -13,6 +13,9 @@ import (
 // Untar extracts the contents of r to the destination dest.
 // dest must not aleady exist.
 func Untar(dest string, r io.Reader) error {
+	if exists(dest) {
+		return errors.Errorf("%q must not exist", dest)
+	}
 	parent, _ := filepath.Split(dest)
 	tmpdir, err := ioutil.TempDir(parent, ".untar")
 	if err != nil {
@@ -83,4 +86,9 @@ func writefile(path string, r io.Reader, mode os.FileMode) error {
 		return err
 	}
 	return w.Close()
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || !os.IsNotExist(err)
 }

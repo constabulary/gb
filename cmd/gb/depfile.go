@@ -79,14 +79,16 @@ func fetchIfMissing(root, prefix, version string) {
 		fatalf("unable to construct gzip reader: %v", err)
 	}
 
-	parent, _ := filepath.Split(dest)
+	parent, pkg := filepath.Split(dest)
 	mkdirall(parent)
 	tmpdir := tempdir(parent)
+	defer os.RemoveAll(tmpdir)
+
+	tmpdir = filepath.Join(tmpdir, pkg)
 
 	if err := untar.Untar(tmpdir, gzr); err != nil {
 		fatalf("unable to untar: %v", err)
 	}
-	defer os.RemoveAll(tmpdir)
 
 	dents, err := ioutil.ReadDir(tmpdir)
 	if err != nil {
