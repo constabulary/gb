@@ -20,9 +20,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+const semverRegex = `\bv?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?\b`
+
 // addDepfileDeps inserts into the Context's importer list
 // a set of importers for entries in the depfile.
 func addDepfileDeps(ctx *gb.Context) {
+	re := regexp.MustCompile(semverRegex)
 	df, err := readDepfile(ctx)
 	if err != nil {
 		if !os.IsNotExist(errors.Cause(err)) {
@@ -37,8 +40,11 @@ func addDepfileDeps(ctx *gb.Context) {
 			// TODO(dfc) return error when version key missing
 			continue
 		}
+		if !re.MatchString(version) {
+			fatalf("%s: %q is not a valid SemVer 2.0.0 version", prefix, version)
+		}
 		root := filepath.Join(cachePath(), hash(prefix, version))
-		downloadIfMissing(root, prefix, version)
+		fetchIfMissing(root, prefix, version)
 		im := importer.Importer{
 			Context: ctx.Context, // TODO(dfc) this is a hack
 			Root:    root,
@@ -48,7 +54,7 @@ func addDepfileDeps(ctx *gb.Context) {
 	}
 }
 
-func downloadIfMissing(root, prefix, version string) {
+func fetchIfMissing(root, prefix, version string) {
 	dest := filepath.Join(root, "src", filepath.FromSlash(prefix))
 	_, err := os.Stat(dest)
 	if err == nil {
@@ -64,7 +70,7 @@ func downloadIfMissing(root, prefix, version string) {
 
 	fmt.Printf("fetching %v (%v)\n", prefix, version)
 
-	rc := fetch(prefix, version)
+	rc := fetchVersion(prefix, version)
 	defer rc.Close()
 
 	gzr, err := gzip.NewReader(rc)
@@ -114,10 +120,14 @@ func mkdirall(path string) {
 	}
 }
 
-func fetch(prefix, version string) io.ReadCloser {
-	const format = "https://api.github.com/repos/%s/tarball/v%s"
+func fetchVersion(prefix, version string) io.ReadCloser {
+	return fetchRelease(prefix, "v"+version)
+}
+
+func fetchRelease(prefix, tag string) io.ReadCloser {
+	const format = "https://api.github.com/repos/%s/tarball/%s"
 	prefix = prefix[len("github.com/"):]
-	url := fmt.Sprintf(format, prefix, version)
+	url := fmt.Sprintf(format, prefix, tag)
 	resp, err := http.Get(url)
 	if err != nil {
 		fatalf("failed to fetch %q: %v", url, err)
