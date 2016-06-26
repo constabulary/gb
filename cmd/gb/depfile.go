@@ -20,7 +20,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const semverRegex = `\bv?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?\b`
+const semverRegex = `^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(\-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-\-\.]+)?$`
 
 // addDepfileDeps inserts into the Context's importer list
 // a set of importers for entries in the depfile.
