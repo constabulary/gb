@@ -121,9 +121,6 @@ func main() {
 		atExit = append(atExit, ctx.Destroy)
 	}
 
-	// add additional paths from the depfile
-	addDepfileDeps(ctx)
-
 	if err := command.Run(ctx, args); err != nil {
 		fatalf("command %q failed: %v", name, err)
 	}

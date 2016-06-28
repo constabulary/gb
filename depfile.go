@@ -1,4 +1,4 @@
-package main
+package gb
 
 import (
 	"compress/gzip"
@@ -12,11 +12,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/cmd/gb/internal/depfile"
-	"github.com/constabulary/gb/cmd/gb/internal/untar"
 	"github.com/constabulary/gb/internal/debug"
+	"github.com/constabulary/gb/internal/depfile"
 	"github.com/constabulary/gb/internal/importer"
+	"github.com/constabulary/gb/internal/untar"
 	"github.com/pkg/errors"
 )
 
@@ -24,16 +23,16 @@ const semverRegex = `^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(\-[0-9A-Za-z-]+(?:\.[0-9A-
 
 // addDepfileDeps inserts into the Context's importer list
 // a set of importers for entries in the depfile.
-func addDepfileDeps(ctx *gb.Context) {
+func addDepfileDeps(ic *importer.Context, ctx *Context) (Importer, error) {
+	i := Importer(new(nullImporter))
 	df, err := readDepfile(ctx)
 	if err != nil {
 		if !os.IsNotExist(errors.Cause(err)) {
-			fatalf("could not parse depfile: %v", err)
+			return nil, errors.Wrap(err, "could not parse depfile")
 		}
 		debug.Debugf("no depfile, nothing to do.")
-		return
+		return i, nil
 	}
-
 	re := regexp.MustCompile(semverRegex)
 	for prefix, kv := range df {
 		version, ok := kv["version"]
@@ -42,106 +41,105 @@ func addDepfileDeps(ctx *gb.Context) {
 			continue
 		}
 		if !re.MatchString(version) {
-			fatalf("%s: %q is not a valid SemVer 2.0.0 version", prefix, version)
+			return nil, errors.Errorf("%s: %q is not a valid SemVer 2.0.0 version", prefix, version)
 		}
 		root := filepath.Join(cachePath(), hash(prefix, version))
-		fetchIfMissing(root, prefix, version)
-		im := importer.Importer{
-			Context: ctx.Context, // TODO(dfc) this is a hack
-			Root:    root,
+		if err := fetchIfMissing(root, prefix, version); err != nil {
+			return nil, err
 		}
-		debug.Debugf("Add importer for %q: %v", prefix+" "+version, im.Root)
-		ctx.AddImporter(&im)
+		i = &_importer{
+			Importer: i,
+			im: importer.Importer{
+				Context: ic,
+				Root:    root,
+			},
+		}
+		debug.Debugf("Add importer for %q: %v", prefix+" "+version, root)
 	}
+	return i, nil
 }
 
-func fetchIfMissing(root, prefix, version string) {
+func fetchIfMissing(root, prefix, version string) error {
 	dest := filepath.Join(root, "src", filepath.FromSlash(prefix))
 	_, err := os.Stat(dest)
 	if err == nil {
 		// not missing, nothing to do
-		return
+		return nil
 	}
 	if !os.IsNotExist(err) {
-		fatalf("unexpected error stating cache dir: %v", err)
+		return errors.Wrap(err, "unexpected error stating cache dir")
 	}
 	if !strings.HasPrefix(prefix, "github.com") {
-		fatalf("unable to fetch %v", prefix)
+		return errors.Errorf("unable to fetch %v", prefix)
 	}
 
 	fmt.Printf("fetching %v (%v)\n", prefix, version)
 
-	rc := fetchVersion(prefix, version)
+	rc, err := fetchVersion(prefix, version)
+	if err != nil {
+		return err
+	}
 	defer rc.Close()
 
 	gzr, err := gzip.NewReader(rc)
 	if err != nil {
-		fatalf("unable to construct gzip reader: %v", err)
+		return errors.Wrap(err, "unable to construct gzip reader")
 	}
 
 	parent, pkg := filepath.Split(dest)
-	mkdirall(parent)
-	tmpdir := tempdir(parent)
+	if err := os.MkdirAll(parent, 0755); err != nil {
+		return err
+	}
+	tmpdir, err := ioutil.TempDir(parent, "tmp")
+	if err != nil {
+		return err
+	}
 	defer os.RemoveAll(tmpdir)
 
 	tmpdir = filepath.Join(tmpdir, pkg)
 
 	if err := untar.Untar(tmpdir, gzr); err != nil {
-		fatalf("unable to untar: %v", err)
+		return err
 	}
 
 	dents, err := ioutil.ReadDir(tmpdir)
 	if err != nil {
 		os.RemoveAll(root)
-		fatalf("cannot read download directory: %v", err)
+		return errors.Wrap(err, "cannot read download directory")
 	}
 	re := regexp.MustCompile(`\w+-\w+-[a-z0-9]+`)
 	for _, dent := range dents {
 		if re.MatchString(dent.Name()) {
 			if err := os.Rename(filepath.Join(tmpdir, dent.Name()), dest); err != nil {
 				os.RemoveAll(root)
-				fatalf("unable to rename final cache dir: %v", err)
+				return errors.Wrap(err, "unable to rename final cache dir")
 			}
-			return
+			return nil
 		}
 	}
 	os.RemoveAll(root)
-	fatalf("release directory not found in tarball")
+	return errors.New("release directory not found in tarball")
 }
 
-func tempdir(parent string) string {
-	path, err := ioutil.TempDir(parent, "tmp")
-	if err != nil {
-		fatalf("unable to create temporary dir: %v", err)
-	}
-	return path
-}
-
-func mkdirall(path string) {
-	if err := os.MkdirAll(path, 0755); err != nil {
-		fatalf("unable to create directory: %v", err)
-	}
-}
-
-func fetchVersion(prefix, version string) io.ReadCloser {
+func fetchVersion(prefix, version string) (io.ReadCloser, error) {
 	return fetchRelease(prefix, "v"+version)
 }
 
-func fetchRelease(prefix, tag string) io.ReadCloser {
+func fetchRelease(prefix, tag string) (io.ReadCloser, error) {
 	const format = "https://api.github.com/repos/%s/tarball/%s"
 	prefix = prefix[len("github.com/"):]
 	url := fmt.Sprintf(format, prefix, tag)
 	resp, err := http.Get(url)
 	if err != nil {
-		fatalf("failed to fetch %q: %v", url, err)
+		return nil, errors.Wrapf(err, "failed to fetch %q", url)
 	}
 	if resp.StatusCode != 200 {
-		fatalf("failed to fetch %q: expected 200, got %d", url, resp.StatusCode)
+		return nil, errors.Errorf("failed to fetch %q: expected 200, got %d", url, resp.StatusCode)
 	}
-	return resp.Body
+	return resp.Body, nil
 }
 
-func readDepfile(ctx *gb.Context) (map[string]map[string]string, error) {
+func readDepfile(ctx *Context) (map[string]map[string]string, error) {
 	file := filepath.Join(ctx.Projectdir(), "depfile")
 	debug.Debugf("loading depfile at %q", file)
 	return depfile.ParseFile(file)

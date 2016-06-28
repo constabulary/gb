@@ -29,9 +29,8 @@ type Importer interface {
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	Project
-	*importer.Context // TODO(dfc) this is a hack
 
-	importers []Importer
+	importer Importer
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -166,32 +165,13 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		ReleaseTags: releaseTags, // from go/build, see gb.go
 		BuildTags:   ctx.buildtags,
 	}
-	ctx.Context = &ic
 
-	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
-
-	i := Importer(&importer.Importer{
-		Context: &ic,
-		Root:    filepath.Join(ctx.Projectdir(), "vendor"),
-	})
-
-	i = &srcImporter{
-		i,
-		importer.Importer{
-			Context: &ic,
-			Root:    ctx.Projectdir(),
-		},
+	i, err := buildImporter(&ic, &ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	i = &gorootImporter{
-		i,
-		importer.Importer{
-			Context: &ic,
-			Root:    runtime.GOROOT(),
-		},
-	}
-
-	ctx.AddImporter(i)
+	ctx.importer = i
 
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
@@ -209,12 +189,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		ctx.pkgs[pkg.ImportPath] = pkg
 	}
 
-	return &ctx, nil
-}
-
-// AddImporter adds an additional Importer to the Context.
-func (c *Context) AddImporter(i Importer) {
-	c.importers = append(c.importers, i)
+	return &ctx, err
 }
 
 // IncludePaths returns the include paths visible in this context.
@@ -276,7 +251,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return pkg, nil
 	}
 
-	p, err := c.importPackage(path)
+	p, err := c.importer.Import(path)
 	if err != nil {
 		return nil, err
 	}
@@ -306,26 +281,6 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	pkg.Stale = stale || isStale(pkg)
 	c.pkgs[p.ImportPath] = pkg
 	return pkg, nil
-}
-
-// importPackage loads a package using the backing set of importers.
-func (c *Context) importPackage(path string) (*importer.Package, error) {
-	var err error
-	for i, im := range c.importers {
-		pkg, err2 := im.Import(path)
-		if err2 == nil {
-			return pkg, nil
-		}
-		if i < 1 {
-			err = err2
-		}
-	}
-	switch err.(type) {
-	case *os.PathError:
-		return nil, errors.Wrapf(err, "import %q: not found", path)
-	default:
-		return nil, err
-	}
 }
 
 // Destroy removes the temporary working files of this context.
@@ -454,4 +409,42 @@ func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
 		}
 		return false
 	}
+}
+
+func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
+	i, err := addDepfileDeps(ic, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
+	i = &_importer{
+		Importer: i,
+		im: importer.Importer{
+			Context: ic,
+			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
+		},
+	}
+
+	i = &srcImporter{
+		i,
+		importer.Importer{
+			Context: ic,
+			Root:    ctx.Projectdir(),
+		},
+	}
+
+	i = &_importer{
+		i,
+		importer.Importer{
+			Context: ic,
+			Root:    runtime.GOROOT(),
+		},
+	}
+
+	i = &fixupImporter{
+		Importer: i,
+	}
+
+	return i, nil
 }
