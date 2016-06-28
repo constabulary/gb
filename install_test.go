@@ -30,14 +30,21 @@ func TestStale(t *testing.T) {
 		},
 	}}
 
-	root := mktemp(t)
-	defer os.RemoveAll(root)
+	proj := tempProject(t)
+	defer os.RemoveAll(proj.rootdir)
+	proj.tempfile("src/a/a.go", `package a
 
-	proj := &project{
-		rootdir: filepath.Join(getwd(t), "testdata"),
-	}
+const A = "A"
+`)
 
-	defer os.RemoveAll(filepath.Join(proj.Projectdir(), "pkg"))
+	proj.tempfile("src/b/b.go", `package main
+
+import "a"
+
+func main() {
+        println(a.A)
+}
+`)
 
 	newctx := func() *Context {
 		ctx, err := NewContext(proj,
