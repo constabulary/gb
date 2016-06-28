@@ -170,11 +170,9 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 
 	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
 
-	i := Importer(&vendorImporter{
-		importer.Importer{
-			Context: &ic,
-			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
-		},
+	i := Importer(&importer.Importer{
+		Context: &ic,
+		Root:    filepath.Join(ctx.Projectdir(), "vendor"),
 	})
 
 	i = &srcImporter{

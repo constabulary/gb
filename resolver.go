@@ -2,14 +2,6 @@ package gb
 
 import "github.com/constabulary/gb/internal/importer"
 
-type vendorImporter struct {
-	importer.Importer
-}
-
-func (i vendorImporter) Import(path string) (*importer.Package, error) {
-	return i.Importer.Import(path)
-}
-
 type srcImporter struct {
 	Importer
 	im importer.Importer

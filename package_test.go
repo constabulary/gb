@@ -10,14 +10,6 @@ import (
 	"github.com/constabulary/gb/internal/importer"
 )
 
-func testProject(t *testing.T) Project {
-	cwd := getwd(t)
-	root := filepath.Join(cwd, "testdata")
-	return &project{
-		rootdir: root,
-	}
-}
-
 func testContext(t *testing.T, opts ...func(*Context) error) *Context {
 	ctx, err := NewContext(testProject(t), opts...)
 	if err != nil {
