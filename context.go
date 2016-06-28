@@ -30,7 +30,7 @@ type Importer interface {
 type Context struct {
 	Project
 
-	importers []Importer
+	Importer
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -166,12 +166,19 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		BuildTags:   ctx.buildtags,
 	}
 
-	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
+	i, err := addDepfileDeps(&ic, &ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	i := Importer(&importer.Importer{
-		Context: &ic,
-		Root:    filepath.Join(ctx.Projectdir(), "vendor"),
-	})
+	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
+	i = &_importer{
+		Importer: i,
+		im: importer.Importer{
+			Context: &ic,
+			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
+		},
+	}
 
 	i = &srcImporter{
 		i,
@@ -181,7 +188,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		},
 	}
 
-	i = &gorootImporter{
+	i = &_importer{
 		i,
 		importer.Importer{
 			Context: &ic,
@@ -189,7 +196,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		},
 	}
 
-	ctx.AddImporter(i)
+	ctx.Importer = i
 
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
@@ -207,13 +214,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		ctx.pkgs[pkg.ImportPath] = pkg
 	}
 
-	err = addDepfileDeps(&ic, &ctx)
 	return &ctx, err
-}
-
-// AddImporter adds an additional Importer to the Context.
-func (c *Context) AddImporter(i Importer) {
-	c.importers = append(c.importers, i)
 }
 
 // IncludePaths returns the include paths visible in this context.
@@ -309,17 +310,10 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 // importPackage loads a package using the backing set of importers.
 func (c *Context) importPackage(path string) (*importer.Package, error) {
-	var err error
-	for i, im := range c.importers {
-		pkg, err2 := im.Import(path)
-		if err2 == nil {
-			return pkg, nil
-		}
-		if i < 1 {
-			err = err2
-		}
-	}
+	pkg, err := c.Import(path)
 	switch err.(type) {
+	case nil:
+		return pkg, nil
 	case *os.PathError:
 		return nil, errors.Wrapf(err, "import %q: not found", path)
 	default:

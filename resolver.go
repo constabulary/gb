@@ -1,6 +1,15 @@
 package gb
 
-import "github.com/constabulary/gb/internal/importer"
+import (
+	"github.com/constabulary/gb/internal/importer"
+	"github.com/pkg/errors"
+)
+
+type nullImporter struct{}
+
+func (i *nullImporter) Import(path string) (*importer.Package, error) {
+	return nil, errors.Errorf("import %q not found")
+}
 
 type srcImporter struct {
 	Importer
@@ -24,12 +33,12 @@ func (i *srcImporter) Import(path string) (*importer.Package, error) {
 	return nil, err
 }
 
-type gorootImporter struct {
+type _importer struct {
 	Importer
 	im importer.Importer
 }
 
-func (i *gorootImporter) Import(path string) (*importer.Package, error) {
+func (i *_importer) Import(path string) (*importer.Package, error) {
 	pkg, err := i.im.Import(path)
 	if err != nil {
 		return i.Importer.Import(path)

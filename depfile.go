@@ -23,16 +23,16 @@ const semverRegex = `^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(\-[0-9A-Za-z-]+(?:\.[0-9A-
 
 // addDepfileDeps inserts into the Context's importer list
 // a set of importers for entries in the depfile.
-func addDepfileDeps(ic *importer.Context, ctx *Context) error {
+func addDepfileDeps(ic *importer.Context, ctx *Context) (Importer, error) {
+	i := Importer(new(nullImporter))
 	df, err := readDepfile(ctx)
 	if err != nil {
 		if !os.IsNotExist(errors.Cause(err)) {
-			return errors.Wrap(err, "could not parse depfile")
+			return nil, errors.Wrap(err, "could not parse depfile")
 		}
 		debug.Debugf("no depfile, nothing to do.")
-		return nil
+		return i, nil
 	}
-
 	re := regexp.MustCompile(semverRegex)
 	for prefix, kv := range df {
 		version, ok := kv["version"]
@@ -41,20 +41,22 @@ func addDepfileDeps(ic *importer.Context, ctx *Context) error {
 			continue
 		}
 		if !re.MatchString(version) {
-			return errors.Errorf("%s: %q is not a valid SemVer 2.0.0 version", prefix, version)
+			return nil, errors.Errorf("%s: %q is not a valid SemVer 2.0.0 version", prefix, version)
 		}
 		root := filepath.Join(cachePath(), hash(prefix, version))
 		if err := fetchIfMissing(root, prefix, version); err != nil {
-			return err
+			return nil, err
 		}
-		im := importer.Importer{
-			Context: ic,
-			Root:    root,
+		i = &_importer{
+			Importer: i,
+			im: importer.Importer{
+				Context: ic,
+				Root:    root,
+			},
 		}
-		debug.Debugf("Add importer for %q: %v", prefix+" "+version, im.Root)
-		ctx.AddImporter(&im)
+		debug.Debugf("Add importer for %q: %v", prefix+" "+version, root)
 	}
-	return nil
+	return i, nil
 }
 
 func fetchIfMissing(root, prefix, version string) error {
