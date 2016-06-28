@@ -209,7 +209,8 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		ctx.pkgs[pkg.ImportPath] = pkg
 	}
 
-	return &ctx, nil
+	err = addDepfileDeps(&ctx)
+	return &ctx, err
 }
 
 // AddImporter adds an additional Importer to the Context.
