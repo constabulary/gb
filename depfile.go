@@ -23,7 +23,7 @@ const semverRegex = `^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(\-[0-9A-Za-z-]+(?:\.[0-9A-
 
 // addDepfileDeps inserts into the Context's importer list
 // a set of importers for entries in the depfile.
-func addDepfileDeps(ctx *Context) error {
+func addDepfileDeps(ic *importer.Context, ctx *Context) error {
 	df, err := readDepfile(ctx)
 	if err != nil {
 		if !os.IsNotExist(errors.Cause(err)) {
@@ -48,7 +48,7 @@ func addDepfileDeps(ctx *Context) error {
 			return err
 		}
 		im := importer.Importer{
-			Context: ctx.Context, // TODO(dfc) this is a hack
+			Context: ic,
 			Root:    root,
 		}
 		debug.Debugf("Add importer for %q: %v", prefix+" "+version, im.Root)
