@@ -1,6 +1,8 @@
 package gb
 
 import (
+	"os"
+
 	"github.com/constabulary/gb/internal/importer"
 	"github.com/pkg/errors"
 )
@@ -44,4 +46,18 @@ func (i *_importer) Import(path string) (*importer.Package, error) {
 		return i.Importer.Import(path)
 	}
 	return pkg, nil
+}
+
+type fixupImporter struct {
+	Importer
+}
+
+func (i *fixupImporter) Import(path string) (*importer.Package, error) {
+	pkg, err := i.Importer.Import(path)
+	switch err.(type) {
+	case *os.PathError:
+		return nil, errors.Wrapf(err, "import %q: not found", path)
+	default:
+		return pkg, err
+	}
 }

@@ -196,6 +196,10 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		},
 	}
 
+	i = &fixupImporter{
+		Importer: i,
+	}
+
 	ctx.importer = i
 
 	// C and unsafe are fake packages synthesised by the compiler.
@@ -276,7 +280,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return pkg, nil
 	}
 
-	p, err := c.importPackage(path)
+	p, err := c.importer.Import(path)
 	if err != nil {
 		return nil, err
 	}
@@ -306,17 +310,6 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	pkg.Stale = stale || isStale(pkg)
 	c.pkgs[p.ImportPath] = pkg
 	return pkg, nil
-}
-
-// importPackage loads a package using the backing set of importers.
-func (c *Context) importPackage(path string) (*importer.Package, error) {
-	pkg, err := c.importer.Import(path)
-	switch err.(type) {
-	case *os.PathError:
-		return nil, errors.Wrapf(err, "import %q: not found", path)
-	default:
-		return pkg, err
-	}
 }
 
 // Destroy removes the temporary working files of this context.
