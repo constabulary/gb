@@ -166,38 +166,9 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		BuildTags:   ctx.buildtags,
 	}
 
-	i, err := addDepfileDeps(&ic, &ctx)
+	i, err := buildImporter(&ic, &ctx)
 	if err != nil {
 		return nil, err
-	}
-
-	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
-	i = &_importer{
-		Importer: i,
-		im: importer.Importer{
-			Context: &ic,
-			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
-		},
-	}
-
-	i = &srcImporter{
-		i,
-		importer.Importer{
-			Context: &ic,
-			Root:    ctx.Projectdir(),
-		},
-	}
-
-	i = &_importer{
-		i,
-		importer.Importer{
-			Context: &ic,
-			Root:    runtime.GOROOT(),
-		},
-	}
-
-	i = &fixupImporter{
-		Importer: i,
 	}
 
 	ctx.importer = i
@@ -438,4 +409,42 @@ func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
 		}
 		return false
 	}
+}
+
+func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
+	i, err := addDepfileDeps(ic, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
+	i = &_importer{
+		Importer: i,
+		im: importer.Importer{
+			Context: ic,
+			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
+		},
+	}
+
+	i = &srcImporter{
+		i,
+		importer.Importer{
+			Context: ic,
+			Root:    ctx.Projectdir(),
+		},
+	}
+
+	i = &_importer{
+		i,
+		importer.Importer{
+			Context: ic,
+			Root:    runtime.GOROOT(),
+		},
+	}
+
+	i = &fixupImporter{
+		Importer: i,
+	}
+
+	return i, nil
 }
