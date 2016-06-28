@@ -30,7 +30,7 @@ type Importer interface {
 type Context struct {
 	Project
 
-	Importer
+	importer Importer
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -196,7 +196,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		},
 	}
 
-	ctx.Importer = i
+	ctx.importer = i
 
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
@@ -310,14 +310,12 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 // importPackage loads a package using the backing set of importers.
 func (c *Context) importPackage(path string) (*importer.Package, error) {
-	pkg, err := c.Import(path)
+	pkg, err := c.importer.Import(path)
 	switch err.(type) {
-	case nil:
-		return pkg, nil
 	case *os.PathError:
 		return nil, errors.Wrapf(err, "import %q: not found", path)
 	default:
-		return nil, err
+		return pkg, err
 	}
 }
 
