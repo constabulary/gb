@@ -37,6 +37,8 @@ func TestStale(t *testing.T) {
 		rootdir: filepath.Join(getwd(t), "testdata"),
 	}
 
+	defer os.RemoveAll(filepath.Join(proj.Projectdir(), "pkg"))
+
 	newctx := func() *Context {
 		ctx, err := NewContext(proj,
 			GcToolchain(),
