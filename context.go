@@ -168,18 +168,32 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	}
 	ctx.Context = &ic
 
-	roots := []string{
-		runtime.GOROOT(),
-		ctx.Projectdir(),
-		filepath.Join(ctx.Projectdir(), "vendor"),
+	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
+
+	i := Importer(&vendorImporter{
+		importer.Importer{
+			Context: &ic,
+			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
+		},
+	})
+
+	i = &srcImporter{
+		i,
+		importer.Importer{
+			Context: &ic,
+			Root:    ctx.Projectdir(),
+		},
 	}
 
-	for _, dir := range roots {
-		ctx.AddImporter(&importer.Importer{
+	i = &gorootImporter{
+		i,
+		importer.Importer{
 			Context: &ic,
-			Root:    dir,
-		})
+			Root:    runtime.GOROOT(),
+		},
 	}
+
+	ctx.AddImporter(i)
 
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
@@ -304,7 +318,7 @@ func (c *Context) importPackage(path string) (*importer.Package, error) {
 		if err2 == nil {
 			return pkg, nil
 		}
-		if i < 2 {
+		if i < 1 {
 			err = err2
 		}
 	}
