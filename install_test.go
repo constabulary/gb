@@ -34,10 +34,7 @@ func TestStale(t *testing.T) {
 	defer os.RemoveAll(root)
 
 	proj := &project{
-		rootdir: root,
-		srcdirs: []string{
-			filepath.Join(getwd(t), "testdata", "src"),
-		},
+		rootdir: filepath.Join(getwd(t), "testdata"),
 	}
 
 	newctx := func() *Context {

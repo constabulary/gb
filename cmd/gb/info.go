@@ -80,7 +80,10 @@ func findenv(env []envvar, name string) string {
 func makeenv(ctx *gb.Context) []envvar {
 	return []envvar{
 		{"GB_PROJECT_DIR", ctx.Projectdir()},
-		{"GB_SRC_PATH", joinlist(ctx.Srcdirs()...)},
+		{"GB_SRC_PATH", joinlist(
+			filepath.Join(ctx.Projectdir(), "src"),
+			filepath.Join(ctx.Projectdir(), "vendor", "src"),
+		)},
 		{"GB_PKG_DIR", ctx.Pkgdir()},
 		{"GB_BIN_SUFFIX", ctx.Suffix()},
 		{"GB_GOROOT", runtime.GOROOT()},

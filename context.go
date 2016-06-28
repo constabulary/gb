@@ -168,15 +168,16 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	}
 	ctx.Context = &ic
 
-	ctx.AddImporter(&importer.Importer{
-		Context: &ic,
-		Root:    runtime.GOROOT(),
-	})
+	roots := []string{
+		runtime.GOROOT(),
+		ctx.Projectdir(),
+		filepath.Join(ctx.Projectdir(), "vendor"),
+	}
 
-	for _, dir := range p.Srcdirs() {
+	for _, dir := range roots {
 		ctx.AddImporter(&importer.Importer{
 			Context: &ic,
-			Root:    filepath.Dir(dir), // strip off "src"
+			Root:    dir,
 		})
 	}
 
