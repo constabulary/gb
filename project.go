@@ -21,23 +21,15 @@ type Project interface {
 
 	// Bindir returns the path for compiled programs.
 	Bindir() string
-
-	// Srcdirs returns the path to the source directories.
-	Srcdirs() []string
 }
 
 type project struct {
 	rootdir string
-	srcdirs []string
 }
 
 func NewProject(root string) Project {
 	proj := project{
 		rootdir: root,
-		srcdirs: []string{
-			filepath.Join(root, "src"),
-			filepath.Join(root, "vendor", "src"),
-		},
 	}
 	return &proj
 }
@@ -50,14 +42,6 @@ func (p *project) Pkgdir() string {
 // Projectdir returns the path root of this project.
 func (p *project) Projectdir() string {
 	return p.rootdir
-}
-
-// Srcdirs returns the path to the source directories.
-// The first source directory will always be
-// filepath.Join(Projectdir(), "src")
-// but there may be additional directories.
-func (p *project) Srcdirs() []string {
-	return p.srcdirs
 }
 
 // Bindir returns the path for compiled programs.

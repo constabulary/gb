@@ -15,9 +15,6 @@ func testProject(t *testing.T) Project {
 	root := filepath.Join(cwd, "testdata")
 	return &project{
 		rootdir: root,
-		srcdirs: []string{
-			filepath.Join(root, "src"),
-		},
 	}
 }
 
