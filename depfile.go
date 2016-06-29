@@ -35,53 +35,102 @@ func addDepfileDeps(ic *importer.Context, ctx *Context) (Importer, error) {
 	}
 	re := regexp.MustCompile(semverRegex)
 	for prefix, kv := range df {
-		version, ok := kv["version"]
-		if !ok {
-			// TODO(dfc) return error when version key missing
-			continue
+		if version, ok := kv["version"]; ok {
+			if !re.MatchString(version) {
+				return nil, errors.Errorf("%s: %q is not a valid SemVer 2.0.0 version", prefix, version)
+			}
+			root := filepath.Join(cachePath(), hash(prefix, version))
+			dest := filepath.Join(root, "src", filepath.FromSlash(prefix))
+			fi, err := os.Stat(dest)
+			if err == nil {
+				if fi.IsDir() {
+					// not missing, nothing to do
+					continue
+				}
+				return nil, errors.Errorf("%s is not a directory", dest)
+			}
+			if err != nil {
+				if !os.IsNotExist(err) {
+					return nil, err
+				}
+			}
+			if err := fetchVersion(root, dest, prefix, version); err != nil {
+				return nil, err
+			}
+			i = &_importer{
+				Importer: i,
+				im: importer.Importer{
+					Context: ic,
+					Root:    root,
+				},
+			}
+			debug.Debugf("Add importer for %q: %v", prefix+" "+version, root)
 		}
-		if !re.MatchString(version) {
-			return nil, errors.Errorf("%s: %q is not a valid SemVer 2.0.0 version", prefix, version)
+
+		if tag, ok := kv["tag"]; ok {
+			root := filepath.Join(cachePath(), hash(prefix, tag))
+			dest := filepath.Join(root, "src", filepath.FromSlash(prefix))
+			fi, err := os.Stat(dest)
+			if err == nil {
+				if fi.IsDir() {
+					// not missing, nothing to do
+					continue
+				}
+				return nil, errors.Errorf("%s is not a directory", dest)
+			}
+			if err != nil {
+				if !os.IsNotExist(err) {
+					return nil, err
+				}
+			}
+			if err := fetchTag(root, dest, prefix, tag); err != nil {
+				return nil, err
+			}
+			i = &_importer{
+				Importer: i,
+				im: importer.Importer{
+					Context: ic,
+					Root:    root,
+				},
+			}
+			debug.Debugf("Add importer for %q: %v", prefix+" "+tag, root)
 		}
-		root := filepath.Join(cachePath(), hash(prefix, version))
-		if err := fetchIfMissing(root, prefix, version); err != nil {
-			return nil, err
-		}
-		i = &_importer{
-			Importer: i,
-			im: importer.Importer{
-				Context: ic,
-				Root:    root,
-			},
-		}
-		debug.Debugf("Add importer for %q: %v", prefix+" "+version, root)
 	}
 	return i, nil
 }
 
-func fetchIfMissing(root, prefix, version string) error {
-	dest := filepath.Join(root, "src", filepath.FromSlash(prefix))
-	_, err := os.Stat(dest)
-	if err == nil {
-		// not missing, nothing to do
-		return nil
-	}
-	if !os.IsNotExist(err) {
-		return errors.Wrap(err, "unexpected error stating cache dir")
-	}
+func fetchVersion(root, dest, prefix, version string) error {
 	if !strings.HasPrefix(prefix, "github.com") {
 		return errors.Errorf("unable to fetch %v", prefix)
 	}
 
 	fmt.Printf("fetching %v (%v)\n", prefix, version)
 
-	rc, err := fetchVersion(prefix, version)
+	rc, err := fetchRelease(prefix, "v"+version)
 	if err != nil {
 		return err
 	}
 	defer rc.Close()
+	return unpackReleaseTarball(dest, rc)
+}
 
-	gzr, err := gzip.NewReader(rc)
+func fetchTag(root, dest, prefix, tag string) error {
+	if !strings.HasPrefix(prefix, "github.com") {
+		return errors.Errorf("unable to fetch %v", prefix)
+	}
+
+	fmt.Printf("fetching %v (%v)\n", prefix, tag)
+
+	rc, err := fetchRelease(prefix, tag)
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+	return unpackReleaseTarball(dest, rc)
+}
+
+func unpackReleaseTarball(dest string, r io.Reader) error {
+	gzr, err := gzip.NewReader(r)
 	if err != nil {
 		return errors.Wrap(err, "unable to construct gzip reader")
 	}
@@ -104,25 +153,21 @@ func fetchIfMissing(root, prefix, version string) error {
 
 	dents, err := ioutil.ReadDir(tmpdir)
 	if err != nil {
-		os.RemoveAll(root)
+		os.RemoveAll(tmpdir)
 		return errors.Wrap(err, "cannot read download directory")
 	}
 	re := regexp.MustCompile(`\w+-\w+-[a-z0-9]+`)
 	for _, dent := range dents {
 		if re.MatchString(dent.Name()) {
 			if err := os.Rename(filepath.Join(tmpdir, dent.Name()), dest); err != nil {
-				os.RemoveAll(root)
+				os.RemoveAll(tmpdir)
 				return errors.Wrap(err, "unable to rename final cache dir")
 			}
 			return nil
 		}
 	}
-	os.RemoveAll(root)
+	os.RemoveAll(tmpdir)
 	return errors.New("release directory not found in tarball")
-}
-
-func fetchVersion(prefix, version string) (io.ReadCloser, error) {
-	return fetchRelease(prefix, "v"+version)
 }
 
 func fetchRelease(prefix, tag string) (io.ReadCloser, error) {
@@ -168,4 +213,9 @@ func envOr(key, def string) string {
 		v = def
 	}
 	return v
+}
+
+func isDir(path string) bool {
+	fi, err := os.Stat(path)
+	return err == nil && fi.IsDir()
 }
