@@ -43,19 +43,17 @@ func addDepfileDeps(ic *importer.Context, ctx *Context) (Importer, error) {
 			dest := filepath.Join(root, "src", filepath.FromSlash(prefix))
 			fi, err := os.Stat(dest)
 			if err == nil {
-				if fi.IsDir() {
-					// not missing, nothing to do
-					continue
+				if !fi.IsDir() {
+					return nil, errors.Errorf("%s is not a directory", dest)
 				}
-				return nil, errors.Errorf("%s is not a directory", dest)
 			}
 			if err != nil {
 				if !os.IsNotExist(err) {
 					return nil, err
 				}
-			}
-			if err := fetchVersion(root, dest, prefix, version); err != nil {
-				return nil, err
+				if err := fetchVersion(root, dest, prefix, version); err != nil {
+					return nil, err
+				}
 			}
 			i = &_importer{
 				Importer: i,
@@ -72,19 +70,17 @@ func addDepfileDeps(ic *importer.Context, ctx *Context) (Importer, error) {
 			dest := filepath.Join(root, "src", filepath.FromSlash(prefix))
 			fi, err := os.Stat(dest)
 			if err == nil {
-				if fi.IsDir() {
-					// not missing, nothing to do
-					continue
+				if !fi.IsDir() {
+					return nil, errors.Errorf("%s is not a directory", dest)
 				}
-				return nil, errors.Errorf("%s is not a directory", dest)
 			}
 			if err != nil {
 				if !os.IsNotExist(err) {
 					return nil, err
 				}
-			}
-			if err := fetchTag(root, dest, prefix, tag); err != nil {
-				return nil, err
+				if err := fetchTag(root, dest, prefix, tag); err != nil {
+					return nil, err
+				}
 			}
 			i = &_importer{
 				Importer: i,
