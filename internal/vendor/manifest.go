@@ -118,6 +118,11 @@ func writeManifest(w io.Writer, m *Manifest) error {
 	if err != nil {
 		return err
 	}
+	// MarshalIndent does not append a newline after the final closing
+	// curly brace, however many editors will helpfully do this which causes
+	// lots of pointless diffs if you edit the manifest file manually. To work
+	// around this, add a newline after MarshalIndent.
+	buf = append(buf, '\n')
 	_, err = io.Copy(w, bytes.NewReader(buf))
 	return err
 }

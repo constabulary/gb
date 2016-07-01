@@ -96,7 +96,8 @@ func TestEmptyPathIsNotWritten(t *testing.T) {
 			"branch": "master"
 		}
 	]
-}`
+}
+`
 	got := buf.String()
 	if want != got {
 		t.Fatalf("want: %s, got %s", want, got)
