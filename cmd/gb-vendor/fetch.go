@@ -159,6 +159,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 			Root, Prefix string
 		}{
 			{filepath.Join(runtime.GOROOT(), "src"), ""},
+			{filepath.Join(runtime.GOROOT(), "src", "vendor"), ""}, // include vendored pkgs from the std library
 			{filepath.Join(ctx.Projectdir(), "src"), ""},
 		}
 		m, err := vendor.ReadManifest(manifestFile(ctx))

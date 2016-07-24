@@ -67,6 +67,10 @@ func LoadTree(root string, prefix string) (*Depset, error) {
 	// handle root of the tree
 	fi, err := os.Stat(root)
 	if err != nil {
+		// some paths may not exist, for example $GOROOT/src/vendor on Go < 1.6
+		if os.IsNotExist(err) {
+			return &d, nil
+		}
 		return nil, err
 	}
 	if err := fn(root+string(filepath.Separator), fi); err != nil {
