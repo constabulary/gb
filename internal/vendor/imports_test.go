@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -20,6 +21,35 @@ func TestParseImports(t *testing.T) {
 	want := set("fmt", "github.com/quux/flobble", "github.com/lypo/moopo", "github.com/hoo/wuu")
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("ParseImports(%q): want: %v, got %v", root, want, got)
+	}
+}
+
+func TestParseMetaRemoteImportPaths(t *testing.T) {
+	tests := []struct {
+		input string
+		want  []metaImport
+	}{
+		// The "meta" element has a start tag, but no end tag.
+		{`<meta name="go-import" content="golang.org/x/tools git https://go.googlesource.com/tools">`,
+			[]metaImport{{"golang.org/x/tools", "git", "https://go.googlesource.com/tools"}}},
+		// The parser tolerates unquoted XML attribute values, but note that the CDATA section is not terminated properly.
+		{`<!doctype html><title>Page Not Found</title>
+<meta name="go-import" content="golang.org/x/tools git https://go.googlesource.com/tools">
+<meta name=go-import content="chitin.io/chitin git https://github.com/chitin-io/chitin">
+<![CDATA[...]`,
+			[]metaImport{
+				{"golang.org/x/tools", "git", "https://go.googlesource.com/tools"},
+				{"chitin.io/chitin", "git", "https://github.com/chitin-io/chitin"}}},
+	}
+	for _, tt := range tests {
+		got, err := parseMetaGoImports(strings.NewReader(tt.input))
+		if err != nil {
+			t.Errorf("parseMetaGoImports(%q): %v", tt.input, err)
+			continue
+		}
+		if !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("parseMetaGoImports(%q): want %v, got %v", tt.input, tt.want, got)
+		}
 	}
 }
 
