@@ -52,7 +52,7 @@ var cmdPurge = &cmd.Command{
 					return errors.Wrap(err, "dependency could not be removed")
 				}
 				if err := fileutils.RemoveAll(filepath.Join(ctx.Projectdir(), "vendor", "src", filepath.FromSlash(d.Importpath))); err != nil {
-					// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
+					// TODO(dfc) need to apply vendor.cleanpath here to remove intermediate directories.
 					return errors.Wrap(err, "dependency could not be deleted")
 				}
 			}
