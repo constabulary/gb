@@ -43,11 +43,12 @@ type Context struct {
 
 	Statistics
 
-	Force   bool // force rebuild of packages
-	Install bool // copy packages into $PROJECT/pkg
-	Verbose bool // verbose output
-	Nope    bool // command specfic flag, under test it skips the execute action.
-	race    bool // race detector requested
+	Force    bool // force rebuild of packages
+	ForceAll bool // force rebuild of all packages, including the standard library
+	Install  bool // copy packages into $PROJECT/pkg
+	Verbose  bool // verbose output
+	Nope     bool // command specfic flag, under test it skips the execute action.
+	race     bool // race detector requested
 
 	gcflags []string // flags passed to the compiler
 	ldflags []string // flags passed to the linker
