@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -278,6 +279,9 @@ func rungcc3(pkg *Package, dir string, ofile string, ofiles []string) error {
 	args = append(args, "-o", ofile)
 	args = append(args, ofiles...)
 	args = append(args, "-Wl,-r", "-nostdlib")
+	if gccSupportsNoPie(pkg) {
+		args = append(args, "-no-pie")
+	}
 	var cmd []string
 	if len(pkg.CXXFiles) > 0 || len(pkg.SwigCXXFiles) > 0 {
 		cmd = gxxCmd(pkg, dir)
@@ -311,6 +315,20 @@ func libgcc(ctx *Context) (string, error) {
 	cmd := gccCmd(&Package{Context: ctx}, "") // TODO(dfc) hack
 	err := runOut(&buf, ".", nil, cmd[0], args...)
 	return strings.TrimSpace(buf.String()), err
+}
+
+// gccSupportsNoPie check if the -no-pie option is supported. On systems with
+// PIE (position independent executables) enabled by default, -no-pie must be
+// passed when doing a partial link with -Wl,-r.
+func gccSupportsNoPie(pkg *Package) bool {
+	cmd := gccCmd(pkg, "")
+	args := []string{
+		"-no-pie",
+		"-fsyntax-only",
+		"-xc",
+		"-",
+	}
+	return exec.Command(cmd[0], append(cmd[1:], args...)...).Run() == nil
 }
 
 func cgotool(ctx *Context) string {
