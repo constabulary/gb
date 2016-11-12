@@ -204,13 +204,17 @@ func (t *testFuncs) load(filename, pkg string, doImport, seen *bool) error {
 			if t.TestMain != nil {
 				return errors.New("multiple definitions of TestMain")
 			}
-			t.TestMain = &testFunc{pkg, name, ""}
+			t.TestMain = &testFunc{
+				Package: pkg,
+				Name:    name,
+				Output:  "",
+			}
 			*doImport, *seen = true, true
 		case isTest(name, "Test"):
-			t.Tests = append(t.Tests, testFunc{pkg, name, ""})
+			t.Tests = append(t.Tests, testFunc{Package: pkg, Name: name})
 			*doImport, *seen = true, true
 		case isTest(name, "Benchmark"):
-			t.Benchmarks = append(t.Benchmarks, testFunc{pkg, name, ""})
+			t.Benchmarks = append(t.Benchmarks, testFunc{Package: pkg, Name: name})
 			*doImport, *seen = true, true
 		}
 	}
@@ -222,7 +226,7 @@ func (t *testFuncs) load(filename, pkg string, doImport, seen *bool) error {
 			// Don't run examples with no output.
 			continue
 		}
-		t.Examples = append(t.Examples, testFunc{pkg, "Example" + e.Name, e.Output})
+		t.Examples = append(t.Examples, testFunc{Package: pkg, Name: "Example" + e.Name, Output: e.Output})
 		*seen = true
 	}
 	return nil
