@@ -177,9 +177,10 @@ func (t *testFuncs) Tested() string {
 }
 
 type testFunc struct {
-	Package string // imported package name (_test or _xtest)
-	Name    string // function name
-	Output  string // output, for examples
+	Package   string // imported package name (_test or _xtest)
+	Name      string // function name
+	Output    string // output, for examples
+	Unordered bool   // TODO(dfc) used for tested output of examples.
 }
 
 var testFileSet = token.NewFileSet()
