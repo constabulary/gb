@@ -43,8 +43,8 @@ func restore(ctx *gb.Context) error {
 	errChan := make(chan error, 1)
 	var wg sync.WaitGroup
 
+	wg.Add(len(m.Dependencies))
 	for _, dep := range m.Dependencies {
-		wg.Add(1)
 		go func(dep vendor.Dependency) {
 			defer wg.Done()
 			fmt.Printf("Getting %s\n", dep.Importpath)
@@ -74,10 +74,7 @@ func restore(ctx *gb.Context) error {
 
 	}
 
-	go func() {
-		wg.Wait()
-		close(errChan)
-	}()
-
+	wg.Wait()
+	close(errChan)
 	return <-errChan
 }
