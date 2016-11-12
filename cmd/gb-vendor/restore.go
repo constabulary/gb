@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"sync"
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
@@ -39,27 +40,41 @@ func restore(ctx *gb.Context) error {
 		return errors.Wrap(err, "could not load manifest")
 	}
 
+	errChan := make(chan error, 1)
+	var wg sync.WaitGroup
+
+	wg.Add(len(m.Dependencies))
 	for _, dep := range m.Dependencies {
-		fmt.Printf("Getting %s\n", dep.Importpath)
-		repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, insecure)
-		if err != nil {
-			return errors.Wrap(err, "could not process dependency")
-		}
-		wc, err := repo.Checkout("", "", dep.Revision)
-		if err != nil {
-			return errors.Wrap(err, "could not retrieve dependency")
-		}
-		dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
-		src := filepath.Join(wc.Dir(), dep.Path)
+		go func(dep vendor.Dependency) {
+			defer wg.Done()
+			fmt.Printf("Getting %s\n", dep.Importpath)
+			repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, insecure)
+			if err != nil {
+				errChan <- errors.Wrap(err, "could not process dependency")
+				return
+			}
+			wc, err := repo.Checkout("", "", dep.Revision)
+			if err != nil {
+				errChan <- errors.Wrap(err, "could not retrieve dependency")
+				return
+			}
+			dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
+			src := filepath.Join(wc.Dir(), dep.Path)
 
-		if err := fileutils.Copypath(dst, src); err != nil {
-			return err
-		}
+			if err := fileutils.Copypath(dst, src); err != nil {
+				errChan <- err
+				return
+			}
 
-		if err := wc.Destroy(); err != nil {
-			return err
-		}
+			if err := wc.Destroy(); err != nil {
+				errChan <- err
+				return
+			}
+		}(dep)
 
 	}
-	return nil
+
+	wg.Wait()
+	close(errChan)
+	return <-errChan
 }
