@@ -36,7 +36,7 @@ Flags:
 	Run: func(ctx *gb.Context, args []string) error {
 		if len(args) != 1 && !deleteAll {
 			return errors.New("delete: import path or --all flag is missing")
-		} else if len(args) == 1 && deleteAll {
+		} else if len(args) >= 1 && deleteAll {
 			return errors.New("delete: you cannot specify path and --all flag at once")
 		}
 
