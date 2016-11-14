@@ -105,6 +105,7 @@ For more about where packages and binaries are installed, run 'gb help project'.
 	Run: func(ctx *gb.Context, args []string) error {
 		// TODO(dfc) run should take a *gb.Context not a *gb.Project
 		ctx.Force = F
+		ctx.ForceAll = F && A
 		ctx.Install = !FF
 
 		pkgs, err := resolveRootPackages(ctx, args...)

@@ -51,6 +51,10 @@ func isStale(pkg *Package) bool {
 		return false
 	}
 
+	if pkg.ForceAll {
+		return true
+	}
+
 	if !pkg.Standard && pkg.Force {
 		return true
 	}
