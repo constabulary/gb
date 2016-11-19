@@ -22,7 +22,7 @@ func cgo(pkg *Package) (*Action, []string, []string, error) {
 	case goversion > 1.4:
 		return cgo15(pkg)
 	default:
-		return nil, nil, nil, errors.Errorf("unsupported Go version: %v", runtime.Version())
+		return nil, nil, nil, errors.Errorf("unsupported Go version: %v", runtime.Version)
 	}
 }
 
@@ -419,7 +419,7 @@ func runcgo1(pkg *Package, cflags, ldflags []string) error {
 			"-I", pkg.Dir,
 		)
 	default:
-		return errors.Errorf("unsupported Go version: %v", runtime.Version())
+		return errors.Errorf("unsupported Go version: %v", runtime.Version)
 	}
 	args = append(args, cflags...)
 	args = append(args, pkg.CgoFiles...)
@@ -458,7 +458,7 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 			"-dynout", dynout,
 		)
 	default:
-		return errors.Errorf("unsuppored Go version: %v", runtime.Version())
+		return errors.Errorf("unsuppored Go version: %v", runtime.Version)
 	}
 	var buf bytes.Buffer
 	err := runOut(&buf, pkg.Dir, nil, cgo, args...)

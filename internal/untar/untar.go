@@ -48,6 +48,7 @@ func untar(dest string, r io.Reader) error {
 			return err
 		}
 	}
+	return nil
 }
 
 func untarfile(dest string, h *tar.Header, r io.Reader) error {
