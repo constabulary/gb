@@ -451,7 +451,7 @@ func (t *T) mustBeEmpty(root string) {
 		found = append(found, path)
 		return nil
 	}
-	err = filepath.Walk(root, fn)
+	filepath.Walk(root, fn)
 	if len(found) > 0 {
 		t.Fatalf("expected %s to be empty, found %s", root, found)
 	}
@@ -1633,10 +1633,6 @@ func main() {
 	tmpdir := gb.tempDir("tmp")
 
 	gb.setenv("TMP", tmpdir)
-	name := "x"
-	if runtime.GOOS == "windows" {
-		name += ".exe"
-	}
 	gb.runFail("build")
 	gb.mustBeEmpty(tmpdir)
 	gb.grepStderr(`FATAL: command "build" failed: failed to resolve import path "x": import "this/is/a/bad/path": not found`, "expected FATAL")

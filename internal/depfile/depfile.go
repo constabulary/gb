@@ -28,7 +28,7 @@ func ParseFile(path string) (map[string]map[string]string, error) {
 //
 //     name key=value [key=value]...
 //
-// Elements can be seperated by whitespace (space and tab).
+// Elements can be separated by whitespace (space and tab).
 // Lines that do not begin with a letter or number are ignored. This
 // provides a simple mechanism for commentary
 //

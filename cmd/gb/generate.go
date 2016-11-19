@@ -11,10 +11,10 @@ import (
 )
 
 func init() {
-	registerCommand(GenerateCmd)
+	registerCommand(generateCmd)
 }
 
-var GenerateCmd = &cmd.Command{
+var generateCmd = &cmd.Command{
 	Name:      "generate",
 	UsageLine: "generate [-run regexp] [file.go... | packages]",
 	Short:     "generate Go files by processing source",

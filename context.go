@@ -46,7 +46,7 @@ type Context struct {
 	Force   bool // force rebuild of packages
 	Install bool // copy packages into $PROJECT/pkg
 	Verbose bool // verbose output
-	Nope    bool // command specfic flag, under test it skips the execute action.
+	Nope    bool // command specific flag, under test it skips the execute action.
 	race    bool // race detector requested
 
 	gcflags []string // flags passed to the compiler
