@@ -48,7 +48,7 @@ func TestExecuteBuildAction(t *testing.T) {
 		}
 		action, err := BuildPackages(pkg)
 		if err != nil {
-			t.Errorf("BuildAction(%v): ", tt.pkg, err)
+			t.Errorf("BuildAction(%v): %v", tt.pkg, err)
 			continue
 		}
 		if err := Execute(action); !reflect.DeepEqual(err, tt.err) {
