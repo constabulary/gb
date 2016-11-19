@@ -52,7 +52,7 @@ func TestIsRel(t *testing.T) {
 	for _, tt := range tests {
 		got := isRel(tt.path)
 		if got != tt.want {
-			t.Errorf("isRel(%q): want: %v, got: %v", tt.path, tt.want, got)
+			t.Errorf("isRel(%q): want: %v, got: %v", tt.want, got)
 		}
 	}
 }

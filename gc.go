@@ -56,7 +56,7 @@ func GcToolchain() func(c *Context) error {
 				pack: filepath.Join(tooldir, "pack"+exe),
 			}
 		default:
-			return errors.Errorf("unsupported Go version: %v", runtime.Version())
+			return errors.Errorf("unsupported Go version: %v", runtime.Version)
 		}
 		return nil
 	}
@@ -73,7 +73,7 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 		includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
 		args = append(args, "-I", odir, "-I", includedir)
 	default:
-		return errors.Errorf("unsupported Go version: %v", runtime.Version())
+		return errors.Errorf("unsupported Go version: %v", runtime.Version)
 	}
 	args = append(args, sfile)
 	if err := mkdir(filepath.Dir(ofile)); err != nil {

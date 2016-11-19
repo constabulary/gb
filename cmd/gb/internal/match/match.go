@@ -44,7 +44,7 @@ func ImportPaths(srcdir, cwd string, args []string) []string {
 		if strings.Contains(a, "...") {
 			pkgs, err := matchPackages(srcdir, a)
 			if err != nil {
-				fmt.Printf("could not load all packages: %v\n", err)
+				fmt.Println("could not load all packages: %v", err)
 			}
 			out = append(out, pkgs...)
 			continue
