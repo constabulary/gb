@@ -7,6 +7,8 @@ Unix:
 Windows:
 [![Build status](https://ci.appveyor.com/api/projects/status/rjttg1agmp2sra3h/branch/master?svg=true)](https://ci.appveyor.com/project/davecheney/gb/branch/master)
 
+[![codecov.io](https://codecov.io/github/constabulary/gb/branch/master/graph/badge.svg)](https://codecov.io/github/constabulary/gb)
+
 `gb` is a proof of concept replacement build tool for the [Go programming language](https://golang.org).
 
 I gave a talk about `gb` and the rational for its creation at GDG Berlin in April 2015, [video](https://www.youtube.com/watch?v=c3dW80eO88I) and [slides](http://go-talks.appspot.com/github.com/davecheney/presentations/reproducible-builds.slide#1).
