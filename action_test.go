@@ -15,20 +15,20 @@ func TestBuildAction(t *testing.T) {
 		pkg: "a",
 		action: &Action{
 			Name: "build: a",
-			Deps: []*Action{&Action{Name: "compile: a"}},
+			Deps: []*Action{{Name: "compile: a"}},
 		},
 	}, {
 		pkg: "b",
 		action: &Action{
 			Name: "build: b",
 			Deps: []*Action{
-				&Action{
+				{
 					Name: "link: b",
 					Deps: []*Action{
-						&Action{
+						{
 							Name: "compile: b",
 							Deps: []*Action{
-								&Action{
+								{
 									Name: "compile: a",
 								}},
 						},
@@ -40,12 +40,12 @@ func TestBuildAction(t *testing.T) {
 		action: &Action{
 			Name: "build: c",
 			Deps: []*Action{
-				&Action{
+				{
 					Name: "compile: c",
 					Deps: []*Action{
-						&Action{
+						{
 							Name: "compile: a",
-						}, &Action{
+						}, {
 							Name: "compile: d.v1",
 						}},
 				}},

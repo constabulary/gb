@@ -10,7 +10,7 @@ import (
 type nullImporter struct{}
 
 func (i *nullImporter) Import(path string) (*importer.Package, error) {
-	return nil, errors.Errorf("import %q not found")
+	return nil, errors.Errorf("import %q not found", path)
 }
 
 type srcImporter struct {

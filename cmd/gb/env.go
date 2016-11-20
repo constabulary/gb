@@ -3,10 +3,10 @@ package main
 import "github.com/constabulary/gb/cmd"
 
 func init() {
-	registerCommand(EnvCmd)
+	registerCommand(envCmd)
 }
 
-var EnvCmd = &cmd.Command{
+var envCmd = &cmd.Command{
 	Name:      "env",
 	UsageLine: `env [var ...]`,
 	Short:     "print project environment variables",
