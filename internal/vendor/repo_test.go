@@ -62,11 +62,13 @@ func TestDeduceRemoteRepo(t *testing.T) {
 				extra: "/cmd/main",
 		*/
 	}, {
-		path: "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
-		want: &gitrepo{
-			url: "https://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
-		},
-	}, {
+		/* path has either changed or is now 403
+			path: "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
+			want: &gitrepo{
+				url: "https://git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
+			},
+		}, {
+		*/
 		path: "git.apache.org/thrift.git/lib/go/thrift",
 		want: &gitrepo{
 			url: "https://git.apache.org/thrift.git",
