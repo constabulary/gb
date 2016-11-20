@@ -1,4 +1,4 @@
-// package fileutils provides utililty methods to copy and move files and directories.
+// Package fileutils provides utililty methods to copy and move files and directories.
 package fileutils
 
 import (
@@ -51,6 +51,7 @@ func Copypath(dst string, src string) error {
 	return err
 }
 
+// Copyfile copies file to destination creating destination directory if needed
 func Copyfile(dst, src string) error {
 	err := mkdir(filepath.Dir(dst))
 	if err != nil {

@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	registerCommand(BuildCmd)
+	registerCommand(buildCmd)
 }
 
 var (
@@ -59,7 +59,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.Var((*stringsFlag)(&buildtags), "tags", "")
 }
 
-var BuildCmd = &cmd.Command{
+var buildCmd = &cmd.Command{
 	Name:      "build",
 	Short:     "build a package",
 	UsageLine: "build [build flags] [packages]",

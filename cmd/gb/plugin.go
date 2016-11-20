@@ -8,10 +8,10 @@ import (
 )
 
 func init() {
-	registerCommand(PluginCmd)
+	registerCommand(pluginCmd)
 }
 
-var PluginCmd = &cmd.Command{
+var pluginCmd = &cmd.Command{
 	Name:  "plugin",
 	Short: "plugin information",
 	Long: `gb supports git style plugins.
