@@ -270,6 +270,9 @@ func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
 	includes := pkg.IncludePaths()
 	importpath := pkg.ImportPath
+
+	wd := pkg.Context.Project.Projectdir()
+
 	if pkg.TestScope && pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
@@ -280,14 +283,17 @@ func gc(pkg *Package, gofiles []string) error {
 			continue
 		}
 		fullpath := filepath.Join(pkg.Dir, gofiles[i])
-		path, err := filepath.Rel(pkg.Dir, fullpath)
+
+		// Run this relative to the *working* directory.
+		path, err := filepath.Rel(wd, fullpath)
+
 		if err == nil {
 			gofiles[i] = path
 		} else {
 			gofiles[i] = fullpath
 		}
 	}
-	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Dir, objfile(pkg), gofiles)
+	err := pkg.tc.Gc(pkg, includes, importpath, wd, objfile(pkg), gofiles)
 	pkg.Record("gc", time.Since(t0))
 	return err
 }
