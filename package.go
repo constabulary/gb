@@ -37,15 +37,6 @@ func newPackage(ctx *Context, p *importer.Package) (*Package, error) {
 	return pkg, nil
 }
 
-// isMain returns true if this is a command, not being built in test scope, and
-// not the testmain itself.
-func (p *Package) isMain() bool {
-	if p.TestScope {
-		return strings.HasSuffix(p.ImportPath, "testmain")
-	}
-	return p.Name == "main"
-}
-
 func (p *Package) String() string {
 	return fmt.Sprintf("%v", struct {
 		Name, ImportPath, Dir string

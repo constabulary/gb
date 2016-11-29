@@ -231,7 +231,7 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 
 	var extra []string
 	switch {
-	case pkg.isMain():
+	case pkg.Main:
 		// all binaries depend on runtime, even if they do not
 		// explicitly import it.
 		extra = append(extra, "runtime")
