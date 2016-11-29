@@ -62,7 +62,7 @@ func GcToolchain() func(c *Context) error {
 	}
 }
 
-func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
+func (t *gcToolchain) Asm(pkg *Package, ofile, sfile string) error {
 	args := []string{"-o", ofile, "-D", "GOOS_" + pkg.gotargetos, "-D", "GOARCH_" + pkg.gotargetarch}
 	switch {
 	case goversion == 1.4:
@@ -80,7 +80,7 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 		return errors.Errorf("gc:asm: %v", err)
 	}
 	var buf bytes.Buffer
-	err := runOut(&buf, srcdir, nil, t.as, args...)
+	err := runOut(&buf, pkg.Dir, nil, t.as, args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
 		io.Copy(os.Stderr, &buf)
@@ -161,7 +161,7 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
-func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error {
+func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, outfile string, files []string) error {
 	args := append(pkg.gcflags, "-p", importpath, "-pack")
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {
@@ -198,7 +198,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 		return errors.Wrap(err, "mkdir")
 	}
 	var buf bytes.Buffer
-	err := runOut(&buf, srcdir, nil, t.gc, args...)
+	err := runOut(&buf, pkg.Dir, nil, t.gc, args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
 		io.Copy(os.Stderr, &buf)

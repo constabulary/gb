@@ -147,7 +147,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 			Name: fmt.Sprintf("asm: %s/%s", pkg.ImportPath, sfile),
 			Run: func() error {
 				t0 := time.Now()
-				err := pkg.tc.Asm(pkg, pkg.Dir, ofile, filepath.Join(pkg.Dir, sfile))
+				err := pkg.tc.Asm(pkg, ofile, filepath.Join(pkg.Dir, sfile))
 				pkg.Record("asm", time.Since(t0))
 				return err
 			},
@@ -287,7 +287,7 @@ func gc(pkg *Package, gofiles []string) error {
 			gofiles[i] = fullpath
 		}
 	}
-	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Dir, pkg.objfile(), gofiles)
+	err := pkg.tc.Gc(pkg, includes, importpath, pkg.objfile(), gofiles)
 	pkg.Record("gc", time.Since(t0))
 	return err
 }

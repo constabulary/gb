@@ -15,8 +15,8 @@ var releaseTags = build.Default.ReleaseTags
 // Toolchain represents a standardised set of command line tools
 // used to build and test Go programs.
 type Toolchain interface {
-	Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error
-	Asm(pkg *Package, srcdir, ofile, sfile string) error
+	Gc(pkg *Package, searchpaths []string, importpath, outfile string, files []string) error
+	Asm(pkg *Package, ofile, sfile string) error
 	Pack(pkg *Package, afiles ...string) error
 	Ld(*Package, []string, string) error
 	Cc(pkg *Package, ofile string, cfile string) error
