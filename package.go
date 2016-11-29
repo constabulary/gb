@@ -17,6 +17,7 @@ type Package struct {
 	TestScope     bool
 	ExtraIncludes string // hook for test
 	Stale         bool   // is the package out of date wrt. its cached copy
+	Main          bool   // is this a command
 	Imports       []*Package
 }
 
@@ -34,15 +35,6 @@ func newPackage(ctx *Context, p *importer.Package) (*Package, error) {
 		pkg.Imports = append(pkg.Imports, dep)
 	}
 	return pkg, nil
-}
-
-// isMain returns true if this is a command, not being built in test scope, and
-// not the testmain itself.
-func (p *Package) isMain() bool {
-	if p.TestScope {
-		return strings.HasSuffix(p.ImportPath, "testmain")
-	}
-	return p.Name == "main"
 }
 
 func (p *Package) String() string {
@@ -72,9 +64,9 @@ func (p *Package) Complete() bool {
 // Binfile returns the destination of the compiled target of this command.
 func (pkg *Package) Binfile() string {
 	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
-	target := filepath.Join(pkg.Bindir(), binname(pkg))
+	target := filepath.Join(pkg.Bindir(), pkg.binname())
 	if pkg.TestScope {
-		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+		target = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", pkg.binname())
 	}
 
 	// if this is a cross compile or GOOS/GOARCH are both defined or there are build tags, add ctxString.
@@ -88,4 +80,34 @@ func (pkg *Package) Binfile() string {
 		target += ".exe"
 	}
 	return target
+}
+
+func (pkg *Package) Workdir() string {
+	if pkg.TestScope {
+		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
+		return filepath.Join(pkg.Context.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	}
+	return filepath.Join(pkg.Context.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+}
+
+// objfile returns the name of the object file for this package
+func (pkg *Package) objfile() string {
+	return filepath.Join(pkg.Workdir(), pkg.objname())
+}
+
+func (pkg *Package) objname() string {
+	return pkg.pkgname() + ".a"
+}
+
+func (pkg *Package) pkgname() string {
+	// TODO(dfc) use pkg path instead?
+	return filepath.Base(filepath.FromSlash(pkg.ImportPath))
+}
+
+func (pkg *Package) binname() string {
+	if !pkg.Main {
+		panic("binname called with non main package: " + pkg.ImportPath)
+	}
+	// TODO(dfc) use pkg path instead?
+	return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 }

@@ -92,7 +92,7 @@ func isStale(pkg *Package) bool {
 			debug.Debugf("%s is older than %s", pkgpath(pkg), pkg.tc.compiler())
 			return true
 		}
-		if pkg.isMain() && olderThan(pkg.tc.linker()) {
+		if pkg.Main && olderThan(pkg.tc.linker()) {
 			debug.Debugf("%s is older than %s", pkgpath(pkg), pkg.tc.compiler())
 			return true
 		}
@@ -118,7 +118,7 @@ func isStale(pkg *Package) bool {
 
 	// if the main package is up to date but _newer_ than the binary (which
 	// could have been removed), then consider it stale.
-	if pkg.isMain() && newerThan(pkg.Binfile()) {
+	if pkg.Main && newerThan(pkg.Binfile()) {
 		debug.Debugf("%s is newer than %s", pkgpath(pkg), pkg.Binfile())
 		return true
 	}

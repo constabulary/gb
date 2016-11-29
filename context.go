@@ -278,6 +278,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "loadPackage(%q)", path)
 	}
+	pkg.Main = pkg.Name == "main"
 	pkg.Stale = stale || isStale(pkg)
 	c.pkgs[p.ImportPath] = pkg
 	return pkg, nil

@@ -153,7 +153,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		}
 		xtestpkg.TestScope = true
 		xtestpkg.Stale = true
-		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
+		xtestpkg.ExtraIncludes = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 
 		// if there is an internal test object, add it as a dependency.
 		if testobj != nil {
@@ -225,7 +225,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if !pkg.TestScope {
 		return nil, errors.Errorf("package %q is not test scoped", pkg.Name)
 	}
-	dir := gb.Workdir(pkg)
+	dir := pkg.Workdir()
 	if err := mkdir(dir); err != nil {
 		return nil, err
 	}
@@ -258,7 +258,8 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 		panic("testmain not marked stale")
 	}
 	testmain.TestScope = true
-	testmain.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
+	testmain.Main = true
+	testmain.ExtraIncludes = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 	return testmain, nil
 }
 
