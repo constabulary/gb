@@ -159,19 +159,19 @@ func TestTestPackages(t *testing.T) {
 	}{{
 		pkgs: []string{"a", "b", "c"},
 		actions: []string{
-			"run: $WORKDIR/a/testmain/_test/a.test$EXE",
-			"run: $WORKDIR/b/testmain/_test/b.test$EXE",
-			"run: $WORKDIR/c/testmain/_test/c.test$EXE",
+			"run: $WORKDIR/a/testmain/_test/testmain$EXE",
+			"run: $WORKDIR/b/testmain/_test/testmain$EXE",
+			"run: $WORKDIR/c/testmain/_test/testmain$EXE",
 		},
 	}, {
 		pkgs: []string{"cgotest", "cgomain", "notestfiles", "cgoonlynotest", "testonly", "extestonly"},
 		actions: []string{
-			"run: $WORKDIR/cgomain/testmain/_test/cgomain.test$EXE",
-			"run: $WORKDIR/cgoonlynotest/testmain/_test/cgoonly.test$EXE",
-			"run: $WORKDIR/cgotest/testmain/_test/cgotest.test$EXE",
-			"run: $WORKDIR/extestonly/testmain/_test/extestonly.test$EXE",
-			"run: $WORKDIR/notestfiles/testmain/_test/notest.test$EXE",
-			"run: $WORKDIR/testonly/testmain/_test/testonly.test$EXE",
+			"run: $WORKDIR/cgomain/testmain/_test/testmain$EXE",
+			"run: $WORKDIR/cgoonlynotest/testmain/_test/testmain$EXE",
+			"run: $WORKDIR/cgotest/testmain/_test/testmain$EXE",
+			"run: $WORKDIR/extestonly/testmain/_test/testmain$EXE",
+			"run: $WORKDIR/notestfiles/testmain/_test/testmain$EXE",
+			"run: $WORKDIR/testonly/testmain/_test/testmain$EXE",
 		},
 	}}
 
