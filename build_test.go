@@ -206,7 +206,7 @@ func TestObjfile(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		got := objfile(pkg)
+		got := pkg.objfile()
 		want := filepath.Join(ctx.Workdir(), tt.want)
 		if want != got {
 			t.Errorf("(%s).Objdir(): want %s, got %s", tt.pkg, want, got)
@@ -257,7 +257,7 @@ func TestWorkdir(t *testing.T) {
 			t.Error(err)
 			continue
 		}
-		got := Workdir(pkg)
+		got := pkg.Workdir()
 		want := filepath.Join(ctx.Workdir(), tt.want)
 		if want != got {
 			t.Errorf("Workdir(Package{Name: %v, ImportPath: %v, TestScope: %v}): want %s, got %s", pkg.Name, pkg.ImportPath, pkg.TestScope, want, got)
@@ -349,7 +349,7 @@ func TestPkgname(t *testing.T) {
 	}}
 
 	for _, tt := range tests {
-		got := pkgname(tt.pkg)
+		got := tt.pkg.pkgname()
 		if got != tt.want {
 			t.Errorf("pkgname(Package{Name:%q, ImportPath: %q, TestScope:%v}): got %v, want %v", tt.pkg.Name, tt.pkg.ImportPath, tt.pkg.TestScope, got, tt.want)
 		}

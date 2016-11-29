@@ -72,9 +72,9 @@ func (p *Package) Complete() bool {
 // Binfile returns the destination of the compiled target of this command.
 func (pkg *Package) Binfile() string {
 	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
-	target := filepath.Join(pkg.Bindir(), binname(pkg))
+	target := filepath.Join(pkg.Bindir(), pkg.binname())
 	if pkg.TestScope {
-		target = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", binname(pkg))
+		target = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", pkg.binname())
 	}
 
 	// if this is a cross compile or GOOS/GOARCH are both defined or there are build tags, add ctxString.

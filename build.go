@@ -142,7 +142,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	var assemble []*Action
 	for _, sfile := range pkg.SFiles {
 		sfile := sfile
-		ofile := filepath.Join(pkg.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
+		ofile := filepath.Join(pkg.Context.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
 		assemble = append(assemble, &Action{
 			Name: fmt.Sprintf("asm: %s/%s", pkg.ImportPath, sfile),
 			Run: func() error {
@@ -175,7 +175,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 				// collect .o files, ofiles always starts with the gc compiled object.
 				// TODO(dfc) objfile(pkg) should already be at the top of this set
 				ofiles = append(
-					[]string{objfile(pkg)},
+					[]string{pkg.objfile()},
 					ofiles...,
 				)
 
@@ -195,7 +195,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		build = &Action{
 			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
 			Deps: []*Action{build},
-			Run:  func() error { return fileutils.Copyfile(installpath(pkg), objfile(pkg)) },
+			Run:  func() error { return fileutils.Copyfile(installpath(pkg), pkg.objfile()) },
 		}
 	}
 
@@ -204,7 +204,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		build = &Action{
 			Name: fmt.Sprintf("link: %s", pkg.ImportPath),
 			Deps: []*Action{build},
-			Run:  func() error { return link(pkg) },
+			Run:  func() error { return pkg.link() },
 		}
 	}
 	if !pkg.TestScope {
@@ -287,12 +287,12 @@ func gc(pkg *Package, gofiles []string) error {
 			gofiles[i] = fullpath
 		}
 	}
-	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Dir, objfile(pkg), gofiles)
+	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Dir, pkg.objfile(), gofiles)
 	pkg.Record("gc", time.Since(t0))
 	return err
 }
 
-func link(pkg *Package) error {
+func (pkg *Package) link() error {
 	t0 := time.Now()
 	target := pkg.Binfile()
 	if err := mkdir(filepath.Dir(target)); err != nil {
@@ -304,33 +304,32 @@ func link(pkg *Package) error {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
 	}
-	err := pkg.tc.Ld(pkg, includes, target, objfile(pkg))
+	err := pkg.tc.Ld(pkg, includes, target, pkg.objfile())
 	pkg.Record("link", time.Since(t0))
 	return err
 }
 
-// Workdir returns the working directory for a package.
-func Workdir(pkg *Package) string {
+func (pkg *Package) Workdir() string {
 	if pkg.TestScope {
 		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
-		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+		return filepath.Join(pkg.Context.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 	}
-	return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	return filepath.Join(pkg.Context.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 }
 
 // objfile returns the name of the object file for this package
-func objfile(pkg *Package) string {
-	return filepath.Join(Workdir(pkg), objname(pkg))
+func (pkg *Package) objfile() string {
+	return filepath.Join(pkg.Workdir(), pkg.objname())
 }
 
-func objname(pkg *Package) string {
+func (pkg *Package) objname() string {
 	if pkg.isMain() {
 		return filepath.Join(filepath.Base(filepath.FromSlash(pkg.ImportPath)), "main.a")
 	}
 	return filepath.Base(filepath.FromSlash(pkg.ImportPath)) + ".a"
 }
 
-func pkgname(pkg *Package) string {
+func (pkg *Package) pkgname() string {
 	switch {
 	case pkg.TestScope:
 		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
@@ -341,7 +340,7 @@ func pkgname(pkg *Package) string {
 	}
 }
 
-func binname(pkg *Package) string {
+func (pkg *Package) binname() string {
 	switch {
 	case pkg.TestScope:
 		return pkg.Name + ".test"
