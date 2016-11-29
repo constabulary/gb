@@ -17,6 +17,7 @@ type Package struct {
 	TestScope     bool
 	ExtraIncludes string // hook for test
 	Stale         bool   // is the package out of date wrt. its cached copy
+	Main          bool   // is this a command
 	Imports       []*Package
 }
 
@@ -113,7 +114,7 @@ func (pkg *Package) pkgname() string {
 }
 
 func (pkg *Package) binname() string {
-	if !pkg.isMain() {
+	if !pkg.Main {
 		panic("binname called with non main package: " + pkg.ImportPath)
 	}
 	// TODO(dfc) use pkg path instead?

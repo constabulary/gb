@@ -258,6 +258,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 		panic("testmain not marked stale")
 	}
 	testmain.TestScope = true
+	testmain.Main = true
 	testmain.ExtraIncludes = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 	return testmain, nil
 }
