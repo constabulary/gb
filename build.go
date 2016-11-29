@@ -83,7 +83,7 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 	// step 0. are we stale ?
 	// if this package is not stale, then by definition none of its
 	// dependencies are stale, so ignore this whole tree.
-	if !pkg.Stale {
+	if pkg.NotStale {
 		return nil, nil
 	}
 

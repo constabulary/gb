@@ -16,7 +16,7 @@ type Package struct {
 	*importer.Package
 	TestScope     bool
 	ExtraIncludes string // hook for test
-	Stale         bool   // is the package out of date wrt. its cached copy
+	NotStale      bool   // this package _and_ all its dependencies are not stale
 	Main          bool   // is this a command
 	Imports       []*Package
 }

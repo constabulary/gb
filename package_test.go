@@ -110,7 +110,7 @@ func TestNewPackage(t *testing.T) {
 			Standard:   true,
 		},
 		Package{
-			Stale: false,
+			NotStale: true,
 		},
 	}}
 	proj := testProject(t)

@@ -14,19 +14,19 @@ func TestStale(t *testing.T) {
 	}{{
 		pkgs: []string{"a"},
 		stale: map[string]bool{
+			"a": false,
+		},
+	}, {
+		pkgs: []string{"a", "b"},
+		stale: map[string]bool{
 			"a": true,
-		},
-	}, {
-		pkgs: []string{"a", "b"},
-		stale: map[string]bool{
-			"a": false,
-			"b": true,
-		},
-	}, {
-		pkgs: []string{"a", "b"},
-		stale: map[string]bool{
-			"a": false,
 			"b": false,
+		},
+	}, {
+		pkgs: []string{"a", "b"},
+		stale: map[string]bool{
+			"a": true,
+			"b": true,
 		},
 	}}
 
@@ -74,8 +74,8 @@ func main() {
 
 		for p, s := range tt.stale {
 			pkg := resolve(ctx, p)
-			if pkg.Stale != s {
-				t.Errorf("%q.Stale: got %v, want %v", pkg.Name, pkg.Stale, s)
+			if pkg.NotStale != s {
+				t.Errorf("%q.NotStale: got %v, want %v", pkg.Name, pkg.NotStale, s)
 			}
 		}
 

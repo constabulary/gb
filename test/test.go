@@ -114,7 +114,6 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		return nil, err
 	}
 	testpkg.TestScope = true
-	testpkg.Stale = true // TODO(dfc) NewPackage should get this right
 
 	// only build the internal test if there is Go source or
 	// internal test files.
@@ -152,7 +151,6 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 			return nil, err
 		}
 		xtestpkg.TestScope = true
-		xtestpkg.Stale = true
 		xtestpkg.ExtraIncludes = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 
 		// if there is an internal test object, add it as a dependency.
@@ -254,7 +252,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !testmain.Stale {
+	if testmain.NotStale {
 		panic("testmain not marked stale")
 	}
 	testmain.TestScope = true
