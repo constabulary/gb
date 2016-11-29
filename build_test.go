@@ -194,7 +194,7 @@ func TestObjfile(t *testing.T) {
 		pkg  string // package name
 		want string // objfile result
 	}{
-		{pkg: "b", want: "b/main.a"},
+		{pkg: "b", want: "b.a"},
 		{pkg: "nested/a", want: "nested/a.a"},
 		{pkg: "nested/b", want: "nested/b.a"},
 	}
@@ -284,7 +284,7 @@ func TestPkgname(t *testing.T) {
 				ImportPath: "main",
 			},
 		},
-		want: "a",
+		want: "main",
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{

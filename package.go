@@ -104,24 +104,18 @@ func (pkg *Package) objfile() string {
 }
 
 func (pkg *Package) objname() string {
-	if pkg.isMain() {
-		return filepath.Join(filepath.Base(filepath.FromSlash(pkg.ImportPath)), "main.a")
-	}
-	return filepath.Base(filepath.FromSlash(pkg.ImportPath)) + ".a"
+	return pkg.pkgname() + ".a"
 }
 
 func (pkg *Package) pkgname() string {
-	switch {
-	case pkg.TestScope || pkg.Name == "main":
-		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
-	default:
-		return pkg.Name
-	}
+	// TODO(dfc) use pkg path instead?
+	return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 }
 
 func (pkg *Package) binname() string {
 	if !pkg.isMain() {
 		panic("binname called with non main package: " + pkg.ImportPath)
 	}
+	// TODO(dfc) use pkg path instead?
 	return filepath.Base(filepath.FromSlash(pkg.ImportPath))
 }
