@@ -200,7 +200,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	}
 
 	// if this is a main package, add a link stage
-	if pkg.isMain() {
+	if pkg.Main {
 		build = &Action{
 			Name: fmt.Sprintf("link: %s", pkg.ImportPath),
 			Deps: []*Action{build},
