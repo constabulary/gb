@@ -88,7 +88,7 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	return err
 }
 
-func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
+func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile string) error {
 	// to ensure we don't write a partial binary, link the binary to a temporary file in
 	// in the target directory, then rename.
 	dir := filepath.Dir(outfile)
@@ -106,7 +106,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	if goversion > 1.4 {
 		args = append(args, "-buildmode", pkg.buildmode)
 	}
-	args = append(args, afile)
+	args = append(args, pkg.objfile())
 
 	if err := mkdir(dir); err != nil {
 		return err

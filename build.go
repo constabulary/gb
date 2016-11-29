@@ -304,7 +304,7 @@ func (pkg *Package) link() error {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
 	}
-	err := pkg.tc.Ld(pkg, includes, target, pkg.objfile())
+	err := pkg.tc.Ld(pkg, includes, target)
 	pkg.Record("link", time.Since(t0))
 	return err
 }
