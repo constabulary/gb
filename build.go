@@ -83,7 +83,7 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 	// step 0. are we stale ?
 	// if this package is not stale, then by definition none of its
 	// dependencies are stale, so ignore this whole tree.
-	if !pkg.Stale {
+	if pkg.NotStale {
 		return nil, nil
 	}
 
@@ -195,7 +195,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		build = &Action{
 			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
 			Deps: []*Action{build},
-			Run:  func() error { return fileutils.Copyfile(installpath(pkg), pkg.objfile()) },
+			Run:  func() error { return fileutils.Copyfile(pkg.installpath(), pkg.objfile()) },
 		}
 	}
 

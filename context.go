@@ -185,7 +185,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		if err != nil {
 			return nil, err
 		}
-		pkg.Stale = false
+		pkg.NotStale = true
 		ctx.pkgs[pkg.ImportPath] = pkg
 	}
 
@@ -206,7 +206,7 @@ func (c *Context) NewPackage(p *importer.Package) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	pkg.Stale = isStale(pkg)
+	pkg.NotStale = !pkg.isStale()
 	return pkg, nil
 }
 
@@ -271,7 +271,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 		// update the import path as the import may have been discovered via vendoring.
 		p.Imports[i] = pkg.ImportPath
-		stale = stale || pkg.Stale
+		stale = stale || !pkg.NotStale
 	}
 
 	pkg, err := newPackage(c, p)
@@ -279,7 +279,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return nil, errors.Wrapf(err, "loadPackage(%q)", path)
 	}
 	pkg.Main = pkg.Name == "main"
-	pkg.Stale = stale || isStale(pkg)
+	pkg.NotStale = !(stale || pkg.isStale())
 	c.pkgs[p.ImportPath] = pkg
 	return pkg, nil
 }
