@@ -5,6 +5,7 @@
 package importer
 
 import (
+	"go/build"
 	"io"
 	"path/filepath"
 	"reflect"
@@ -14,7 +15,7 @@ import (
 
 func TestMatch(t *testing.T) {
 	ctxt := &Importer{
-		Context: &Context{
+		Context: &build.Context{
 			GOOS:   runtime.GOOS,
 			GOARCH: runtime.GOARCH,
 		},
@@ -72,7 +73,7 @@ func TestShouldBuild(t *testing.T) {
 		"func shouldBuild(content []byte)\n"
 	want3 := map[string]bool{}
 
-	ctx := &Importer{Context: &Context{BuildTags: []string{"tag1"}}}
+	ctx := &Importer{Context: &build.Context{BuildTags: []string{"tag1"}}}
 	m := map[string]bool{}
 	if !ctx.shouldBuild([]byte(file1), m) {
 		t.Errorf("shouldBuild(file1) = false, want true")
@@ -90,7 +91,7 @@ func TestShouldBuild(t *testing.T) {
 	}
 
 	m = map[string]bool{}
-	ctx = &Importer{Context: &Context{BuildTags: nil}}
+	ctx = &Importer{Context: &build.Context{BuildTags: nil}}
 	if !ctx.shouldBuild([]byte(file3), m) {
 		t.Errorf("shouldBuild(file3) = false, want true")
 	}
@@ -108,12 +109,12 @@ func (r readNopCloser) Close() error {
 }
 
 var (
-	ctxtP9      = Context{GOARCH: "arm", GOOS: "plan9"}
-	ctxtAndroid = Context{GOARCH: "arm", GOOS: "android"}
+	ctxtP9      = build.Context{GOARCH: "arm", GOOS: "plan9"}
+	ctxtAndroid = build.Context{GOARCH: "arm", GOOS: "android"}
 )
 
 var matchFileTests = []struct {
-	ctxt  Context
+	ctxt  build.Context
 	name  string
 	data  string
 	match bool
