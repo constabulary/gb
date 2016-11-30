@@ -206,7 +206,7 @@ func (c *Context) NewPackage(p *importer.Package) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	pkg.NotStale = !isStale(pkg)
+	pkg.NotStale = !pkg.isStale()
 	return pkg, nil
 }
 
@@ -279,7 +279,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return nil, errors.Wrapf(err, "loadPackage(%q)", path)
 	}
 	pkg.Main = pkg.Name == "main"
-	pkg.NotStale = !(stale || isStale(pkg))
+	pkg.NotStale = !(stale || pkg.isStale())
 	c.pkgs[p.ImportPath] = pkg
 	return pkg, nil
 }
