@@ -63,10 +63,10 @@ func TestBuild(t *testing.T) {
 	}, {
 		pkg:  "tags1",
 		opts: opts(Tags("x")), // excludes the test file in package
-		err:  &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags1"), Ignored: true},
+		err:  nogoerr(filepath.Join(getwd(t), "testdata", "src", "tags1")),
 	}, {
 		pkg: "tags2",
-		err: &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags2"), Ignored: true},
+		err: nogoerr(filepath.Join(getwd(t), "testdata", "src", "tags2")),
 	}, {
 		pkg:  "tags2",
 		opts: opts(Tags("x")),
