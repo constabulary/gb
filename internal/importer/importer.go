@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"go/build"
-	"io"
 	"os"
 	pathpkg "path"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"unicode"
+
+	"github.com/pkg/errors"
 )
 
 type Importer struct {
@@ -32,12 +33,19 @@ func (i *Importer) Import(path string) (*Package, error) {
 	}
 
 	p := &Package{
-		importer: i,
 		Standard: i.Root == runtime.GOROOT(),
-		Package: &build.Package{
-			ImportPath: path,
-		},
 	}
+
+	loadPackage := func(importpath, dir string) error {
+		pkg, err := i.Context.ImportDir(dir, 0)
+		if err != nil {
+			return err
+		}
+		p.Package = pkg
+		p.ImportPath = importpath
+		return nil
+	}
+
 	// if this is the stdlib, then search vendor first.
 	// this isn't real vendor support, just enough to make net/http compile.
 	if p.Standard {
@@ -45,94 +53,21 @@ func (i *Importer) Import(path string) (*Package, error) {
 		dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
 		fi, err := os.Stat(dir)
 		if err == nil && fi.IsDir() {
-			p.Dir = dir
-			p.Root = i.Root
-			p.ImportPath = path
-			p.SrcRoot = filepath.Join(p.Root, "src")
-			err = i.loadPackage(p)
+			err := loadPackage(path, dir)
 			return p, err
 		}
 	}
 
 	dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
 	fi, err := os.Stat(dir)
-	if err == nil {
-		if fi.IsDir() {
-			p.Dir = dir
-			p.Root = i.Root
-			p.SrcRoot = filepath.Join(p.Root, "src")
-			err = i.loadPackage(p)
-			return p, err
-		}
-		err = fmt.Errorf("import %q: not a directory", path)
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
-}
-
-// matchFile determines whether the file with the given name in the given directory
-// should be included in the package being constructed.
-// It returns the data read from the file.
-// If allTags is non-nil, matchFile records any encountered build tag
-// by setting allTags[tag] = true.
-func (i *Importer) matchFile(path string, allTags map[string]bool) (match bool, data []byte, err error) {
-	name := filepath.Base(path)
-	if name[0] == '_' || name[0] == '.' {
-		return
+	if !fi.IsDir() {
+		return nil, errors.Errorf("import %q: not a directory", path)
 	}
-
-	if !goodOSArchFile(i.GOOS, i.GOARCH, name, allTags) {
-		return
-	}
-
-	read := func(path string, fn func(r io.Reader) ([]byte, error)) ([]byte, error) {
-		f, err := os.Open(path)
-		if err != nil {
-			return nil, err
-		}
-		defer f.Close()
-		data, err := fn(f)
-		if err != nil {
-			err = fmt.Errorf("read %s: %v", path, err)
-		}
-		return data, err
-	}
-
-	switch filepath.Ext(name) {
-	case ".go":
-		data, err = read(path, readImports)
-		if err != nil {
-			return
-		}
-		// Look for +build comments to accept or reject the file.
-		if !i.shouldBuild(data, allTags) {
-			return
-		}
-
-		match = true
-		return
-
-	case ".c", ".cc", ".cxx", ".cpp", ".m", ".s", ".h", ".hh", ".hpp", ".hxx", ".S", ".swig", ".swigcxx":
-		// tentatively okay - read to make sure
-		data, err = read(path, readComments)
-		if err != nil {
-			return
-		}
-		// Look for +build comments to accept or reject the file.
-		if !i.shouldBuild(data, allTags) {
-			return
-		}
-
-		match = true
-		return
-
-	case ".syso":
-		// binary, no reading
-		match = true
-		return
-	default:
-		// skip
-		return
-	}
+	err = loadPackage(path, dir)
+	return p, err
 }
 
 // shouldBuild reports whether it is okay to use this file,
@@ -273,4 +208,108 @@ func (i *Importer) match(name string, allTags map[string]bool) bool {
 	}
 
 	return false
+}
+
+var knownOS = map[string]bool{
+	"android":   true,
+	"darwin":    true,
+	"dragonfly": true,
+	"freebsd":   true,
+	"linux":     true,
+	"nacl":      true,
+	"netbsd":    true,
+	"openbsd":   true,
+	"plan9":     true,
+	"solaris":   true,
+	"windows":   true,
+}
+
+var knownArch = map[string]bool{
+	"386":         true,
+	"amd64":       true,
+	"amd64p32":    true,
+	"arm":         true,
+	"armbe":       true,
+	"arm64":       true,
+	"arm64be":     true,
+	"mips":        true,
+	"mipsle":      true,
+	"mips64":      true,
+	"mips64le":    true,
+	"mips64p32":   true,
+	"mips64p32le": true,
+	"ppc":         true,
+	"ppc64":       true,
+	"ppc64le":     true,
+	"s390":        true,
+	"s390x":       true,
+	"sparc":       true,
+	"sparc64":     true,
+}
+
+// goodOSArchFile returns false if the name contains a $GOOS or $GOARCH
+// suffix which does not match the current system.
+// The recognized name formats are:
+//
+//     name_$(GOOS).*
+//     name_$(GOARCH).*
+//     name_$(GOOS)_$(GOARCH).*
+//     name_$(GOOS)_test.*
+//     name_$(GOARCH)_test.*
+//     name_$(GOOS)_$(GOARCH)_test.*
+//
+// An exception: if GOOS=android, then files with GOOS=linux are also matched.
+func goodOSArchFile(goos, goarch, name string, allTags map[string]bool) bool {
+	// Before Go 1.4, a file called "linux.go" would be equivalent to having a
+	// build tag "linux" in that file. For Go 1.4 and beyond, we require this
+	// auto-tagging to apply only to files with a non-empty prefix, so
+	// "foo_linux.go" is tagged but "linux.go" is not. This allows new operating
+	// systems, such as android, to arrive without breaking existing code with
+	// innocuous source code in "android.go". The easiest fix: cut everything
+	// in the name before the initial _.
+	i := strings.Index(name, "_")
+	if i < 0 {
+		return true
+	}
+	name = name[i:] // ignore everything before first _
+
+	// strip extension
+	if dot := strings.Index(name, "."); dot != -1 {
+		name = name[:dot]
+	}
+
+	l := strings.Split(name, "_")
+	if n := len(l); n > 0 && l[n-1] == "test" {
+		l = l[:n-1]
+	}
+	n := len(l)
+	switch {
+	case n >= 2 && knownOS[l[n-2]] && knownArch[l[n-1]]:
+		if allTags != nil {
+			allTags[l[n-2]] = true
+			allTags[l[n-1]] = true
+		}
+		if l[n-1] != goarch {
+			return false
+		}
+		if goos == "android" && l[n-2] == "linux" {
+			return true
+		}
+		return l[n-2] == goos
+	case n >= 1 && knownOS[l[n-1]]:
+		if allTags != nil {
+			allTags[l[n-1]] = true
+		}
+		if goos == "android" && l[n-1] == "linux" {
+			return true
+		}
+		return l[n-1] == goos
+	case n >= 1 && knownArch[l[n-1]]:
+		if allTags != nil {
+			allTags[l[n-1]] = true
+		}
+		return l[n-1] == goarch
+	default:
+		return true
+	}
 }

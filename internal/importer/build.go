@@ -12,16 +12,8 @@ import (
 	"strings"
 )
 
-// importer is a private interface defined here so public *Importer
-// types can be embedded in *Package with exposing them to the caller.
-type importer interface {
-	matchFile(path string, allTags map[string]bool) (match bool, data []byte, err error)
-	match(name string, allTags map[string]bool) bool
-}
-
 // A Package describes the Go package found in a directory.
 type Package struct {
-	importer // the importer context that loaded this package
 	*build.Package
 	Standard bool // package found in GOROOT
 }
