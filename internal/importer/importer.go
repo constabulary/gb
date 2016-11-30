@@ -1,3 +1,7 @@
+// Copyright 2011 The Go Authors.  All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package importer
 
 import (
@@ -11,6 +15,12 @@ import (
 
 	"github.com/pkg/errors"
 )
+
+// A Package describes the Go package found in a directory.
+type Package struct {
+	*build.Package
+	Standard bool // package found in GOROOT
+}
 
 type Importer struct {
 	*build.Context
@@ -35,7 +45,7 @@ func (i *Importer) Import(path string) (*Package, error) {
 	}
 
 	loadPackage := func(importpath, dir string) error {
-		pkg, err := i.Context.ImportDir(dir, 0)
+		pkg, err := i.ImportDir(dir, 0)
 		if err != nil {
 			return err
 		}
