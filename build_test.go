@@ -63,14 +63,13 @@ func TestBuild(t *testing.T) {
 	}, {
 		pkg:  "tags1",
 		opts: opts(Tags("x")), // excludes the test file in package
-		err:  &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags1")},
+		err:  &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags1"), Ignored: true},
 	}, {
 		pkg: "tags2",
 		err: &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags2"), Ignored: true},
 	}, {
 		pkg:  "tags2",
 		opts: opts(Tags("x")),
-		err:  &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags2"), Ignored: true},
 	}, {
 		pkg: "nosource",
 		err: &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "nosource")},
@@ -274,40 +273,50 @@ func TestPkgname(t *testing.T) {
 	}{{
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "main",
-				ImportPath: "main",
+				Package: &build.Package{
+					Name:       "main",
+					ImportPath: "main",
+				},
 			},
 		},
 		want: "main",
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "a",
-				ImportPath: "main",
+				Package: &build.Package{
+					Name:       "a",
+					ImportPath: "main",
+				},
 			},
 		},
 		want: "main",
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "main",
-				ImportPath: "a",
+				Package: &build.Package{
+					Name:       "main",
+					ImportPath: "a",
+				},
 			},
 		},
 		want: "a",
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "main",
-				ImportPath: "testmain",
+				Package: &build.Package{
+					Name:       "main",
+					ImportPath: "testmain",
+				},
 			},
 		},
 		want: "testmain",
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "main",
-				ImportPath: "main",
+				Package: &build.Package{
+					Name:       "main",
+					ImportPath: "main",
+				},
 			},
 			TestScope: true,
 		},
@@ -315,8 +324,10 @@ func TestPkgname(t *testing.T) {
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "a",
-				ImportPath: "main",
+				Package: &build.Package{
+					Name:       "a",
+					ImportPath: "main",
+				},
 			},
 			TestScope: true,
 		},
@@ -324,8 +335,10 @@ func TestPkgname(t *testing.T) {
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "main",
-				ImportPath: "a",
+				Package: &build.Package{
+					Name:       "main",
+					ImportPath: "a",
+				},
 			},
 			TestScope: true,
 		},
@@ -333,8 +346,10 @@ func TestPkgname(t *testing.T) {
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "main",
-				ImportPath: "a/a",
+				Package: &build.Package{
+					Name:       "main",
+					ImportPath: "a/a",
+				},
 			},
 			TestScope: true,
 		},
@@ -342,8 +357,10 @@ func TestPkgname(t *testing.T) {
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
-				Name:       "main",
-				ImportPath: "testmain",
+				Package: &build.Package{
+					Name:       "main",
+					ImportPath: "testmain",
+				},
 			},
 			TestScope: true,
 		},

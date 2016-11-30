@@ -92,25 +92,25 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 	// internal tests
 	testpkg, err := pkg.NewPackage(&importer.Package{
-		Name:       name,
-		ImportPath: pkg.ImportPath,
-		SrcRoot:    pkg.SrcRoot,
-
-		GoFiles:      gofiles,
-		CFiles:       pkg.CFiles,
-		CgoFiles:     cgofiles,
-		TestGoFiles:  pkg.TestGoFiles,  // passed directly to buildTestMain
-		XTestGoFiles: pkg.XTestGoFiles, // passed directly to buildTestMain
-
-		CgoCFLAGS:    pkg.CgoCFLAGS,
-		CgoCPPFLAGS:  pkg.CgoCPPFLAGS,
-		CgoCXXFLAGS:  pkg.CgoCXXFLAGS,
-		CgoLDFLAGS:   pkg.CgoLDFLAGS,
-		CgoPkgConfig: pkg.CgoPkgConfig,
-
-		Imports: imports,
 		Package: &build.Package{
-			Dir: pkg.Dir,
+			Name:       name,
+			ImportPath: pkg.ImportPath,
+			SrcRoot:    pkg.SrcRoot,
+
+			GoFiles:      gofiles,
+			CFiles:       pkg.CFiles,
+			CgoFiles:     cgofiles,
+			TestGoFiles:  pkg.TestGoFiles,  // passed directly to buildTestMain
+			XTestGoFiles: pkg.XTestGoFiles, // passed directly to buildTestMain
+
+			CgoCFLAGS:    pkg.CgoCFLAGS,
+			CgoCPPFLAGS:  pkg.CgoCPPFLAGS,
+			CgoCXXFLAGS:  pkg.CgoCXXFLAGS,
+			CgoLDFLAGS:   pkg.CgoLDFLAGS,
+			CgoPkgConfig: pkg.CgoPkgConfig,
+
+			Imports: imports,
+			Dir:     pkg.Dir,
 		},
 	})
 	if err != nil {
@@ -138,12 +138,12 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
 		xtestpkg, err := pkg.NewPackage(&importer.Package{
-			Name:       name,
-			ImportPath: pkg.ImportPath + "_test",
-			GoFiles:    pkg.XTestGoFiles,
-			Imports:    pkg.XTestImports,
 			Package: &build.Package{
-				Dir: pkg.Dir,
+				Name:       name,
+				ImportPath: pkg.ImportPath + "_test",
+				GoFiles:    pkg.XTestGoFiles,
+				Imports:    pkg.XTestImports,
+				Dir:        pkg.Dir,
 			},
 		})
 		if err != nil {
@@ -245,15 +245,15 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 		return nil, err
 	}
 	testmain, err := pkg.NewPackage(&importer.Package{
-		Name:       pkg.Name,
-		ImportPath: path.Join(pkg.ImportPath, "testmain"),
-		SrcRoot:    pkg.SrcRoot,
-
-		GoFiles: []string{"_testmain.go"},
-
-		Imports: pkg.Package.Imports,
 		Package: &build.Package{
-			Dir: dir,
+			Name:       pkg.Name,
+			ImportPath: path.Join(pkg.ImportPath, "testmain"),
+			SrcRoot:    pkg.SrcRoot,
+
+			GoFiles: []string{"_testmain.go"},
+
+			Imports: pkg.Package.Imports,
+			Dir:     dir,
 		},
 	})
 	if err != nil {

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"fmt"
 	"go/build"
-	"go/token"
 	"path/filepath"
 	"strings"
 )
@@ -24,46 +23,7 @@ type importer interface {
 type Package struct {
 	importer // the importer context that loaded this package
 	*build.Package
-	Name          string   // package name
-	ImportPath    string   // import path of package ("" if unknown)
-	Root          string   // root of Go tree where this package lives
-	SrcRoot       string   // package source root directory ("" if unknown)
-	PkgTargetRoot string   // architecture dependent install root directory ("" if unknown)
-	Standard      bool     // package found in GOROOT
-	AllTags       []string // tags that can influence file selection in this directory
-	ConflictDir   string   // this directory shadows Dir in $GOPATH
-
-	// Source files
-	GoFiles        []string // .go source files (excluding CgoFiles, TestGoFiles, XTestGoFiles)
-	CgoFiles       []string // .go source files that import "C"
-	IgnoredGoFiles []string // .go source files ignored for this build
-	CFiles         []string // .c source files
-	CXXFiles       []string // .cc, .cpp and .cxx source files
-	MFiles         []string // .m (Objective-C) source files
-	HFiles         []string // .h, .hh, .hpp and .hxx source files
-	SFiles         []string // .s source files
-	SwigFiles      []string // .swig files
-	SwigCXXFiles   []string // .swigcxx files
-	SysoFiles      []string // .syso system object files to add to archive
-
-	// Cgo directives
-	CgoCFLAGS    []string // Cgo CFLAGS directives
-	CgoCPPFLAGS  []string // Cgo CPPFLAGS directives
-	CgoCXXFLAGS  []string // Cgo CXXFLAGS directives
-	CgoLDFLAGS   []string // Cgo LDFLAGS directives
-	CgoPkgConfig []string // Cgo pkg-config directives
-
-	// Dependency information
-	Imports   []string                    // imports from GoFiles, CgoFiles
-	ImportPos map[string][]token.Position // line information for Imports
-
-	// Test information
-	TestGoFiles    []string                    // _test.go files in package
-	TestImports    []string                    // imports from TestGoFiles
-	TestImportPos  map[string][]token.Position // line information for TestImports
-	XTestGoFiles   []string                    // _test.go files outside package
-	XTestImports   []string                    // imports from XTestGoFiles
-	XTestImportPos map[string][]token.Position // line information for XTestImports
+	Standard bool // package found in GOROOT
 }
 
 // MultiplePackageError describes a directory containing

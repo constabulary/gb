@@ -159,15 +159,14 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	// sort build tags to ensure the ctxSring and Suffix is stable
 	sort.Strings(ctx.buildtags)
 
-	ic := build.Context{
-		GOOS:        ctx.gotargetos,
-		GOARCH:      ctx.gotargetarch,
-		CgoEnabled:  cgoEnabled(ctx.gohostos, ctx.gohostarch, ctx.gotargetos, ctx.gotargetarch),
-		ReleaseTags: releaseTags, // from go/build, see gb.go
-		BuildTags:   ctx.buildtags,
-	}
+	bc := build.Default
+	bc.GOOS = ctx.gotargetos
+	bc.GOARCH = ctx.gotargetarch
+	bc.CgoEnabled = cgoEnabled(ctx.gohostos, ctx.gohostarch, ctx.gotargetos, ctx.gotargetarch)
+	bc.ReleaseTags = releaseTags
+	bc.BuildTags = ctx.buildtags
 
-	i, err := buildImporter(&ic, &ctx)
+	i, err := buildImporter(&bc, &ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -178,11 +177,11 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	// Insert fake packages into the package cache.
 	for _, name := range []string{"C", "unsafe"} {
 		pkg, err := newPackage(&ctx, &importer.Package{
-			Name:       name,
-			ImportPath: name,
-			Standard:   true,
+			Standard: true,
 			Package: &build.Package{
-				Dir: name, // fake, but helps diagnostics
+				Name:       name,
+				ImportPath: name,
+				Dir:        name, // fake, but helps diagnostics
 			},
 		})
 		if err != nil {

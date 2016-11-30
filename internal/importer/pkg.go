@@ -125,8 +125,8 @@ func (x byName) Len() int           { return len(x) }
 func (x byName) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 func (x byName) Less(i, j int) bool { return x[i].Name() < x[j].Name() }
 
-func loadPackage(p *Package) error {
-	pkg, err := build.ImportDir(p.Dir, 0)
+func (i *Importer) loadPackage(p *Package) error {
+	pkg, err := i.Context.ImportDir(p.Dir, 0)
 	if err != nil {
 		return err
 	}
@@ -136,6 +136,8 @@ func loadPackage(p *Package) error {
 	}
 	pkg.ImportPath = filepath.ToSlash(importpath)
 	p.Package = pkg
+	return nil
+
 	dir, err := os.Open(p.Dir)
 	if err != nil {
 		return errors.Wrap(err, "unable open directory")
