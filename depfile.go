@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"crypto/sha1"
 	"fmt"
+	"go/build"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -23,7 +24,7 @@ const semverRegex = `^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(\-[0-9A-Za-z-]+(?:\.[0-9A-
 
 // addDepfileDeps inserts into the Context's importer list
 // a set of importers for entries in the depfile.
-func addDepfileDeps(ic *importer.Context, ctx *Context) (Importer, error) {
+func addDepfileDeps(bc *build.Context, ctx *Context) (Importer, error) {
 	i := Importer(new(nullImporter))
 	df, err := readDepfile(ctx)
 	if err != nil {
@@ -58,7 +59,7 @@ func addDepfileDeps(ic *importer.Context, ctx *Context) (Importer, error) {
 			i = &_importer{
 				Importer: i,
 				im: importer.Importer{
-					Context: ic,
+					Context: bc,
 					Root:    root,
 				},
 			}
@@ -85,7 +86,7 @@ func addDepfileDeps(ic *importer.Context, ctx *Context) (Importer, error) {
 			i = &_importer{
 				Importer: i,
 				im: importer.Importer{
-					Context: ic,
+					Context: bc,
 					Root:    root,
 				},
 			}

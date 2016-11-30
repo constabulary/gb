@@ -3,6 +3,7 @@ package importer
 import (
 	"bytes"
 	"fmt"
+	"go/build"
 	"io"
 	"os"
 	pathpkg "path"
@@ -12,24 +13,8 @@ import (
 	"unicode"
 )
 
-type Context struct {
-	GOOS       string // target architecture
-	GOARCH     string // target operating system
-	CgoEnabled bool   // whether cgo can be used
-
-	// The build and release tags specify build constraints
-	// that should be considered satisfied when processing +build lines.
-	// Clients creating a new context may customize BuildTags, which
-	// defaults to empty, but it is usually an error to customize ReleaseTags,
-	// which defaults to the list of Go releases the current release is compatible with.
-	// In addition to the BuildTags and ReleaseTags, build constraints
-	// consider the values of GOARCH and GOOS as satisfied tags.
-	BuildTags   []string
-	ReleaseTags []string
-}
-
 type Importer struct {
-	*Context
+	*build.Context
 	Root string // root directory
 }
 

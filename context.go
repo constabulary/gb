@@ -2,6 +2,7 @@ package gb
 
 import (
 	"fmt"
+	"go/build"
 	"io"
 	"io/ioutil"
 	"os"
@@ -158,7 +159,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	// sort build tags to ensure the ctxSring and Suffix is stable
 	sort.Strings(ctx.buildtags)
 
-	ic := importer.Context{
+	ic := build.Context{
 		GOOS:        ctx.gotargetos,
 		GOARCH:      ctx.gotargetarch,
 		CgoEnabled:  cgoEnabled(ctx.gohostos, ctx.gohostarch, ctx.gotargetos, ctx.gotargetarch),
@@ -412,8 +413,8 @@ func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
 	}
 }
 
-func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
-	i, err := addDepfileDeps(ic, ctx)
+func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
+	i, err := addDepfileDeps(bc, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +423,7 @@ func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
 	i = &_importer{
 		Importer: i,
 		im: importer.Importer{
-			Context: ic,
+			Context: bc,
 			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
 		},
 	}
@@ -430,7 +431,7 @@ func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
 	i = &srcImporter{
 		i,
 		importer.Importer{
-			Context: ic,
+			Context: bc,
 			Root:    ctx.Projectdir(),
 		},
 	}
@@ -438,7 +439,7 @@ func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
 	i = &_importer{
 		i,
 		importer.Importer{
-			Context: ic,
+			Context: bc,
 			Root:    runtime.GOROOT(),
 		},
 	}

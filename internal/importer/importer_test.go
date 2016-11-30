@@ -2,6 +2,7 @@ package importer
 
 import (
 	"fmt"
+	"go/build"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -53,7 +54,7 @@ func TestImporter(t *testing.T) {
 		err:      fmt.Errorf("import %q: cannot import absolute path", "/foo"),
 	}, {
 		Importer: Importer{
-			Context: &Context{
+			Context: &build.Context{
 				GOOS:   "linux",
 				GOARCH: "amd64",
 			},
@@ -74,7 +75,7 @@ func TestImporter(t *testing.T) {
 		},
 	}, {
 		Importer: Importer{
-			Context: &Context{
+			Context: &build.Context{
 				GOOS:   "linux",
 				GOARCH: "amd64",
 			},
@@ -84,7 +85,7 @@ func TestImporter(t *testing.T) {
 		err:  &NoGoError{filepath.Join(runtime.GOROOT(), "src", "database")},
 	}, {
 		Importer: Importer{
-			Context: &Context{
+			Context: &build.Context{
 				GOOS:   "linux",
 				GOARCH: "amd64",
 			},
@@ -94,7 +95,7 @@ func TestImporter(t *testing.T) {
 		err:  patherr(filepath.Join(runtime.GOROOT(), "src", "missing")),
 	}, {
 		Importer: Importer{
-			Context: &Context{
+			Context: &build.Context{
 				GOOS:       "linux",
 				GOARCH:     "amd64",
 				CgoEnabled: true,
@@ -104,7 +105,7 @@ func TestImporter(t *testing.T) {
 		path: "net",
 	}, {
 		Importer: Importer{
-			Context: &Context{
+			Context: &build.Context{
 				GOOS:       "linux",
 				GOARCH:     "amd64",
 				CgoEnabled: true,
