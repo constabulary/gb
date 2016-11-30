@@ -7,6 +7,7 @@ package importer
 import (
 	"bytes"
 	"fmt"
+	"go/build"
 	"go/token"
 	"path/filepath"
 	"strings"
@@ -21,8 +22,8 @@ type importer interface {
 
 // A Package describes the Go package found in a directory.
 type Package struct {
-	importer               // the importer context that loaded this package
-	Dir           string   // directory containing package sources
+	importer // the importer context that loaded this package
+	*build.Package
 	Name          string   // package name
 	ImportPath    string   // import path of package ("" if unknown)
 	Root          string   // root of Go tree where this package lives
@@ -63,17 +64,6 @@ type Package struct {
 	XTestGoFiles   []string                    // _test.go files outside package
 	XTestImports   []string                    // imports from XTestGoFiles
 	XTestImportPos map[string][]token.Position // line information for XTestImports
-}
-
-// NoGoError is the error used by Import to describe a directory
-// containing no buildable Go source files. (It may still contain
-// test files, files hidden by build tags, and so on.)
-type NoGoError struct {
-	Dir string
-}
-
-func (e *NoGoError) Error() string {
-	return "no buildable Go source files in " + e.Dir
 }
 
 // MultiplePackageError describes a directory containing

@@ -2,6 +2,7 @@ package gb
 
 import (
 	"errors"
+	"go/build"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -56,22 +57,23 @@ func TestBuild(t *testing.T) {
 		err: nil,
 	}, {
 		pkg: "h", // imports "blank", which is blank, see issue #131
-		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "blank")},
+		err: &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "blank")},
 	}, {
 		pkg: "cppmain",
 	}, {
 		pkg:  "tags1",
 		opts: opts(Tags("x")), // excludes the test file in package
-		err:  &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "tags1")},
+		err:  &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags1")},
 	}, {
 		pkg: "tags2",
-		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "tags2")},
+		err: &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags2"), Ignored: true},
 	}, {
 		pkg:  "tags2",
 		opts: opts(Tags("x")),
+		err:  &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "tags2"), Ignored: true},
 	}, {
 		pkg: "nosource",
-		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "nosource")},
+		err: &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "nosource")},
 	}}
 
 	proj := testProject(t)

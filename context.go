@@ -181,7 +181,9 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 			Name:       name,
 			ImportPath: name,
 			Standard:   true,
-			Dir:        name, // fake, but helps diagnostics
+			Package: &build.Package{
+				Dir: name, // fake, but helps diagnostics
+			},
 		})
 		if err != nil {
 			return nil, err

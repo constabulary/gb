@@ -35,6 +35,7 @@ func (i *Importer) Import(path string) (*Package, error) {
 		importer:   i,
 		ImportPath: path,
 		Standard:   i.Root == runtime.GOROOT(),
+		Package:    &build.Package{},
 	}
 	// if this is the stdlib, then search vendor first.
 	// this isn't real vendor support, just enough to make net/http compile.

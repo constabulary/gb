@@ -64,7 +64,6 @@ func TestImporter(t *testing.T) {
 		want: &Package{
 			ImportPath: "errors",
 			Name:       "errors", // no yet
-			Dir:        filepath.Join(runtime.GOROOT(), "src", "errors"),
 			Root:       filepath.Join(runtime.GOROOT()),
 			SrcRoot:    filepath.Join(runtime.GOROOT(), "src"),
 			Standard:   true,
@@ -72,6 +71,9 @@ func TestImporter(t *testing.T) {
 			GoFiles:      []string{"errors.go"},
 			XTestGoFiles: []string{"errors_test.go", "example_test.go"},
 			XTestImports: []string{"errors", "fmt", "testing", "time"},
+			Package: &build.Package{
+				Dir: filepath.Join(runtime.GOROOT(), "src", "errors"),
+			},
 		},
 	}, {
 		Importer: Importer{
@@ -82,7 +84,7 @@ func TestImporter(t *testing.T) {
 			Root: filepath.Join(runtime.GOROOT()),
 		},
 		path: "database",
-		err:  &NoGoError{filepath.Join(runtime.GOROOT(), "src", "database")},
+		err:  &build.NoGoError{Dir: filepath.Join(runtime.GOROOT(), "src", "database")},
 	}, {
 		Importer: Importer{
 			Context: &build.Context{
@@ -132,10 +134,12 @@ func TestImporter(t *testing.T) {
 
 		// fixups
 		want := tt.want
+		want.Package = nil
 		want.importer = got.importer
 		got.ImportPos = nil
 		got.TestImportPos = nil
 		got.XTestImportPos = nil
+		got.Package = nil
 
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("Import(%q): got %#v, want %#v", tt.path, got, want)

@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"fmt"
+	"go/build"
 	"io"
 	"os"
 	"os/exec"
@@ -93,7 +94,6 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	testpkg, err := pkg.NewPackage(&importer.Package{
 		Name:       name,
 		ImportPath: pkg.ImportPath,
-		Dir:        pkg.Dir,
 		SrcRoot:    pkg.SrcRoot,
 
 		GoFiles:      gofiles,
@@ -109,6 +109,9 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		CgoPkgConfig: pkg.CgoPkgConfig,
 
 		Imports: imports,
+		Package: &build.Package{
+			Dir: pkg.Dir,
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -137,9 +140,11 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 		xtestpkg, err := pkg.NewPackage(&importer.Package{
 			Name:       name,
 			ImportPath: pkg.ImportPath + "_test",
-			Dir:        pkg.Dir,
 			GoFiles:    pkg.XTestGoFiles,
 			Imports:    pkg.XTestImports,
+			Package: &build.Package{
+				Dir: pkg.Dir,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -242,12 +247,14 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	testmain, err := pkg.NewPackage(&importer.Package{
 		Name:       pkg.Name,
 		ImportPath: path.Join(pkg.ImportPath, "testmain"),
-		Dir:        dir,
 		SrcRoot:    pkg.SrcRoot,
 
 		GoFiles: []string{"_testmain.go"},
 
 		Imports: pkg.Package.Imports,
+		Package: &build.Package{
+			Dir: dir,
+		},
 	})
 	if err != nil {
 		return nil, err

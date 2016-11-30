@@ -3,6 +3,7 @@ package importer
 import (
 	"bufio"
 	"go/ast" // for build.Default
+	"go/build"
 	"go/parser"
 	"go/token"
 	"os"
@@ -125,6 +126,16 @@ func (x byName) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 func (x byName) Less(i, j int) bool { return x[i].Name() < x[j].Name() }
 
 func loadPackage(p *Package) error {
+	pkg, err := build.ImportDir(p.Dir, 0)
+	if err != nil {
+		return err
+	}
+	importpath, err := filepath.Rel(p.SrcRoot, p.Dir)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	pkg.ImportPath = filepath.ToSlash(importpath)
+	p.Package = pkg
 	dir, err := os.Open(p.Dir)
 	if err != nil {
 		return errors.Wrap(err, "unable open directory")
@@ -275,7 +286,7 @@ func loadPackage(p *Package) error {
 		}
 	}
 	if len(p.GoFiles)+len(p.CgoFiles)+len(p.TestGoFiles)+len(p.XTestGoFiles) == 0 {
-		return &NoGoError{p.Dir}
+		return &build.NoGoError{Dir: p.Dir}
 	}
 
 	for tag := range allTags {
