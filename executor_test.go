@@ -3,12 +3,11 @@ package gb
 import (
 	"errors"
 	"fmt"
+	"go/build"
 	"io"
 	"path/filepath"
 	"reflect"
 	"testing"
-
-	"github.com/constabulary/gb/internal/importer"
 )
 
 func TestExecuteBuildAction(t *testing.T) {
@@ -32,7 +31,7 @@ func TestExecuteBuildAction(t *testing.T) {
 		err: errors.New("import cycle detected: x -> y -> x"),
 	}, {
 		pkg: "h", // imports "blank", which is blank, see issue #131
-		err: &importer.NoGoError{filepath.Join(getwd(t), "testdata", "src", "blank")},
+		err: &build.NoGoError{Dir: filepath.Join(getwd(t), "testdata", "src", "blank")},
 	}}
 
 	for _, tt := range tests {

@@ -2,6 +2,7 @@ package gb
 
 import (
 	"fmt"
+	"go/build"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -106,9 +107,11 @@ func TestNewPackage(t *testing.T) {
 		want Package
 	}{{
 		importer.Package{
-			Name:       "C",
-			ImportPath: "C",
-			Standard:   true,
+			Package: &build.Package{
+				Name:       "C",
+				ImportPath: "C",
+			},
+			Standard: true,
 		},
 		Package{
 			NotStale: true,

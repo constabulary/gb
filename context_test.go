@@ -2,14 +2,13 @@ package gb
 
 import (
 	"fmt"
+	"go/build"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"runtime/debug"
 	"strings"
 	"testing"
-
-	"github.com/constabulary/gb/internal/importer"
 )
 
 func testImportCycle(pkg string, t *testing.T) {
@@ -225,7 +224,7 @@ func TestContextImportPackage(t *testing.T) {
 		path: "net/http", // loaded from GOROOT
 	}, {
 		path: "cmd",
-		err:  &importer.NoGoError{Dir: filepath.Join(proj.Projectdir(), "src", "cmd")},
+		err:  &build.NoGoError{Dir: filepath.Join(proj.Projectdir(), "src", "cmd")},
 	}}
 
 	for _, tt := range tests {
