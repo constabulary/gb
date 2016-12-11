@@ -102,7 +102,7 @@ func (t *gcToolchain) Ld(pkg *Package) error {
 	tmp.Close()
 
 	args := append(pkg.ldflags, "-o", tmp.Name())
-	for _, d := range pkg.IncludePaths() {
+	for _, d := range pkg.includePaths() {
 		args = append(args, "-L", d)
 	}
 	args = append(args, "-extld", linkCmd(pkg, "CC", defaultCC))
@@ -164,7 +164,7 @@ func (t *gcToolchain) Gc(pkg *Package, files []string) error {
 	outfile := pkg.objfile()
 	args := append(pkg.gcflags, "-p", pkg.ImportPath, "-pack")
 	args = append(args, "-o", outfile)
-	for _, d := range pkg.IncludePaths() {
+	for _, d := range pkg.includePaths() {
 		args = append(args, "-I", d)
 	}
 	if pkg.Standard && pkg.ImportPath == "runtime" {

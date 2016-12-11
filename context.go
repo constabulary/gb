@@ -195,7 +195,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 }
 
 // IncludePaths returns the include paths visible in this context.
-func (c *Context) IncludePaths() []string {
+func (c *Context) includePaths() []string {
 	return []string{
 		c.workdir,
 		c.Pkgdir(),
