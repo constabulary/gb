@@ -160,9 +160,9 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
-func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath string, files []string) error {
+func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, files []string) error {
 	outfile := pkg.objfile()
-	args := append(pkg.gcflags, "-p", importpath, "-pack")
+	args := append(pkg.gcflags, "-p", pkg.ImportPath, "-pack")
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-I", d)
