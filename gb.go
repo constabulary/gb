@@ -18,7 +18,7 @@ type Toolchain interface {
 	Gc(pkg *Package, searchpaths []string, importpath, outfile string, files []string) error
 	Asm(pkg *Package, ofile, sfile string) error
 	Pack(pkg *Package, afiles ...string) error
-	Ld(*Package, []string, string) error
+	Ld(*Package, []string) error
 	Cc(pkg *Package, ofile string, cfile string) error
 
 	// compiler returns the location of the compiler for .go source code

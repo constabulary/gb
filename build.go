@@ -294,17 +294,12 @@ func gc(pkg *Package, gofiles []string) error {
 
 func (pkg *Package) link() error {
 	t0 := time.Now()
-	target := pkg.Binfile()
-	if err := mkdir(filepath.Dir(target)); err != nil {
-		return err
-	}
-
 	includes := pkg.IncludePaths()
 	if pkg.TestScope && pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
 	}
-	err := pkg.tc.Ld(pkg, includes, target)
+	err := pkg.tc.Ld(pkg, includes)
 	pkg.Record("link", time.Since(t0))
 	return err
 }
