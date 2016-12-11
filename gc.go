@@ -88,7 +88,7 @@ func (t *gcToolchain) Asm(pkg *Package, ofile, sfile string) error {
 	return err
 }
 
-func (t *gcToolchain) Ld(pkg *Package, searchpaths []string) error {
+func (t *gcToolchain) Ld(pkg *Package) error {
 	// to ensure we don't write a partial binary, link the binary to a temporary file in
 	// in the target directory, then rename.
 	dir := pkg.Bindir()
@@ -102,7 +102,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string) error {
 	tmp.Close()
 
 	args := append(pkg.ldflags, "-o", tmp.Name())
-	for _, d := range searchpaths {
+	for _, d := range pkg.IncludePaths() {
 		args = append(args, "-L", d)
 	}
 	args = append(args, "-extld", linkCmd(pkg, "CC", defaultCC))
@@ -160,11 +160,11 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
-func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, files []string) error {
+func (t *gcToolchain) Gc(pkg *Package, files []string) error {
 	outfile := pkg.objfile()
 	args := append(pkg.gcflags, "-p", pkg.ImportPath, "-pack")
 	args = append(args, "-o", outfile)
-	for _, d := range searchpaths {
+	for _, d := range pkg.IncludePaths() {
 		args = append(args, "-I", d)
 	}
 	if pkg.Standard && pkg.ImportPath == "runtime" {
