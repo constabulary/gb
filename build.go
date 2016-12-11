@@ -269,7 +269,6 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
 	includes := pkg.IncludePaths()
-	importpath := pkg.ImportPath
 	if pkg.TestScope && pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
@@ -287,24 +286,19 @@ func gc(pkg *Package, gofiles []string) error {
 			gofiles[i] = fullpath
 		}
 	}
-	err := pkg.tc.Gc(pkg, includes, importpath, pkg.objfile(), gofiles)
+	err := pkg.tc.Gc(pkg, includes, gofiles)
 	pkg.Record("gc", time.Since(t0))
 	return err
 }
 
 func (pkg *Package) link() error {
 	t0 := time.Now()
-	target := pkg.Binfile()
-	if err := mkdir(filepath.Dir(target)); err != nil {
-		return err
-	}
-
 	includes := pkg.IncludePaths()
 	if pkg.TestScope && pkg.ExtraIncludes != "" {
 		// TODO(dfc) gross
 		includes = append([]string{pkg.ExtraIncludes}, includes...)
 	}
-	err := pkg.tc.Ld(pkg, includes, target)
+	err := pkg.tc.Ld(pkg, includes)
 	pkg.Record("link", time.Since(t0))
 	return err
 }

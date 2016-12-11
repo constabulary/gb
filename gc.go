@@ -88,11 +88,14 @@ func (t *gcToolchain) Asm(pkg *Package, ofile, sfile string) error {
 	return err
 }
 
-func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile string) error {
+func (t *gcToolchain) Ld(pkg *Package, searchpaths []string) error {
 	// to ensure we don't write a partial binary, link the binary to a temporary file in
 	// in the target directory, then rename.
-	dir := filepath.Dir(outfile)
-	tmp, err := ioutil.TempFile(dir, ".gb-link")
+	dir := pkg.Bindir()
+	if err := mkdir(dir); err != nil {
+		return err
+	}
+	tmp, err := ioutil.TempFile(pkg.Bindir(), ".gb-link")
 	if err != nil {
 		return err
 	}
@@ -108,10 +111,6 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile string) err
 	}
 	args = append(args, pkg.objfile())
 
-	if err := mkdir(dir); err != nil {
-		return err
-	}
-
 	var buf bytes.Buffer
 	if err = runOut(&buf, ".", nil, t.ld, args...); err != nil {
 		os.Remove(tmp.Name()) // remove partial file
@@ -119,7 +118,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile string) err
 		io.Copy(os.Stderr, &buf)
 		return err
 	}
-	return os.Rename(tmp.Name(), outfile)
+	return os.Rename(tmp.Name(), pkg.Binfile())
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
@@ -161,8 +160,9 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
-func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, outfile string, files []string) error {
-	args := append(pkg.gcflags, "-p", importpath, "-pack")
+func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, files []string) error {
+	outfile := pkg.objfile()
+	args := append(pkg.gcflags, "-p", pkg.ImportPath, "-pack")
 	args = append(args, "-o", outfile)
 	for _, d := range searchpaths {
 		args = append(args, "-I", d)
