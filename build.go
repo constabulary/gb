@@ -269,10 +269,6 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
 	includes := pkg.IncludePaths()
-	if pkg.TestScope && pkg.ExtraIncludes != "" {
-		// TODO(dfc) gross
-		includes = append([]string{pkg.ExtraIncludes}, includes...)
-	}
 	for i := range gofiles {
 		if filepath.IsAbs(gofiles[i]) {
 			// terrible hack for cgo files which come with an absolute path
@@ -294,10 +290,6 @@ func gc(pkg *Package, gofiles []string) error {
 func (pkg *Package) link() error {
 	t0 := time.Now()
 	includes := pkg.IncludePaths()
-	if pkg.TestScope && pkg.ExtraIncludes != "" {
-		// TODO(dfc) gross
-		includes = append([]string{pkg.ExtraIncludes}, includes...)
-	}
 	err := pkg.tc.Ld(pkg, includes)
 	pkg.Record("link", time.Since(t0))
 	return err
