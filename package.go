@@ -50,6 +50,9 @@ func (p *Package) String() string {
 
 func (p *Package) includePaths() []string {
 	includes := p.Context.includePaths()
+	if p.TestScope && p.Main {
+		return append([]string{filepath.Join(p.Context.Workdir(), filepath.Dir(filepath.FromSlash(p.ImportPath)), "_test")}, includes...)
+	}
 	if p.TestScope && p.ExtraIncludes != "" {
 		includes = append([]string{p.ExtraIncludes}, includes...)
 	}
