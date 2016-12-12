@@ -176,7 +176,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
 	for _, name := range []string{"C", "unsafe"} {
-		pkg, err := newPackage(&ctx, &importer.Package{
+		pkg, err := ctx.newPackage(&importer.Package{
 			Standard: true,
 			Package: &build.Package{
 				Name:       name,
@@ -204,7 +204,7 @@ func (c *Context) includePaths() []string {
 
 // NewPackage creates a resolved Package for p.
 func (c *Context) NewPackage(p *importer.Package) (*Package, error) {
-	pkg, err := newPackage(c, p)
+	pkg, err := c.newPackage(p)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +276,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		stale = stale || !pkg.NotStale
 	}
 
-	pkg, err := newPackage(c, p)
+	pkg, err := c.newPackage(p)
 	if err != nil {
 		return nil, errors.Wrapf(err, "loadPackage(%q)", path)
 	}

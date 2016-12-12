@@ -25,7 +25,7 @@ type Package struct {
 }
 
 // newPackage creates a resolved Package without setting pkg.Stale.
-func newPackage(ctx *Context, p *importer.Package) (*Package, error) {
+func (ctx *Context) newPackage(p *importer.Package) (*Package, error) {
 	pkg := &Package{
 		Context: ctx,
 		Package: p,
