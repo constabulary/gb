@@ -102,11 +102,15 @@ func (pkg *Package) bindir() string {
 }
 
 func (pkg *Package) Workdir() string {
-	if pkg.TestScope {
-		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
-		return filepath.Join(pkg.Context.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
+	path := filepath.FromSlash(pkg.ImportPath)
+	dir := filepath.Dir(path)
+	switch {
+	case pkg.TestScope:
+		ip := strings.TrimSuffix(path, "_test")
+		return filepath.Join(pkg.Context.Workdir(), ip, "_test", dir)
+	default:
+		return filepath.Join(pkg.Context.Workdir(), dir)
 	}
-	return filepath.Join(pkg.Context.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
 }
 
 // objfile returns the name of the object file for this package
