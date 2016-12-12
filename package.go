@@ -48,6 +48,17 @@ func (p *Package) String() string {
 	})
 }
 
+func (p *Package) includePaths() []string {
+	includes := p.Context.includePaths()
+	if p.TestScope && p.Main {
+		return append([]string{filepath.Join(p.Context.Workdir(), filepath.Dir(filepath.FromSlash(p.ImportPath)), "_test")}, includes...)
+	}
+	if p.TestScope && p.ExtraIncludes != "" {
+		includes = append([]string{p.ExtraIncludes}, includes...)
+	}
+	return includes
+}
+
 // Complete indicates if this is a pure Go package
 func (p *Package) Complete() bool {
 	// If we're giving the compiler the entire package (no C etc files), tell it that,
