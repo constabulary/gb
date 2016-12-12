@@ -2,6 +2,7 @@ package gb
 
 import (
 	"fmt"
+	"go/build"
 	"io"
 	"io/ioutil"
 	"os"
@@ -158,15 +159,14 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	// sort build tags to ensure the ctxSring and Suffix is stable
 	sort.Strings(ctx.buildtags)
 
-	ic := importer.Context{
-		GOOS:        ctx.gotargetos,
-		GOARCH:      ctx.gotargetarch,
-		CgoEnabled:  cgoEnabled(ctx.gohostos, ctx.gohostarch, ctx.gotargetos, ctx.gotargetarch),
-		ReleaseTags: releaseTags, // from go/build, see gb.go
-		BuildTags:   ctx.buildtags,
-	}
+	bc := build.Default
+	bc.GOOS = ctx.gotargetos
+	bc.GOARCH = ctx.gotargetarch
+	bc.CgoEnabled = cgoEnabled(ctx.gohostos, ctx.gohostarch, ctx.gotargetos, ctx.gotargetarch)
+	bc.ReleaseTags = releaseTags
+	bc.BuildTags = ctx.buildtags
 
-	i, err := buildImporter(&ic, &ctx)
+	i, err := buildImporter(&bc, &ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -177,15 +177,17 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	// Insert fake packages into the package cache.
 	for _, name := range []string{"C", "unsafe"} {
 		pkg, err := newPackage(&ctx, &importer.Package{
-			Name:       name,
-			ImportPath: name,
-			Standard:   true,
-			Dir:        name, // fake, but helps diagnostics
+			Standard: true,
+			Package: &build.Package{
+				Name:       name,
+				ImportPath: name,
+				Dir:        name, // fake, but helps diagnostics
+			},
 		})
 		if err != nil {
 			return nil, err
 		}
-		pkg.Stale = false
+		pkg.NotStale = true
 		ctx.pkgs[pkg.ImportPath] = pkg
 	}
 
@@ -193,7 +195,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 }
 
 // IncludePaths returns the include paths visible in this context.
-func (c *Context) IncludePaths() []string {
+func (c *Context) includePaths() []string {
 	return []string{
 		c.workdir,
 		c.Pkgdir(),
@@ -206,7 +208,7 @@ func (c *Context) NewPackage(p *importer.Package) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	pkg.Stale = isStale(pkg)
+	pkg.NotStale = !pkg.isStale()
 	return pkg, nil
 }
 
@@ -271,14 +273,15 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 		// update the import path as the import may have been discovered via vendoring.
 		p.Imports[i] = pkg.ImportPath
-		stale = stale || pkg.Stale
+		stale = stale || !pkg.NotStale
 	}
 
 	pkg, err := newPackage(c, p)
 	if err != nil {
 		return nil, errors.Wrapf(err, "loadPackage(%q)", path)
 	}
-	pkg.Stale = stale || isStale(pkg)
+	pkg.Main = pkg.Name == "main"
+	pkg.NotStale = !(stale || pkg.isStale())
 	c.pkgs[p.ImportPath] = pkg
 	return pkg, nil
 }
@@ -411,8 +414,8 @@ func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
 	}
 }
 
-func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
-	i, err := addDepfileDeps(ic, ctx)
+func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
+	i, err := addDepfileDeps(bc, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +424,7 @@ func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
 	i = &_importer{
 		Importer: i,
 		im: importer.Importer{
-			Context: ic,
+			Context: bc,
 			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
 		},
 	}
@@ -429,7 +432,7 @@ func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
 	i = &srcImporter{
 		i,
 		importer.Importer{
-			Context: ic,
+			Context: bc,
 			Root:    ctx.Projectdir(),
 		},
 	}
@@ -437,7 +440,7 @@ func buildImporter(ic *importer.Context, ctx *Context) (Importer, error) {
 	i = &_importer{
 		i,
 		importer.Importer{
-			Context: ic,
+			Context: bc,
 			Root:    runtime.GOROOT(),
 		},
 	}

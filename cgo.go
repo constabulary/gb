@@ -471,7 +471,7 @@ func runcgo2(pkg *Package, dynout, ofile string) error {
 
 // cgoworkdir returns the cgo working directory for this package.
 func cgoworkdir(pkg *Package) string {
-	return filepath.Join(Workdir(pkg), pkgname(pkg), "_cgo")
+	return filepath.Join(pkg.Workdir(), pkg.pkgname(), "_cgo")
 }
 
 // gccCmd returns a gcc command line prefix.

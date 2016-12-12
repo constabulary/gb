@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"fmt"
+	"go/build"
 	"io"
 	"os"
 	"os/exec"
@@ -91,30 +92,31 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 	// internal tests
 	testpkg, err := pkg.NewPackage(&importer.Package{
-		Name:       name,
-		ImportPath: pkg.ImportPath,
-		Dir:        pkg.Dir,
-		SrcRoot:    pkg.SrcRoot,
+		Package: &build.Package{
+			Name:       name,
+			ImportPath: pkg.ImportPath,
+			SrcRoot:    pkg.SrcRoot,
 
-		GoFiles:      gofiles,
-		CFiles:       pkg.CFiles,
-		CgoFiles:     cgofiles,
-		TestGoFiles:  pkg.TestGoFiles,  // passed directly to buildTestMain
-		XTestGoFiles: pkg.XTestGoFiles, // passed directly to buildTestMain
+			GoFiles:      gofiles,
+			CFiles:       pkg.CFiles,
+			CgoFiles:     cgofiles,
+			TestGoFiles:  pkg.TestGoFiles,  // passed directly to buildTestMain
+			XTestGoFiles: pkg.XTestGoFiles, // passed directly to buildTestMain
 
-		CgoCFLAGS:    pkg.CgoCFLAGS,
-		CgoCPPFLAGS:  pkg.CgoCPPFLAGS,
-		CgoCXXFLAGS:  pkg.CgoCXXFLAGS,
-		CgoLDFLAGS:   pkg.CgoLDFLAGS,
-		CgoPkgConfig: pkg.CgoPkgConfig,
+			CgoCFLAGS:    pkg.CgoCFLAGS,
+			CgoCPPFLAGS:  pkg.CgoCPPFLAGS,
+			CgoCXXFLAGS:  pkg.CgoCXXFLAGS,
+			CgoLDFLAGS:   pkg.CgoLDFLAGS,
+			CgoPkgConfig: pkg.CgoPkgConfig,
 
-		Imports: imports,
+			Imports: imports,
+			Dir:     pkg.Dir,
+		},
 	})
 	if err != nil {
 		return nil, err
 	}
 	testpkg.TestScope = true
-	testpkg.Stale = true // TODO(dfc) NewPackage should get this right
 
 	// only build the internal test if there is Go source or
 	// internal test files.
@@ -136,11 +138,13 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 	// external tests
 	if len(pkg.XTestGoFiles) > 0 {
 		xtestpkg, err := pkg.NewPackage(&importer.Package{
-			Name:       name,
-			ImportPath: pkg.ImportPath + "_test",
-			Dir:        pkg.Dir,
-			GoFiles:    pkg.XTestGoFiles,
-			Imports:    pkg.XTestImports,
+			Package: &build.Package{
+				Name:       name,
+				ImportPath: pkg.ImportPath + "_test",
+				GoFiles:    pkg.XTestGoFiles,
+				Imports:    pkg.XTestImports,
+				Dir:        pkg.Dir,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -152,8 +156,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 			return nil, err
 		}
 		xtestpkg.TestScope = true
-		xtestpkg.Stale = true
-		xtestpkg.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
+		xtestpkg.ExtraIncludes = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 
 		// if there is an internal test object, add it as a dependency.
 		if testobj != nil {
@@ -225,7 +228,7 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 	if !pkg.TestScope {
 		return nil, errors.Errorf("package %q is not test scoped", pkg.Name)
 	}
-	dir := gb.Workdir(pkg)
+	dir := pkg.Workdir()
 	if err := mkdir(dir); err != nil {
 		return nil, err
 	}
@@ -242,23 +245,25 @@ func buildTestMain(pkg *gb.Package) (*gb.Package, error) {
 		return nil, err
 	}
 	testmain, err := pkg.NewPackage(&importer.Package{
-		Name:       pkg.Name,
-		ImportPath: path.Join(pkg.ImportPath, "testmain"),
-		Dir:        dir,
-		SrcRoot:    pkg.SrcRoot,
+		Package: &build.Package{
+			Name:       pkg.Name,
+			ImportPath: path.Join(pkg.ImportPath, "testmain"),
+			SrcRoot:    pkg.SrcRoot,
 
-		GoFiles: []string{"_testmain.go"},
+			GoFiles: []string{"_testmain.go"},
 
-		Imports: pkg.Package.Imports,
+			Imports: pkg.Package.Imports,
+			Dir:     dir,
+		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	if !testmain.Stale {
+	if testmain.NotStale {
 		panic("testmain not marked stale")
 	}
 	testmain.TestScope = true
-	testmain.ExtraIncludes = filepath.Join(pkg.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
+	testmain.Main = true
 	return testmain, nil
 }
 

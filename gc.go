@@ -62,7 +62,7 @@ func GcToolchain() func(c *Context) error {
 	}
 }
 
-func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
+func (t *gcToolchain) Asm(pkg *Package, ofile, sfile string) error {
 	args := []string{"-o", ofile, "-D", "GOOS_" + pkg.gotargetos, "-D", "GOARCH_" + pkg.gotargetarch}
 	switch {
 	case goversion == 1.4:
@@ -80,7 +80,7 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 		return errors.Errorf("gc:asm: %v", err)
 	}
 	var buf bytes.Buffer
-	err := runOut(&buf, srcdir, nil, t.as, args...)
+	err := runOut(&buf, pkg.Dir, nil, t.as, args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
 		io.Copy(os.Stderr, &buf)
@@ -88,10 +88,13 @@ func (t *gcToolchain) Asm(pkg *Package, srcdir, ofile, sfile string) error {
 	return err
 }
 
-func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile string) error {
+func (t *gcToolchain) Ld(pkg *Package) error {
 	// to ensure we don't write a partial binary, link the binary to a temporary file in
 	// in the target directory, then rename.
-	dir := filepath.Dir(outfile)
+	dir := pkg.bindir()
+	if err := mkdir(dir); err != nil {
+		return err
+	}
 	tmp, err := ioutil.TempFile(dir, ".gb-link")
 	if err != nil {
 		return err
@@ -99,18 +102,14 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 	tmp.Close()
 
 	args := append(pkg.ldflags, "-o", tmp.Name())
-	for _, d := range searchpaths {
+	for _, d := range pkg.includePaths() {
 		args = append(args, "-L", d)
 	}
 	args = append(args, "-extld", linkCmd(pkg, "CC", defaultCC))
 	if goversion > 1.4 {
 		args = append(args, "-buildmode", pkg.buildmode)
 	}
-	args = append(args, afile)
-
-	if err := mkdir(dir); err != nil {
-		return err
-	}
+	args = append(args, pkg.objfile())
 
 	var buf bytes.Buffer
 	if err = runOut(&buf, ".", nil, t.ld, args...); err != nil {
@@ -119,7 +118,7 @@ func (t *gcToolchain) Ld(pkg *Package, searchpaths []string, outfile, afile stri
 		io.Copy(os.Stderr, &buf)
 		return err
 	}
-	return os.Rename(tmp.Name(), outfile)
+	return os.Rename(tmp.Name(), pkg.Binfile())
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
@@ -128,8 +127,8 @@ func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
 	}
 	args := []string{
 		"-F", "-V", "-w",
-		"-trimpath", pkg.Workdir(),
-		"-I", Workdir(pkg),
+		"-trimpath", pkg.Context.Workdir(),
+		"-I", pkg.Workdir(),
 		"-I", filepath.Join(runtime.GOROOT(), "pkg", pkg.gohostos+"_"+pkg.gohostarch), // for runtime.h
 		"-o", ofile,
 		"-D", "GOOS_" + pkg.gotargetos,
@@ -161,10 +160,11 @@ func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
 func (t *gcToolchain) compiler() string { return t.gc }
 func (t *gcToolchain) linker() string   { return t.ld }
 
-func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir, outfile string, files []string) error {
-	args := append(pkg.gcflags, "-p", importpath, "-pack")
+func (t *gcToolchain) Gc(pkg *Package, files []string) error {
+	outfile := pkg.objfile()
+	args := append(pkg.gcflags, "-p", pkg.ImportPath, "-pack")
 	args = append(args, "-o", outfile)
-	for _, d := range searchpaths {
+	for _, d := range pkg.includePaths() {
 		args = append(args, "-I", d)
 	}
 	if pkg.Standard && pkg.ImportPath == "runtime" {
@@ -198,7 +198,7 @@ func (t *gcToolchain) Gc(pkg *Package, searchpaths []string, importpath, srcdir,
 		return errors.Wrap(err, "mkdir")
 	}
 	var buf bytes.Buffer
-	err := runOut(&buf, srcdir, nil, t.gc, args...)
+	err := runOut(&buf, pkg.Dir, nil, t.gc, args...)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
 		io.Copy(os.Stderr, &buf)

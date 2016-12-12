@@ -83,7 +83,7 @@ func BuildPackage(targets map[string]*Action, pkg *Package) (*Action, error) {
 	// step 0. are we stale ?
 	// if this package is not stale, then by definition none of its
 	// dependencies are stale, so ignore this whole tree.
-	if !pkg.Stale {
+	if pkg.NotStale {
 		return nil, nil
 	}
 
@@ -142,12 +142,12 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 	var assemble []*Action
 	for _, sfile := range pkg.SFiles {
 		sfile := sfile
-		ofile := filepath.Join(pkg.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
+		ofile := filepath.Join(pkg.Context.Workdir(), pkg.ImportPath, stripext(sfile)+".6")
 		assemble = append(assemble, &Action{
 			Name: fmt.Sprintf("asm: %s/%s", pkg.ImportPath, sfile),
 			Run: func() error {
 				t0 := time.Now()
-				err := pkg.tc.Asm(pkg, pkg.Dir, ofile, filepath.Join(pkg.Dir, sfile))
+				err := pkg.tc.Asm(pkg, ofile, filepath.Join(pkg.Dir, sfile))
 				pkg.Record("asm", time.Since(t0))
 				return err
 			},
@@ -175,7 +175,7 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 				// collect .o files, ofiles always starts with the gc compiled object.
 				// TODO(dfc) objfile(pkg) should already be at the top of this set
 				ofiles = append(
-					[]string{objfile(pkg)},
+					[]string{pkg.objfile()},
 					ofiles...,
 				)
 
@@ -195,16 +195,16 @@ func Compile(pkg *Package, deps ...*Action) (*Action, error) {
 		build = &Action{
 			Name: fmt.Sprintf("install: %s", pkg.ImportPath),
 			Deps: []*Action{build},
-			Run:  func() error { return fileutils.Copyfile(installpath(pkg), objfile(pkg)) },
+			Run:  func() error { return fileutils.Copyfile(pkg.installpath(), pkg.objfile()) },
 		}
 	}
 
 	// if this is a main package, add a link stage
-	if pkg.isMain() {
+	if pkg.Main {
 		build = &Action{
 			Name: fmt.Sprintf("link: %s", pkg.ImportPath),
 			Deps: []*Action{build},
-			Run:  func() error { return link(pkg) },
+			Run:  func() error { return pkg.link() },
 		}
 	}
 	if !pkg.TestScope {
@@ -231,7 +231,7 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 
 	var extra []string
 	switch {
-	case pkg.isMain():
+	case pkg.Main:
 		// all binaries depend on runtime, even if they do not
 		// explicitly import it.
 		extra = append(extra, "runtime")
@@ -268,12 +268,6 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 
 func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
-	includes := pkg.IncludePaths()
-	importpath := pkg.ImportPath
-	if pkg.TestScope && pkg.ExtraIncludes != "" {
-		// TODO(dfc) gross
-		includes = append([]string{pkg.ExtraIncludes}, includes...)
-	}
 	for i := range gofiles {
 		if filepath.IsAbs(gofiles[i]) {
 			// terrible hack for cgo files which come with an absolute path
@@ -287,67 +281,14 @@ func gc(pkg *Package, gofiles []string) error {
 			gofiles[i] = fullpath
 		}
 	}
-	err := pkg.tc.Gc(pkg, includes, importpath, pkg.Dir, objfile(pkg), gofiles)
+	err := pkg.tc.Gc(pkg, gofiles)
 	pkg.Record("gc", time.Since(t0))
 	return err
 }
 
-func link(pkg *Package) error {
+func (pkg *Package) link() error {
 	t0 := time.Now()
-	target := pkg.Binfile()
-	if err := mkdir(filepath.Dir(target)); err != nil {
-		return err
-	}
-
-	includes := pkg.IncludePaths()
-	if pkg.TestScope && pkg.ExtraIncludes != "" {
-		// TODO(dfc) gross
-		includes = append([]string{pkg.ExtraIncludes}, includes...)
-	}
-	err := pkg.tc.Ld(pkg, includes, target, objfile(pkg))
+	err := pkg.tc.Ld(pkg)
 	pkg.Record("link", time.Since(t0))
 	return err
-}
-
-// Workdir returns the working directory for a package.
-func Workdir(pkg *Package) string {
-	if pkg.TestScope {
-		ip := strings.TrimSuffix(filepath.FromSlash(pkg.ImportPath), "_test")
-		return filepath.Join(pkg.Workdir(), ip, "_test", filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
-	}
-	return filepath.Join(pkg.Workdir(), filepath.Dir(filepath.FromSlash(pkg.ImportPath)))
-}
-
-// objfile returns the name of the object file for this package
-func objfile(pkg *Package) string {
-	return filepath.Join(Workdir(pkg), objname(pkg))
-}
-
-func objname(pkg *Package) string {
-	if pkg.isMain() {
-		return filepath.Join(filepath.Base(filepath.FromSlash(pkg.ImportPath)), "main.a")
-	}
-	return filepath.Base(filepath.FromSlash(pkg.ImportPath)) + ".a"
-}
-
-func pkgname(pkg *Package) string {
-	switch {
-	case pkg.TestScope:
-		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
-	case pkg.Name == "main":
-		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
-	default:
-		return pkg.Name
-	}
-}
-
-func binname(pkg *Package) string {
-	switch {
-	case pkg.TestScope:
-		return pkg.Name + ".test"
-	case pkg.Name == "main":
-		return filepath.Base(filepath.FromSlash(pkg.ImportPath))
-	default:
-		panic("binname called with non main package: " + pkg.ImportPath)
-	}
 }
