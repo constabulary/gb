@@ -156,7 +156,6 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 			return nil, err
 		}
 		xtestpkg.TestScope = true
-		xtestpkg.ExtraIncludes = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
 
 		// if there is an internal test object, add it as a dependency.
 		if testobj != nil {
