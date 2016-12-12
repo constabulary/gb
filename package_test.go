@@ -101,6 +101,40 @@ func TestPackageBinfile(t *testing.T) {
 	}
 }
 
+func TestPackageBindir(t *testing.T) {
+	ctx := testContext(t)
+	defer ctx.Destroy()
+	tests := []struct {
+		pkg  *Package
+		want string
+	}{{
+		pkg: &Package{
+			Context: ctx,
+		},
+		want: ctx.Bindir(),
+	}, {
+		pkg: &Package{
+			Package: &importer.Package{
+				Package: &build.Package{
+					Name:       "testpkg",
+					ImportPath: "github.com/constabulary/gb/testpkg",
+				},
+			},
+			Context:   ctx,
+			TestScope: true,
+		},
+		want: filepath.Join(ctx.Workdir(), "github.com", "constabulary", "gb", "testpkg", "_test"),
+	}}
+
+	for i, tt := range tests {
+		got := tt.pkg.Bindir()
+		want := tt.want
+		if got != want {
+			t.Errorf("test %v: Bindir: got %v want %v", i+1, got, want)
+		}
+	}
+}
+
 func TestNewPackage(t *testing.T) {
 	tests := []struct {
 		pkg  importer.Package

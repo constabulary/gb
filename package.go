@@ -79,9 +79,6 @@ func (p *Package) Complete() bool {
 func (pkg *Package) Binfile() string {
 	// TODO(dfc) should have a check for package main, or should be merged in to objfile.
 	target := filepath.Join(pkg.Bindir(), pkg.binname())
-	if pkg.TestScope {
-		target = filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test", pkg.binname())
-	}
 
 	// if this is a cross compile or GOOS/GOARCH are both defined or there are build tags, add ctxString.
 	if pkg.isCrossCompile() || (os.Getenv("GOOS") != "" && os.Getenv("GOARCH") != "") {
@@ -94,6 +91,15 @@ func (pkg *Package) Binfile() string {
 		target += ".exe"
 	}
 	return target
+}
+
+func (pkg *Package) Bindir() string {
+	switch {
+	case pkg.TestScope:
+		return filepath.Join(pkg.Context.Workdir(), filepath.FromSlash(pkg.ImportPath), "_test")
+	default:
+		return pkg.Context.Bindir()
+	}
 }
 
 func (pkg *Package) Workdir() string {

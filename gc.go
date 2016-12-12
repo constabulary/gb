@@ -91,8 +91,7 @@ func (t *gcToolchain) Asm(pkg *Package, ofile, sfile string) error {
 func (t *gcToolchain) Ld(pkg *Package) error {
 	// to ensure we don't write a partial binary, link the binary to a temporary file in
 	// in the target directory, then rename.
-	outfile := pkg.Binfile()
-	dir := filepath.Dir(outfile)
+	dir := pkg.Bindir()
 	if err := mkdir(dir); err != nil {
 		return err
 	}
@@ -119,7 +118,7 @@ func (t *gcToolchain) Ld(pkg *Package) error {
 		io.Copy(os.Stderr, &buf)
 		return err
 	}
-	return os.Rename(tmp.Name(), outfile)
+	return os.Rename(tmp.Name(), pkg.Binfile())
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
