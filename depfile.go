@@ -211,8 +211,3 @@ func envOr(key, def string) string {
 	}
 	return v
 }
-
-func isDir(path string) bool {
-	fi, err := os.Stat(path)
-	return err == nil && fi.IsDir()
-}
