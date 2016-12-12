@@ -20,7 +20,7 @@ type Project interface {
 	Pkgdir() string
 
 	// Bindir returns the path for compiled programs.
-	Bindir() string
+	bindir() string
 }
 
 type project struct {
@@ -45,6 +45,6 @@ func (p *project) Projectdir() string {
 }
 
 // Bindir returns the path for compiled programs.
-func (p *project) Bindir() string {
+func (p *project) bindir() string {
 	return filepath.Join(p.rootdir, "bin")
 }

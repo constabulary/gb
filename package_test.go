@@ -91,7 +91,7 @@ func TestPackageBinfile(t *testing.T) {
 			t.Fatal(err)
 		}
 		got := pkg.Binfile()
-		want := filepath.Join(ctx.Bindir(), tt.want)
+		want := filepath.Join(ctx.bindir(), tt.want)
 		if pkg.gotargetos == "windows" {
 			want += ".exe"
 		}
@@ -111,7 +111,7 @@ func TestPackageBindir(t *testing.T) {
 		pkg: &Package{
 			Context: ctx,
 		},
-		want: ctx.Bindir(),
+		want: ctx.bindir(),
 	}, {
 		pkg: &Package{
 			Package: &importer.Package{
@@ -127,7 +127,7 @@ func TestPackageBindir(t *testing.T) {
 	}}
 
 	for i, tt := range tests {
-		got := tt.pkg.Bindir()
+		got := tt.pkg.bindir()
 		want := tt.want
 		if got != want {
 			t.Errorf("test %v: Bindir: got %v want %v", i+1, got, want)
