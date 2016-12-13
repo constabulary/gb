@@ -24,26 +24,23 @@ func (fn importerFn) Import(path string) (*build.Package, error) {
 	return fn(path)
 }
 
-type srcImporter struct {
-	Importer
-	im Importer
-}
+func srcImporter(parent Importer, child func(string) (*build.Package, error)) func(string) (*build.Package, error) {
+	return func(path string) (*build.Package, error) {
+		pkg, err := child(path)
+		if err == nil {
+			return pkg, nil
+		}
 
-func (i *srcImporter) Import(path string) (*build.Package, error) {
-	pkg, err := i.im.Import(path)
-	if err == nil {
-		return pkg, nil
+		// gb expects, when there is a failure to resolve packages that
+		// live in $PROJECT/src that the importer for that directory
+		// will report them.
+
+		pkg, err2 := parent.Import(path)
+		if err2 == nil {
+			return pkg, nil
+		}
+		return nil, err
 	}
-
-	// gb expects, when there is a failure to resolve packages that
-	// live in $PROJECT/src that the importer for that directory
-	// will report them.
-
-	pkg, err2 := i.Importer.Import(path)
-	if err2 == nil {
-		return pkg, nil
-	}
-	return nil, err
 }
 
 func childFirstImporter(parent Importer, child func(string) (*build.Package, error)) func(string) (*build.Package, error) {
