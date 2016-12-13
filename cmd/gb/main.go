@@ -44,7 +44,9 @@ var atExit []func() error
 // exit runs all atExit functions, then calls os.Exit(code).
 func exit(code int) {
 	for _, fn := range atExit {
-		fn()
+		if err := fn(); err != nil {
+			fmt.Fprintln(os.Stderr, "atExit:", err)
+		}
 	}
 	os.Exit(code)
 }
