@@ -15,7 +15,6 @@ import (
 
 	"github.com/constabulary/gb/internal/debug"
 	"github.com/constabulary/gb/internal/depfile"
-	"github.com/constabulary/gb/internal/importer"
 	"github.com/constabulary/gb/internal/untar"
 	"github.com/pkg/errors"
 )
@@ -58,7 +57,7 @@ func addDepfileDeps(bc *build.Context, ctx *Context) (Importer, error) {
 			}
 			i = &_importer{
 				Importer: i,
-				im: importer.Importer{
+				im: importer{
 					Context: bc,
 					Root:    root,
 				},
@@ -85,7 +84,7 @@ func addDepfileDeps(bc *build.Context, ctx *Context) (Importer, error) {
 			}
 			i = &_importer{
 				Importer: i,
-				im: importer.Importer{
+				im: importer{
 					Context: bc,
 					Root:    root,
 				},

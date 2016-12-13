@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/constabulary/gb/internal/debug"
-	"github.com/constabulary/gb/internal/importer"
 	"github.com/pkg/errors"
 )
 
@@ -421,7 +420,7 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
 	i = &_importer{
 		Importer: i,
-		im: importer.Importer{
+		im: importer{
 			Context: bc,
 			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
 		},
@@ -429,7 +428,7 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 
 	i = &srcImporter{
 		i,
-		importer.Importer{
+		importer{
 			Context: bc,
 			Root:    ctx.Projectdir(),
 		},
@@ -437,7 +436,7 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 
 	i = &_importer{
 		i,
-		importer.Importer{
+		importer{
 			Context: bc,
 			Root:    runtime.GOROOT(),
 		},
