@@ -72,17 +72,26 @@ type importer struct {
 	Root string // root directory
 }
 
+type importErr struct {
+	path string
+	msg  string
+}
+
+func (e *importErr) Error() string {
+	return fmt.Sprintf("import %q: %v", e.path, e.msg)
+}
+
 func (i *importer) Import(path string) (*build.Package, error) {
 	if path == "" {
-		return nil, fmt.Errorf("import %q: invalid import path", path)
+		return nil, errors.WithStack(&importErr{path: path, msg: "invalid import path"})
 	}
 
 	if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
-		return nil, fmt.Errorf("import %q: relative import not supported", path)
+		return nil, errors.WithStack(&importErr{path: path, msg: "relative import not supported"})
 	}
 
 	if strings.HasPrefix(path, "/") {
-		return nil, fmt.Errorf("import %q: cannot import absolute path", path)
+		return nil, errors.WithStack(&importErr{path: path, msg: "cannot import absolute path"})
 	}
 
 	var p *build.Package

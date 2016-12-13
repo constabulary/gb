@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"runtime"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
 func testContext(t *testing.T, opts ...func(*Context) error) *Context {
@@ -28,13 +30,14 @@ func TestResolvePackage(t *testing.T) {
 		pkg: "a",
 	}, {
 		pkg: "localimport",
-		err: fmt.Errorf(`import "../localimport": relative import not supported`),
+		err: &importErr{path: "../localimport", msg: "relative import not supported"},
 	}}
 	proj := testProject(t)
 	for _, tt := range tests {
 		ctx, err := NewContext(proj, tt.opts...)
 		defer ctx.Destroy()
 		_, err = ctx.ResolvePackage(tt.pkg)
+		err = errors.Cause(err)
 		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("ResolvePackage(%q): want: %v, got %v", tt.pkg, tt.err, err)
 		}
