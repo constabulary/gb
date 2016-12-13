@@ -19,7 +19,7 @@ import (
 )
 
 // enables sh style -e output
-const eMode = true
+const eMode = false
 
 // Importer resolves package import paths to *importer.Packages.
 type Importer interface {
