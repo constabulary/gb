@@ -46,17 +46,14 @@ func (i *srcImporter) Import(path string) (*build.Package, error) {
 	return nil, err
 }
 
-type _importer struct {
-	Importer
-	im Importer
-}
-
-func (i *_importer) Import(path string) (*build.Package, error) {
-	pkg, err := i.im.Import(path)
-	if err != nil {
-		return i.Importer.Import(path)
+func childFirstImporter(parent Importer, child func(string) (*build.Package, error)) func(string) (*build.Package, error) {
+	return func(path string) (*build.Package, error) {
+		pkg, err := child(path)
+		if err != nil {
+			return parent.Import(path)
+		}
+		return pkg, nil
 	}
-	return pkg, nil
 }
 
 func fixupImporter(importer Importer) func(string) (*build.Package, error) {

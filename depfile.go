@@ -55,10 +55,7 @@ func addDepfileDeps(bc *build.Context, ctx *Context) (Importer, error) {
 					return nil, err
 				}
 			}
-			i = &_importer{
-				Importer: i,
-				im:       importerFn(dirImporter(bc, root)),
-			}
+			i = importerFn(childFirstImporter(i, dirImporter(bc, root)))
 			debug.Debugf("Add importer for %q: %v", prefix+" "+version, root)
 		}
 
@@ -79,10 +76,7 @@ func addDepfileDeps(bc *build.Context, ctx *Context) (Importer, error) {
 					return nil, err
 				}
 			}
-			i = &_importer{
-				Importer: i,
-				im:       importerFn(dirImporter(bc, root)),
-			}
+			i = importerFn(childFirstImporter(i, dirImporter(bc, root)))
 			debug.Debugf("Add importer for %q: %v", prefix+" "+tag, root)
 		}
 	}
