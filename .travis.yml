@@ -26,7 +26,7 @@ install:
 
 script:
   - go install -v ./...
-    && go test -v ./...
+    && bin/coverage.sh
     && go build
     && gb test 
     && ../integration-tests/run-all.bash
