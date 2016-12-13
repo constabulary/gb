@@ -13,15 +13,11 @@ import (
 )
 
 func init() {
-	registerCommand(BuildCmd)
+	registerCommand(buildCmd)
 }
 
 var (
 	// build flags
-
-	// should we build all packages in this project.
-	// defaults to true when build is invoked from the project root.
-	A bool
 
 	// should we perform a release build +release tag ?
 	// defaults to false, +debug.
@@ -47,7 +43,6 @@ var (
 
 func addBuildFlags(fs *flag.FlagSet) {
 	// TODO(dfc) this should accept a *gb.Context
-	fs.BoolVar(&A, "a", false, "build all packages in this project")
 	fs.BoolVar(&R, "r", false, "perform a release build")
 	fs.BoolVar(&F, "f", false, "rebuild up-to-date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
@@ -59,7 +54,7 @@ func addBuildFlags(fs *flag.FlagSet) {
 	fs.Var((*stringsFlag)(&buildtags), "tags", "")
 }
 
-var BuildCmd = &cmd.Command{
+var buildCmd = &cmd.Command{
 	Name:      "build",
 	Short:     "build a package",
 	UsageLine: "build [build flags] [packages]",

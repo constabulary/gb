@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	registerCommand(TestCmd)
+	registerCommand(testCmd)
 }
 
 var (
@@ -34,7 +34,7 @@ func addTestFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&testNope, "n", false, "do not execute test binaries, compile only")
 }
 
-var TestCmd = &cmd.Command{
+var testCmd = &cmd.Command{
 	Name:      "test",
 	UsageLine: "test [build flags] -n -v [packages] [flags for test binary]",
 	Short:     "test packages",

@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// MustGetwd returns current working directory and fails otherwise
 func MustGetwd() string {
 	wd, err := os.Getwd()
 	if err != nil {

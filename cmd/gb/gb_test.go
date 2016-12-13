@@ -63,9 +63,9 @@ func TestMain(m *testing.M) {
 		}
 		testgb = filepath.Join(dir, testgb)
 		locations := [][]string{
-			[]string{runtime.GOROOT(), "bin", "go"},
-			[]string{runtime.GOROOT(), "..", "bin", "go"},
-			[]string{runtime.GOROOT(), "..", "..", "bin", "go"},
+			{runtime.GOROOT(), "bin", "go"},
+			{runtime.GOROOT(), "..", "bin", "go"},
+			{runtime.GOROOT(), "..", "..", "bin", "go"},
 		}
 		ok := false
 		for _, loc := range locations {
@@ -1737,6 +1737,6 @@ func TestFoo(t *testing.T) {
 
 	gb.cd(gb.tempdir)
 	tmpdir := gb.tempDir("tmp")
-	gb.run("test", "-a")
+	gb.run("test")
 	gb.mustBeEmpty(tmpdir)
 }

@@ -76,10 +76,10 @@ var executorTests = []struct {
 	action: &Action{
 		Name: "child, child, error",
 		Run:  func() error { return fmt.Errorf("I should not have been called") },
-		Deps: []*Action{&Action{
+		Deps: []*Action{{
 			Name: "child, error",
 			Run:  niltask,
-			Deps: []*Action{&Action{
+			Deps: []*Action{{
 				Name: "error",
 				Run:  func() error { return io.EOF },
 			}},
