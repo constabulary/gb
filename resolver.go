@@ -24,7 +24,7 @@ func (fn importerFn) Import(path string) (*build.Package, error) {
 	return fn(path)
 }
 
-func srcImporter(parent Importer, child func(string) (*build.Package, error)) func(string) (*build.Package, error) {
+func srcImporter(parent, child func(string) (*build.Package, error)) func(string) (*build.Package, error) {
 	return func(path string) (*build.Package, error) {
 		pkg, err := child(path)
 		if err == nil {
@@ -35,7 +35,7 @@ func srcImporter(parent Importer, child func(string) (*build.Package, error)) fu
 		// live in $PROJECT/src that the importer for that directory
 		// will report them.
 
-		pkg, err2 := parent.Import(path)
+		pkg, err2 := parent(path)
 		if err2 == nil {
 			return pkg, nil
 		}

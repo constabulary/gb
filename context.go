@@ -172,7 +172,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 		return nil, err
 	}
 
-	ctx.importer = i
+	ctx.importer = importerFn(i)
 
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
@@ -416,7 +416,7 @@ func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
 	}
 }
 
-func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
+func buildImporter(bc *build.Context, ctx *Context) (func(string) (*build.Package, error), error) {
 	i, err := addDepfileDeps(bc, ctx)
 	if err != nil {
 		return nil, err
@@ -425,10 +425,10 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
 	i = childFirstImporter(i, dirImporter(bc, filepath.Join(ctx.Projectdir(), "vendor")))
 
-	i = srcImporter(importerFn(i), dirImporter(bc, ctx.Projectdir()))
+	i = srcImporter(i, dirImporter(bc, ctx.Projectdir()))
 
 	i = childFirstImporter(i, dirImporter(bc, runtime.GOROOT()))
 
 	i = fixupImporter(i)
-	return importerFn(i), nil
+	return i, nil
 }
