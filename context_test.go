@@ -232,7 +232,7 @@ func TestContextImportPackage(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = ctx.importer.Import(tt.path)
+		_, err = ctx.importer(tt.path)
 		if !reflect.DeepEqual(err, tt.err) {
 			t.Errorf("importPackage(%q): got %v, want %v", tt.path, err, tt.err)
 		}

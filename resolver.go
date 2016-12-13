@@ -18,12 +18,6 @@ func nullImporter() func(string) (*build.Package, error) {
 	}
 }
 
-type importerFn func(string) (*build.Package, error)
-
-func (fn importerFn) Import(path string) (*build.Package, error) {
-	return fn(path)
-}
-
 func srcImporter(parent, child func(string) (*build.Package, error)) func(string) (*build.Package, error) {
 	return func(path string) (*build.Package, error) {
 		pkg, err := child(path)
