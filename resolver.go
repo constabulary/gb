@@ -12,15 +12,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-type nullImporter struct{}
+func nullImporter() func(string) (*build.Package, error) {
+	return func(path string) (*build.Package, error) {
+		return nil, errors.Errorf("import %q not found", path)
+	}
+}
 
-func (i *nullImporter) Import(path string) (*build.Package, error) {
-	return nil, errors.Errorf("import %q not found", path)
+type importerFn func(string) (*build.Package, error)
+
+func (fn importerFn) Import(path string) (*build.Package, error) {
+	return fn(path)
 }
 
 type srcImporter struct {
 	Importer
-	im importer
+	im Importer
 }
 
 func (i *srcImporter) Import(path string) (*build.Package, error) {
@@ -42,7 +48,7 @@ func (i *srcImporter) Import(path string) (*build.Package, error) {
 
 type _importer struct {
 	Importer
-	im importer
+	im Importer
 }
 
 func (i *_importer) Import(path string) (*build.Package, error) {
@@ -67,11 +73,6 @@ func (i *fixupImporter) Import(path string) (*build.Package, error) {
 	}
 }
 
-type importer struct {
-	*build.Context
-	Root string // root directory
-}
-
 type importErr struct {
 	path string
 	msg  string
@@ -81,51 +82,53 @@ func (e *importErr) Error() string {
 	return fmt.Sprintf("import %q: %v", e.path, e.msg)
 }
 
-func (i *importer) Import(path string) (*build.Package, error) {
-	if path == "" {
-		return nil, errors.WithStack(&importErr{path: path, msg: "invalid import path"})
-	}
-
-	if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
-		return nil, errors.WithStack(&importErr{path: path, msg: "relative import not supported"})
-	}
-
-	if strings.HasPrefix(path, "/") {
-		return nil, errors.WithStack(&importErr{path: path, msg: "cannot import absolute path"})
-	}
-
-	var p *build.Package
-
-	loadPackage := func(importpath, dir string) error {
-		pkg, err := i.ImportDir(dir, 0)
-		if err != nil {
-			return err
+func dirImporter(ctx *build.Context, dir string) func(string) (*build.Package, error) {
+	return func(path string) (*build.Package, error) {
+		if path == "" {
+			return nil, errors.WithStack(&importErr{path: path, msg: "invalid import path"})
 		}
-		p = pkg
-		p.ImportPath = importpath
-		return nil
-	}
 
-	// if this is the stdlib, then search vendor first.
-	// this isn't real vendor support, just enough to make net/http compile.
-	if i.Root == runtime.GOROOT() {
-		path := pathpkg.Join("vendor", path)
-		dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
+		if path == "." || path == ".." || strings.HasPrefix(path, "./") || strings.HasPrefix(path, "../") {
+			return nil, errors.WithStack(&importErr{path: path, msg: "relative import not supported"})
+		}
+
+		if strings.HasPrefix(path, "/") {
+			return nil, errors.WithStack(&importErr{path: path, msg: "cannot import absolute path"})
+		}
+
+		var p *build.Package
+
+		loadPackage := func(importpath, dir string) error {
+			pkg, err := ctx.ImportDir(dir, 0)
+			if err != nil {
+				return err
+			}
+			p = pkg
+			p.ImportPath = importpath
+			return nil
+		}
+
+		// if this is the stdlib, then search vendor first.
+		// this isn't real vendor support, just enough to make net/http compile.
+		if dir == runtime.GOROOT() {
+			path := pathpkg.Join("vendor", path)
+			dir := filepath.Join(dir, "src", filepath.FromSlash(path))
+			fi, err := os.Stat(dir)
+			if err == nil && fi.IsDir() {
+				err := loadPackage(path, dir)
+				return p, err
+			}
+		}
+
+		dir := filepath.Join(dir, "src", filepath.FromSlash(path))
 		fi, err := os.Stat(dir)
-		if err == nil && fi.IsDir() {
-			err := loadPackage(path, dir)
-			return p, err
+		if err != nil {
+			return nil, err
 		}
+		if !fi.IsDir() {
+			return nil, errors.Errorf("import %q: not a directory", path)
+		}
+		err = loadPackage(path, dir)
+		return p, err
 	}
-
-	dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
-	fi, err := os.Stat(dir)
-	if err != nil {
-		return nil, err
-	}
-	if !fi.IsDir() {
-		return nil, errors.Errorf("import %q: not a directory", path)
-	}
-	err = loadPackage(path, dir)
-	return p, err
 }
