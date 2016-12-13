@@ -59,17 +59,15 @@ func (i *_importer) Import(path string) (*build.Package, error) {
 	return pkg, nil
 }
 
-type fixupImporter struct {
-	Importer
-}
-
-func (i *fixupImporter) Import(path string) (*build.Package, error) {
-	pkg, err := i.Importer.Import(path)
-	switch err.(type) {
-	case *os.PathError:
-		return nil, errors.Wrapf(err, "import %q: not found", path)
-	default:
-		return pkg, err
+func fixupImporter(importer Importer) func(string) (*build.Package, error) {
+	return func(path string) (*build.Package, error) {
+		pkg, err := importer.Import(path)
+		switch err.(type) {
+		case *os.PathError:
+			return nil, errors.Wrapf(err, "import %q: not found", path)
+		default:
+			return pkg, err
+		}
 	}
 }
 

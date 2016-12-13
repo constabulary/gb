@@ -438,9 +438,6 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 		importerFn(dirImporter(bc, runtime.GOROOT())),
 	}
 
-	i = &fixupImporter{
-		Importer: i,
-	}
-
+	i = importerFn(fixupImporter(i))
 	return i, nil
 }
