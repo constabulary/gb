@@ -1737,6 +1737,6 @@ func TestFoo(t *testing.T) {
 
 	gb.cd(gb.tempdir)
 	tmpdir := gb.tempDir("tmp")
-	gb.run("test", "-a")
+	gb.run("test")
 	gb.mustBeEmpty(tmpdir)
 }
