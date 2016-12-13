@@ -16,17 +16,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// A Package describes the Go package found in a directory.
-type Package struct {
-	*build.Package
-}
-
 type Importer struct {
 	*build.Context
 	Root string // root directory
 }
 
-func (i *Importer) Import(path string) (*Package, error) {
+func (i *Importer) Import(path string) (*build.Package, error) {
 	if path == "" {
 		return nil, fmt.Errorf("import %q: invalid import path", path)
 	}
@@ -39,14 +34,14 @@ func (i *Importer) Import(path string) (*Package, error) {
 		return nil, fmt.Errorf("import %q: cannot import absolute path", path)
 	}
 
-	p := new(Package)
+	var p *build.Package
 
 	loadPackage := func(importpath, dir string) error {
 		pkg, err := i.ImportDir(dir, 0)
 		if err != nil {
 			return err
 		}
-		p.Package = pkg
+		p = pkg
 		p.ImportPath = importpath
 		return nil
 	}

@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"go/build"
 	"os"
 
 	"github.com/constabulary/gb/internal/importer"
@@ -9,7 +10,7 @@ import (
 
 type nullImporter struct{}
 
-func (i *nullImporter) Import(path string) (*importer.Package, error) {
+func (i *nullImporter) Import(path string) (*build.Package, error) {
 	return nil, errors.Errorf("import %q not found", path)
 }
 
@@ -18,7 +19,7 @@ type srcImporter struct {
 	im importer.Importer
 }
 
-func (i *srcImporter) Import(path string) (*importer.Package, error) {
+func (i *srcImporter) Import(path string) (*build.Package, error) {
 	pkg, err := i.im.Import(path)
 	if err == nil {
 		return pkg, nil
@@ -40,7 +41,7 @@ type _importer struct {
 	im importer.Importer
 }
 
-func (i *_importer) Import(path string) (*importer.Package, error) {
+func (i *_importer) Import(path string) (*build.Package, error) {
 	pkg, err := i.im.Import(path)
 	if err != nil {
 		return i.Importer.Import(path)
@@ -52,7 +53,7 @@ type fixupImporter struct {
 	Importer
 }
 
-func (i *fixupImporter) Import(path string) (*importer.Package, error) {
+func (i *fixupImporter) Import(path string) (*build.Package, error) {
 	pkg, err := i.Importer.Import(path)
 	switch err.(type) {
 	case *os.PathError:

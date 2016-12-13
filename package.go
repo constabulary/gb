@@ -2,6 +2,7 @@ package gb
 
 import (
 	"fmt"
+	"go/build"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -9,14 +10,13 @@ import (
 	"time"
 
 	"github.com/constabulary/gb/internal/debug"
-	"github.com/constabulary/gb/internal/importer"
 	"github.com/pkg/errors"
 )
 
 // Package represents a resolved package from the Project with respect to the Context.
 type Package struct {
 	*Context
-	*importer.Package
+	*build.Package
 	TestScope bool
 	NotStale  bool // this package _and_ all its dependencies are not stale
 	Main      bool // is this a command
@@ -24,7 +24,7 @@ type Package struct {
 }
 
 // newPackage creates a resolved Package without setting pkg.Stale.
-func (ctx *Context) newPackage(p *importer.Package) (*Package, error) {
+func (ctx *Context) newPackage(p *build.Package) (*Package, error) {
 	pkg := &Package{
 		Context: ctx,
 		Package: p,
