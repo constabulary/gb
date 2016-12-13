@@ -371,3 +371,76 @@ func TestPkgpath(t *testing.T) {
 		}
 	}
 }
+
+func TestPackageIncludePaths(t *testing.T) {
+	ctx := testContext(t)
+	tests := []struct {
+		pkg  *Package
+		want []string
+	}{{
+		pkg: &Package{
+			Context: ctx,
+			Package: &importer.Package{
+				Package: &build.Package{
+					ImportPath: "github.com/foo/bar",
+				},
+			},
+		},
+		want: []string{
+			ctx.Workdir(),
+			ctx.Pkgdir(),
+		},
+	}, {
+		pkg: &Package{
+			Context: ctx,
+			Package: &importer.Package{
+				Package: &build.Package{
+					ImportPath: "github.com/foo/bar",
+				},
+			},
+			Main: true,
+		},
+		want: []string{
+			ctx.Workdir(),
+			ctx.Pkgdir(),
+		},
+	}, {
+		pkg: &Package{
+			Context: ctx,
+			Package: &importer.Package{
+				Package: &build.Package{
+					ImportPath: "github.com/foo/bar",
+				},
+			},
+			TestScope: true,
+		},
+		want: []string{
+			filepath.Join(ctx.Workdir(), "github.com", "foo", "bar", "_test"),
+			ctx.Workdir(),
+			ctx.Pkgdir(),
+		},
+	}, {
+		pkg: &Package{
+			Context: ctx,
+			Package: &importer.Package{
+				Package: &build.Package{
+					ImportPath: "github.com/foo/bar",
+				},
+			},
+			TestScope: true,
+			Main:      true,
+		},
+		want: []string{
+			filepath.Join(ctx.Workdir(), "github.com", "foo", "_test"), // TODO(dfc) WTF
+			ctx.Workdir(),
+			ctx.Pkgdir(),
+		},
+	}}
+
+	for i, tt := range tests {
+		got := tt.pkg.includePaths()
+		if !reflect.DeepEqual(got, tt.want) {
+			t.Errorf("%d: Package: ImportPath: %v, TestScope: %v, Main: %v: got %v, want %v", i, tt.pkg.ImportPath, tt.pkg.TestScope, tt.pkg.Main, got, tt.want)
+		}
+	}
+}

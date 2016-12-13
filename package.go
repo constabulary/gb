@@ -17,11 +17,10 @@ import (
 type Package struct {
 	*Context
 	*importer.Package
-	TestScope     bool
-	ExtraIncludes string // hook for test
-	NotStale      bool   // this package _and_ all its dependencies are not stale
-	Main          bool   // is this a command
-	Imports       []*Package
+	TestScope bool
+	NotStale  bool // this package _and_ all its dependencies are not stale
+	Main      bool // is this a command
+	Imports   []*Package
 }
 
 // newPackage creates a resolved Package without setting pkg.Stale.
@@ -50,13 +49,16 @@ func (p *Package) String() string {
 
 func (p *Package) includePaths() []string {
 	includes := p.Context.includePaths()
-	if p.TestScope && p.Main {
-		return append([]string{filepath.Join(p.Context.Workdir(), filepath.Dir(filepath.FromSlash(p.ImportPath)), "_test")}, includes...)
+	switch {
+	case p.TestScope && p.Main:
+		ip := filepath.Dir(filepath.FromSlash(p.ImportPath))
+		return append([]string{filepath.Join(p.Context.Workdir(), ip, "_test")}, includes...)
+	case p.TestScope:
+		ip := strings.TrimSuffix(filepath.FromSlash(p.ImportPath), "_test")
+		return append([]string{filepath.Join(p.Context.Workdir(), ip, "_test")}, includes...)
+	default:
+		return includes
 	}
-	if p.TestScope && p.ExtraIncludes != "" {
-		includes = append([]string{p.ExtraIncludes}, includes...)
-	}
-	return includes
 }
 
 // Complete indicates if this is a pure Go package
