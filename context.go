@@ -423,12 +423,12 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 	}
 
 	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
-	i = importerFn(childFirstImporter(i, dirImporter(bc, filepath.Join(ctx.Projectdir(), "vendor"))))
+	i = childFirstImporter(i, dirImporter(bc, filepath.Join(ctx.Projectdir(), "vendor")))
 
-	i = importerFn(srcImporter(i, dirImporter(bc, ctx.Projectdir())))
+	i = srcImporter(importerFn(i), dirImporter(bc, ctx.Projectdir()))
 
-	i = importerFn(childFirstImporter(i, dirImporter(bc, runtime.GOROOT())))
+	i = childFirstImporter(i, dirImporter(bc, runtime.GOROOT()))
 
-	i = importerFn(fixupImporter(i))
-	return i, nil
+	i = fixupImporter(i)
+	return importerFn(i), nil
 }

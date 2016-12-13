@@ -43,19 +43,19 @@ func srcImporter(parent Importer, child func(string) (*build.Package, error)) fu
 	}
 }
 
-func childFirstImporter(parent Importer, child func(string) (*build.Package, error)) func(string) (*build.Package, error) {
+func childFirstImporter(parent, child func(string) (*build.Package, error)) func(string) (*build.Package, error) {
 	return func(path string) (*build.Package, error) {
 		pkg, err := child(path)
 		if err != nil {
-			return parent.Import(path)
+			return parent(path)
 		}
 		return pkg, nil
 	}
 }
 
-func fixupImporter(importer Importer) func(string) (*build.Package, error) {
+func fixupImporter(importer func(string) (*build.Package, error)) func(string) (*build.Package, error) {
 	return func(path string) (*build.Package, error) {
-		pkg, err := importer.Import(path)
+		pkg, err := importer(path)
 		switch err.(type) {
 		case *os.PathError:
 			return nil, errors.Wrapf(err, "import %q: not found", path)
