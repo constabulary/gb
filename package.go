@@ -51,9 +51,11 @@ func (p *Package) includePaths() []string {
 	includes := p.Context.includePaths()
 	switch {
 	case p.TestScope && p.Main:
-		return append([]string{filepath.Join(p.Context.Workdir(), filepath.Dir(filepath.FromSlash(p.ImportPath)), "_test")}, includes...)
+		ip := filepath.Dir(filepath.FromSlash(p.ImportPath))
+		return append([]string{filepath.Join(p.Context.Workdir(), ip, "_test")}, includes...)
 	case p.TestScope:
-		return append([]string{filepath.Join(p.Context.Workdir(), strings.TrimRight(filepath.FromSlash(p.ImportPath), "_test"), "_test")}, includes...)
+		ip := strings.TrimSuffix(filepath.FromSlash(p.ImportPath), "_test")
+		return append([]string{filepath.Join(p.Context.Workdir(), ip, "_test")}, includes...)
 	default:
 		return includes
 	}
