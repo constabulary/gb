@@ -8,8 +8,6 @@ import (
 	"reflect"
 	"runtime"
 	"testing"
-
-	"github.com/constabulary/gb/internal/importer"
 )
 
 func testContext(t *testing.T, opts ...func(*Context) error) *Context {
@@ -114,11 +112,9 @@ func TestPackageBindir(t *testing.T) {
 		want: ctx.bindir(),
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "testpkg",
-					ImportPath: "github.com/constabulary/gb/testpkg",
-				},
+			Package: &build.Package{
+				Name:       "testpkg",
+				ImportPath: "github.com/constabulary/gb/testpkg",
 			},
 			Context:   ctx,
 			TestScope: true,
@@ -137,17 +133,15 @@ func TestPackageBindir(t *testing.T) {
 
 func TestNewPackage(t *testing.T) {
 	tests := []struct {
-		pkg  importer.Package
+		pkg  build.Package
 		want Package
 	}{{
-		importer.Package{
-			Package: &build.Package{
-				Name:       "C",
-				ImportPath: "C",
-			},
-			Standard: true,
+		pkg: build.Package{
+			Name:       "C",
+			ImportPath: "C",
+			Goroot:     true,
 		},
-		Package{
+		want: Package{
 			NotStale: true,
 		},
 	}}
@@ -380,10 +374,8 @@ func TestPackageIncludePaths(t *testing.T) {
 	}{{
 		pkg: &Package{
 			Context: ctx,
-			Package: &importer.Package{
-				Package: &build.Package{
-					ImportPath: "github.com/foo/bar",
-				},
+			Package: &build.Package{
+				ImportPath: "github.com/foo/bar",
 			},
 		},
 		want: []string{
@@ -393,10 +385,8 @@ func TestPackageIncludePaths(t *testing.T) {
 	}, {
 		pkg: &Package{
 			Context: ctx,
-			Package: &importer.Package{
-				Package: &build.Package{
-					ImportPath: "github.com/foo/bar",
-				},
+			Package: &build.Package{
+				ImportPath: "github.com/foo/bar",
 			},
 			Main: true,
 		},
@@ -407,10 +397,8 @@ func TestPackageIncludePaths(t *testing.T) {
 	}, {
 		pkg: &Package{
 			Context: ctx,
-			Package: &importer.Package{
-				Package: &build.Package{
-					ImportPath: "github.com/foo/bar",
-				},
+			Package: &build.Package{
+				ImportPath: "github.com/foo/bar",
 			},
 			TestScope: true,
 		},
@@ -422,10 +410,8 @@ func TestPackageIncludePaths(t *testing.T) {
 	}, {
 		pkg: &Package{
 			Context: ctx,
-			Package: &importer.Package{
-				Package: &build.Package{
-					ImportPath: "github.com/foo/bar",
-				},
+			Package: &build.Package{
+				ImportPath: "github.com/foo/bar",
 			},
 			TestScope: true,
 			Main:      true,

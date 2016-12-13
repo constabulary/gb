@@ -9,8 +9,6 @@ import (
 	"reflect"
 	"sort"
 	"testing"
-
-	"github.com/constabulary/gb/internal/importer"
 )
 
 func TestBuild(t *testing.T) {
@@ -272,95 +270,77 @@ func TestPkgname(t *testing.T) {
 		want string
 	}{{
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "main",
-					ImportPath: "main",
-				},
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "main",
 			},
 		},
 		want: "main",
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "a",
-					ImportPath: "main",
-				},
+			Package: &build.Package{
+				Name:       "a",
+				ImportPath: "main",
 			},
 		},
 		want: "main",
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "main",
-					ImportPath: "a",
-				},
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "a",
 			},
 		},
 		want: "a",
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "main",
-					ImportPath: "testmain",
-				},
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "testmain",
 			},
 		},
 		want: "testmain",
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "main",
-					ImportPath: "main",
-				},
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "main",
 			},
 			TestScope: true,
 		},
 		want: "main",
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "a",
-					ImportPath: "main",
-				},
+			Package: &build.Package{
+				Name:       "a",
+				ImportPath: "main",
 			},
 			TestScope: true,
 		},
 		want: "main",
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "main",
-					ImportPath: "a",
-				},
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "a",
 			},
 			TestScope: true,
 		},
 		want: "a",
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "main",
-					ImportPath: "a/a",
-				},
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "a/a",
 			},
 			TestScope: true,
 		},
 		want: "a",
 	}, {
 		pkg: &Package{
-			Package: &importer.Package{
-				Package: &build.Package{
-					Name:       "main",
-					ImportPath: "testmain",
-				},
+			Package: &build.Package{
+				Name:       "main",
+				ImportPath: "testmain",
 			},
 			TestScope: true,
 		},

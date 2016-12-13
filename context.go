@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/constabulary/gb/internal/debug"
-	"github.com/constabulary/gb/internal/importer"
 	"github.com/pkg/errors"
 )
 
@@ -24,7 +23,7 @@ type Importer interface {
 
 	// Import attempts to resolve the package import path, path,
 	// to an *importer.Package.
-	Import(path string) (*importer.Package, error)
+	Import(path string) (*build.Package, error)
 }
 
 // Context represents an execution of one or more Targets inside a Project.
@@ -176,13 +175,11 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
 	for _, name := range []string{"C", "unsafe"} {
-		pkg, err := ctx.newPackage(&importer.Package{
-			Standard: true,
-			Package: &build.Package{
-				Name:       name,
-				ImportPath: name,
-				Dir:        name, // fake, but helps diagnostics
-			},
+		pkg, err := ctx.newPackage(&build.Package{
+			Name:       name,
+			ImportPath: name,
+			Dir:        name, // fake, but helps diagnostics
+			Goroot:     true,
 		})
 		if err != nil {
 			return nil, err
@@ -203,7 +200,7 @@ func (c *Context) includePaths() []string {
 }
 
 // NewPackage creates a resolved Package for p.
-func (c *Context) NewPackage(p *importer.Package) (*Package, error) {
+func (c *Context) NewPackage(p *build.Package) (*Package, error) {
 	pkg, err := c.newPackage(p)
 	if err != nil {
 		return nil, err
@@ -423,7 +420,7 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
 	i = &_importer{
 		Importer: i,
-		im: importer.Importer{
+		im: importer{
 			Context: bc,
 			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
 		},
@@ -431,7 +428,7 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 
 	i = &srcImporter{
 		i,
-		importer.Importer{
+		importer{
 			Context: bc,
 			Root:    ctx.Projectdir(),
 		},
@@ -439,7 +436,7 @@ func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
 
 	i = &_importer{
 		i,
-		importer.Importer{
+		importer{
 			Context: bc,
 			Root:    runtime.GOROOT(),
 		},
