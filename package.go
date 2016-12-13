@@ -40,11 +40,7 @@ func (ctx *Context) newPackage(p *build.Package) (*Package, error) {
 }
 
 func (p *Package) String() string {
-	return fmt.Sprintf("%v", struct {
-		Name, ImportPath, Dir string
-	}{
-		p.Name, p.ImportPath, p.Dir,
-	})
+	return fmt.Sprintf("%s {Name:%s, Dir:%s}", p.ImportPath, p.Name, p.Dir)
 }
 
 func (p *Package) includePaths() []string {

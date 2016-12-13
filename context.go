@@ -18,6 +18,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// enables sh style -e output
+const eMode = true
+
 // Importer resolves package import paths to *importer.Packages.
 type Importer interface {
 
@@ -306,6 +309,9 @@ func runOut(output io.Writer, dir string, env []string, command string, args ...
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
 	cmd.Env = mergeEnvLists(env, envForDir(cmd.Dir))
+	if eMode {
+		fmt.Fprintln(os.Stderr, "+", strings.Join(cmd.Args, " "))
+	}
 	debug.Debugf("cd %s; %s", cmd.Dir, cmd.Args)
 	err := cmd.Run()
 	return err
