@@ -19,7 +19,6 @@ import (
 // A Package describes the Go package found in a directory.
 type Package struct {
 	*build.Package
-	Standard bool // package found in GOROOT
 }
 
 type Importer struct {
@@ -40,9 +39,7 @@ func (i *Importer) Import(path string) (*Package, error) {
 		return nil, fmt.Errorf("import %q: cannot import absolute path", path)
 	}
 
-	p := &Package{
-		Standard: i.Root == runtime.GOROOT(),
-	}
+	p := new(Package)
 
 	loadPackage := func(importpath, dir string) error {
 		pkg, err := i.ImportDir(dir, 0)
@@ -56,7 +53,7 @@ func (i *Importer) Import(path string) (*Package, error) {
 
 	// if this is the stdlib, then search vendor first.
 	// this isn't real vendor support, just enough to make net/http compile.
-	if p.Standard {
+	if i.Root == runtime.GOROOT() {
 		path := pathpkg.Join("vendor", path)
 		dir := filepath.Join(i.Root, "src", filepath.FromSlash(path))
 		fi, err := os.Stat(dir)

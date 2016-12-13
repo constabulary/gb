@@ -68,7 +68,7 @@ func (p *Package) Complete() bool {
 	// Exceptions: a few standard packages have forward declarations for
 	// pieces supplied behind-the-scenes by package runtime.
 	extFiles := len(p.CgoFiles) + len(p.CFiles) + len(p.CXXFiles) + len(p.MFiles) + len(p.SFiles) + len(p.SysoFiles) + len(p.SwigFiles) + len(p.SwigCXXFiles)
-	if p.Standard {
+	if p.Goroot {
 		switch p.ImportPath {
 		case "bytes", "net", "os", "runtime/pprof", "sync", "time":
 			extFiles++
@@ -159,10 +159,10 @@ func (pkg *Package) pkgpath() string {
 	switch {
 	case pkg.isCrossCompile():
 		return filepath.Join(pkg.Pkgdir(), importpath)
-	case pkg.Standard && pkg.race:
+	case pkg.Goroot && pkg.race:
 		// race enabled standard lib
 		return filepath.Join(runtime.GOROOT(), "pkg", pkg.gotargetos+"_"+pkg.gotargetarch+"_race", importpath)
-	case pkg.Standard:
+	case pkg.Goroot:
 		// standard lib
 		return filepath.Join(runtime.GOROOT(), "pkg", pkg.gotargetos+"_"+pkg.gotargetarch, importpath)
 	default:
@@ -179,7 +179,7 @@ func (pkg *Package) isStale() bool {
 		return false
 	}
 
-	if !pkg.Standard && pkg.Force {
+	if !pkg.Goroot && pkg.Force {
 		return true
 	}
 
@@ -215,7 +215,7 @@ func (pkg *Package) isStale() bool {
 	// the linker.  This heuristic will not work if the binaries are
 	// back-dated, as some binary distributions may do, but it does handle
 	// a very common case.
-	if !pkg.Standard {
+	if !pkg.Goroot {
 		if olderThan(pkg.tc.compiler()) {
 			debug.Debugf("%s is older than %s", pkg.pkgpath(), pkg.tc.compiler())
 			return true
@@ -226,7 +226,7 @@ func (pkg *Package) isStale() bool {
 		}
 	}
 
-	if pkg.Standard && !pkg.isCrossCompile() {
+	if pkg.Goroot && !pkg.isCrossCompile() {
 		// if this is a standard lib package, and we are not cross compiling
 		// then assume the package is up to date. This also works around
 		// golang/go#13769.

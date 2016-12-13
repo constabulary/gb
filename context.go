@@ -177,11 +177,11 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	// Insert fake packages into the package cache.
 	for _, name := range []string{"C", "unsafe"} {
 		pkg, err := ctx.newPackage(&importer.Package{
-			Standard: true,
 			Package: &build.Package{
 				Name:       name,
 				ImportPath: name,
 				Dir:        name, // fake, but helps diagnostics
+				Goroot:     true,
 			},
 		})
 		if err != nil {

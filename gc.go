@@ -167,7 +167,7 @@ func (t *gcToolchain) Gc(pkg *Package, files []string) error {
 	for _, d := range pkg.includePaths() {
 		args = append(args, "-I", d)
 	}
-	if pkg.Standard && pkg.ImportPath == "runtime" {
+	if pkg.Goroot && pkg.ImportPath == "runtime" {
 		// runtime compiles with a special gc flag to emit
 		// additional reflect type data.
 		args = append(args, "-+")
@@ -183,7 +183,7 @@ func (t *gcToolchain) Gc(pkg *Package, files []string) error {
 
 	// If there are vendored components, create an -importmap to map the import statement
 	// to the vendored import path. The possibilities for abusing this flag are endless.
-	if goversion > 1.5 && pkg.Standard {
+	if goversion > 1.5 && pkg.Goroot {
 		for _, path := range pkg.Package.Imports {
 			if i := strings.LastIndex(path, "/vendor/"); i >= 0 {
 				args = append(args, "-importmap", path[i+len("/vendor/"):]+"="+path)

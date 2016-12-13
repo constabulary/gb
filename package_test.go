@@ -144,8 +144,8 @@ func TestNewPackage(t *testing.T) {
 			Package: &build.Package{
 				Name:       "C",
 				ImportPath: "C",
+				Goroot:     true,
 			},
-			Standard: true,
 		},
 		Package{
 			NotStale: true,
