@@ -1716,3 +1716,27 @@ func main() {
 	gb.grepStdout("^pkg2$", "expected pkg2")
 	gb.mustBeEmpty(tmpdir)
 }
+
+func TestIssue680(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempFile("src/issue680/issue_test.go", `// +build go1.7
+
+package main
+
+import (
+	"net/http/httptest"
+	"testing"
+)
+
+func TestFoo(t *testing.T) {
+	_ = httptest.NewRequest("", "https://example.com", nil)
+}`)
+	gb.tempFile("src/issue680/test_test.go", "package main")
+
+	gb.cd(gb.tempdir)
+	tmpdir := gb.tempDir("tmp")
+	gb.run("test", "-a")
+	gb.mustBeEmpty(tmpdir)
+}
