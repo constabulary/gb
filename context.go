@@ -123,9 +123,8 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	envOr := func(key, def string) string {
 		if v := os.Getenv(key); v != "" {
 			return v
-		} else {
-			return def
 		}
+		return def
 	}
 
 	defaults := []func(*Context) error{

@@ -1,4 +1,4 @@
-// depfile loads a file of tagged key value pairs.
+// Package depfile loads a file of tagged key value pairs.
 package depfile
 
 import (
