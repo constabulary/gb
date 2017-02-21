@@ -374,3 +374,7 @@ func mktemp(t *testing.T) string {
 func mktmp() (string, error) {
 	return ioutil.TempDir("", "gb-test-")
 }
+
+func nogoerr(dir string) error {
+	return &build.NoGoError{Dir: dir}
+}
