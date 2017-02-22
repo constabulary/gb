@@ -268,19 +268,6 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 
 func gc(pkg *Package, gofiles []string) error {
 	t0 := time.Now()
-	for i := range gofiles {
-		if filepath.IsAbs(gofiles[i]) {
-			// terrible hack for cgo files which come with an absolute path
-			continue
-		}
-		fullpath := filepath.Join(pkg.Dir, gofiles[i])
-		path, err := filepath.Rel(pkg.Dir, fullpath)
-		if err == nil {
-			gofiles[i] = path
-		} else {
-			gofiles[i] = fullpath
-		}
-	}
 	err := pkg.tc.Gc(pkg, gofiles)
 	pkg.Record("gc", time.Since(t0))
 	return err
