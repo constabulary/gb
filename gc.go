@@ -174,7 +174,7 @@ func (t *gcToolchain) Gc(pkg *Package, files []string) error {
 	}
 
 	switch {
-	case pkg.Complete():
+	case pkg.complete():
 		args = append(args, "-complete")
 	case goversion > 1.4:
 		asmhdr := filepath.Join(filepath.Dir(outfile), pkg.Name, "go_asm.h")
