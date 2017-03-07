@@ -39,10 +39,13 @@ var (
 	dotfile string // path to dot output file
 
 	buildtags []string
+
+	outputFileName string
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
 	// TODO(dfc) this should accept a *gb.Context
+	fs.StringVar(&outputFileName, "o", "", "output file name")
 	fs.BoolVar(&R, "r", false, "perform a release build")
 	fs.BoolVar(&F, "f", false, "rebuild up-to-date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")

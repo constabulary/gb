@@ -58,6 +58,8 @@ type Context struct {
 	linkmode, buildmode string // link and build modes
 
 	buildtags []string // build tags
+
+	outputBinFileName string
 }
 
 // GOOS configures the Context to use goos as the target os.
@@ -86,6 +88,14 @@ func GOARCH(goarch string) func(*Context) error {
 func Tags(tags ...string) func(*Context) error {
 	return func(c *Context) error {
 		c.buildtags = append(c.buildtags, tags...)
+		return nil
+	}
+}
+
+// OutputFileName configured the context to use output file name for produced bin
+func OutputFileName(outputFileName string) func(*Context) error {
+	return func(c *Context) error {
+		c.outputBinFileName = outputFileName
 		return nil
 	}
 }

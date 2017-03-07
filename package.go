@@ -75,6 +75,10 @@ func (p *Package) Complete() bool {
 
 // Binfile returns the destination of the compiled target of this command.
 func (pkg *Package) Binfile() string {
+	if pkg.outputBinFileName != "" {
+		return pkg.outputBinFileName
+	}
+
 	target := filepath.Join(pkg.bindir(), pkg.binname())
 
 	// if this is a cross compile or GOOS/GOARCH are both defined or there are build tags, add ctxString.
