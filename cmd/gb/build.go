@@ -40,12 +40,12 @@ var (
 
 	buildtags []string
 
-	outputFileName string
+	outputFileTemplate string
 )
 
 func addBuildFlags(fs *flag.FlagSet) {
 	// TODO(dfc) this should accept a *gb.Context
-	fs.StringVar(&outputFileName, "o", "", "output file name")
+	fs.StringVar(&outputFileTemplate, "o", "", "output file template. possible placeholders: target_path, tags: example: `gb build -o '{{.target_path}}-{{.tags}}'`")
 	fs.BoolVar(&R, "r", false, "perform a release build")
 	fs.BoolVar(&F, "f", false, "rebuild up-to-date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")

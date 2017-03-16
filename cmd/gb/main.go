@@ -187,7 +187,7 @@ func newContext(cwd string) (*gb.Context, error) {
 		gb.Gcflags(gcflags...),
 		gb.Ldflags(ldflags...),
 		gb.Tags(buildtags...),
-		gb.OutputFileName(outputFileName),
+		gb.OutputFileTemplate(outputFileTemplate),
 		func(c *gb.Context) error {
 			if !race {
 				return nil

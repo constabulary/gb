@@ -59,7 +59,7 @@ type Context struct {
 
 	buildtags []string // build tags
 
-	outputBinFileName string
+	outputBinFileTemplate string
 }
 
 // GOOS configures the Context to use goos as the target os.
@@ -92,10 +92,10 @@ func Tags(tags ...string) func(*Context) error {
 	}
 }
 
-// OutputFileName configured the context to use output file name for produced bin
-func OutputFileName(outputFileName string) func(*Context) error {
+// OutputFileTemplate configured the context to use output file name for produced bin
+func OutputFileTemplate(outputFileTemplate string) func(*Context) error {
 	return func(c *Context) error {
-		c.outputBinFileName = outputFileName
+		c.outputBinFileTemplate = outputFileTemplate
 		return nil
 	}
 }
