@@ -45,7 +45,7 @@ var (
 
 func addBuildFlags(fs *flag.FlagSet) {
 	// TODO(dfc) this should accept a *gb.Context
-	fs.StringVar(&outputFileTemplate, "o", "", "output file template. possible placeholders: target_path, tags: example: `gb build -o '{{.target_path}}-{{.tags}}'`")
+	fs.StringVar(&outputFileTemplate, "o", "", "output file template")
 	fs.BoolVar(&R, "r", false, "perform a release build")
 	fs.BoolVar(&F, "f", false, "rebuild up-to-date packages")
 	fs.BoolVar(&FF, "F", false, "do not cache built packages")
@@ -67,6 +67,10 @@ dependencies.
 
 Flags:
 
+	-o
+		changes output binary file name. golang template expected.
+		possible placeholders: target_path, tags.
+		example: gb build -o '{{.target_path}}-{{.tags}}'
 	-f
 		ignore cached packages if present, new packages built will overwrite
 		any cached packages. This effectively disables incremental
