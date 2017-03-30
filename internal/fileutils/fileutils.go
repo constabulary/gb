@@ -17,13 +17,15 @@ const debugCopyfile = false
 
 // Copypath copies the contents of src to dst, excluding any file or
 // directory that starts with a period.
-func Copypath(dst string, src string) error {
+func Copypath(dst string, src string, withGit bool) error {
 	err := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if strings.HasPrefix(filepath.Base(path), ".") {
+		git := filepath.Base(path) == ".git" && withGit
+
+		if strings.HasPrefix(filepath.Base(path), ".") && !git {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}

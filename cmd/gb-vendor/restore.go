@@ -61,7 +61,7 @@ func restore(ctx *gb.Context) error {
 			dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
 			src := filepath.Join(wc.Dir(), dep.Path)
 
-			if err := fileutils.Copypath(dst, src); err != nil {
+			if err := fileutils.Copypath(dst, src, dep.Clone); err != nil {
 				errChan <- err
 				return
 			}
