@@ -50,49 +50,59 @@ func restore(ctx *gb.Context) error {
 		return errors.Wrap(err, "could not load manifest")
 	}
 
+	work := make(chan vendor.Dependency)
 	var wg sync.WaitGroup
-
-	errChan := make(chan error, 1)
-	sem := make(chan int, jobs)
-
-	wg.Add(len(m.Dependencies))
-	for _, dep := range m.Dependencies {
-		sem <- 1
-		go func(dep vendor.Dependency) {
-			defer func() {
-				wg.Done()
-				<-sem
-			}()
-
-			fmt.Printf("Getting %s\n", dep.Importpath)
-			repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, insecure)
-			if err != nil {
-				errChan <- errors.Wrap(err, "could not process dependency")
-				return
-			}
-			wc, err := repo.Checkout("", "", dep.Revision)
-			if err != nil {
-				errChan <- errors.Wrap(err, "could not retrieve dependency")
-				return
-			}
-			dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
-			src := filepath.Join(wc.Dir(), dep.Path)
-
-			if err := fileutils.Copypath(dst, src); err != nil {
-				errChan <- err
-				return
-			}
-
-			if err := wc.Destroy(); err != nil {
-				errChan <- err
-				return
-			}
-		}(dep)
+	workers := min(jobs, len(m.Dependencies))
+	wg.Add(workers)
+	errChan := make(chan error, workers)
+	for i := 0; i < workers; i++ {
+		go restoreWorker(ctx, work, &wg, errChan)
 	}
-
+	for _, dep := range m.Dependencies {
+		work <- dep
+	}
+	close(work)
 	wg.Wait()
+	select {
+	case err := <-errChan:
+		return err
+	default:
+		return nil
+	}
+}
 
-	close(errChan)
-	close(sem)
-	return <-errChan
+func restoreWorker(ctx *gb.Context, work chan vendor.Dependency, wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+	for dep := range work {
+		fmt.Printf("Getting %s\n", dep.Importpath)
+		repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, insecure)
+		if err != nil {
+			errChan <- errors.Wrap(err, "could not process dependency")
+			return
+		}
+		wc, err := repo.Checkout("", "", dep.Revision)
+		if err != nil {
+			errChan <- errors.Wrap(err, "could not retrieve dependency")
+			return
+		}
+		dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
+		src := filepath.Join(wc.Dir(), dep.Path)
+
+		if err := fileutils.Copypath(dst, src); err != nil {
+			errChan <- err
+			return
+		}
+
+		if err := wc.Destroy(); err != nil {
+			errChan <- err
+			return
+		}
+	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

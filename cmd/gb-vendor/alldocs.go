@@ -125,6 +125,9 @@ Flags:
 	-precaire
 		allow the use of insecure protocols.
 
+	-jobs N
+		limit the amount of restoration jobs occurring at the same time.
+
 
 */
 package main
