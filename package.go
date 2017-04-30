@@ -57,8 +57,8 @@ func (p *Package) includePaths() []string {
 	}
 }
 
-// Complete indicates if this is a pure Go package
-func (p *Package) Complete() bool {
+// complete indicates if this is a pure Go package
+func (p *Package) complete() bool {
 	// If we're giving the compiler the entire package (no C etc files), tell it that,
 	// so that it can give good error messages about forward declarations.
 	// Exceptions: a few standard packages have forward declarations for
