@@ -239,11 +239,18 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 			// race binaries have extra implicit depdendenceis.
 			extra = append(extra, "runtime/race")
 		}
-
 	case len(pkg.CgoFiles) > 0 && pkg.ImportPath != "runtime/cgo":
 		// anything that uses cgo has a dependency on runtime/cgo which is
 		// only visible after cgo file generation.
+		// TODO(dfc) what about pkg.Main && pkg.CgoFiles > 0 ??
 		extra = append(extra, "runtime/cgo")
+	}
+	if pkg.TestScope {
+		extra = append(extra, "regexp")
+		if goversion > 1.7 {
+			// since Go 1.8 tests have additional implicit dependencies
+			extra = append(extra, "testing/internal/testdeps")
+		}
 	}
 	for _, i := range extra {
 		p, err := pkg.ResolvePackage(i)
