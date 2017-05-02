@@ -71,7 +71,18 @@ func TestMain(m *testing.M) {
 		}
 		ok := false
 		for _, loc := range locations {
-			out, err := exec.Command(filepath.Join(loc...), "build", "-o", testgb).CombinedOutput()
+			cmd := exec.Command(filepath.Join(loc...), "build", "-o", testgb)
+			var env []string
+			// if we're running the cross compile tests, strip the GOOS/GOARCH values
+			// because we need to use the _host_ compiler to build the cross version of gb
+			for _, v := range os.Environ() {
+				if strings.HasPrefix(v, "GOOS") || strings.HasPrefix(v, "GOARCH") {
+					continue
+				}
+				env = append(env, v)
+			}
+			cmd.Env = env
+			out, err := cmd.CombinedOutput()
 			if err == nil {
 				ok = true
 				break
