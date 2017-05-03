@@ -10,6 +10,7 @@ import (
 
 	"github.com/constabulary/gb/internal/debug"
 	"github.com/constabulary/gb/internal/fileutils"
+	"github.com/constabulary/gb/internal/version"
 )
 
 // Build builds each of pkgs in succession. If pkg is a command, then the results of build include
@@ -247,7 +248,7 @@ func BuildDependencies(targets map[string]*Action, pkg *Package) ([]*Action, err
 	}
 	if pkg.TestScope {
 		extra = append(extra, "regexp")
-		if goversion > 1.7 {
+		if version.Version > 1.7 {
 			// since Go 1.8 tests have additional implicit dependencies
 			extra = append(extra, "testing/internal/testdeps")
 		}

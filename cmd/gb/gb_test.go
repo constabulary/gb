@@ -21,6 +21,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/constabulary/gb/internal/version"
 )
 
 var (
@@ -1315,7 +1317,7 @@ func TestTestRace(t *testing.T) {
 	if !canRace {
 		t.Skip("skipping because race detector not supported")
 	}
-	if strings.HasPrefix(runtime.Version(), "go1.4") {
+	if version.Version == 1.4 {
 		t.Skipf("skipping race test as Go version %v incorrectly marks race failures as success", runtime.Version())
 	}
 
@@ -1390,7 +1392,7 @@ func TestNoBuildStdlib(t *testing.T) {
 }
 
 func TestCrossCompile(t *testing.T) {
-	if strings.HasPrefix(runtime.Version(), "go1.4") {
+	if version.Version == 1.4 {
 		t.Skip("skipping cross compile test, not supported on", runtime.Version())
 	}
 	gb := T{T: t}
@@ -1748,7 +1750,7 @@ func TestIssue707(t *testing.T) {
 	default:
 		t.Skipf("test relies on being able to run cross compiled binaries, only supported on amd64")
 	}
-	if strings.HasPrefix(runtime.Version(), "go1.4") {
+	if version.Version == 1.4 {
 		t.Skipf("skipping test on version: %v", runtime.Version())
 	}
 
