@@ -31,6 +31,7 @@ var (
 
 	recurse  bool // should we fetch recursively
 	insecure bool // Allow the use of insecure protocols
+	clone    bool // allows to fetch as a full git repo
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
@@ -39,11 +40,12 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&tag, "tag", "", "tag of the package")
 	fs.BoolVar(&noRecurse, "no-recurse", false, "do not fetch recursively")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
+	fs.BoolVar(&clone, "clone", false, "fetch repository with .git folder")
 }
 
 var cmdFetch = &cmd.Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
+	UsageLine: "fetch [-branch branch | -revision rev | -tag tag] [-clone] [-precaire] [-no-recurse] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
@@ -54,6 +56,8 @@ Flags:
 	-branch branch
 		fetch from the name branch. If not supplied the default upstream
 		branch will be used.
+	-clone
+		fetches as a full git repository
 	-no-recurse
 		do not fetch recursively.
 	-tag tag
@@ -73,7 +77,7 @@ Flags:
 		case 1:
 			path := args[0]
 			recurse = !noRecurse
-			return fetch(ctx, path, recurse)
+			return fetch(ctx, path, recurse, clone)
 		default:
 			return errors.New("more than one import path supplied")
 		}
@@ -81,7 +85,7 @@ Flags:
 	AddFlags: addFetchFlags,
 }
 
-func fetch(ctx *gb.Context, path string, recurse bool) error {
+func fetch(ctx *gb.Context, path string, recurse bool, clone bool) error {
 	m, err := vendor.ReadManifest(manifestFile(ctx))
 	if err != nil {
 		return errors.Wrap(err, "could not load manifest")
@@ -122,6 +126,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 		Revision:   rev,
 		Branch:     b,
 		Path:       extra,
+		Clone:      clone,
 	}
 
 	if err := m.AddDependency(dep); err != nil {
@@ -131,7 +136,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 	dst := filepath.Join(ctx.Projectdir(), "vendor", "src", dep.Importpath)
 	src := filepath.Join(wc.Dir(), dep.Path)
 
-	if err := fileutils.Copypath(dst, src); err != nil {
+	if err := fileutils.Copypath(dst, src, clone); err != nil {
 		return err
 	}
 
@@ -192,7 +197,7 @@ func fetch(ctx *gb.Context, path string, recurse bool) error {
 			sort.Strings(keys)
 			pkg := keys[0]
 			fmt.Println("fetching recursive dependency", pkg)
-			if err := fetch(ctx, pkg, false); err != nil {
+			if err := fetch(ctx, pkg, false, false); err != nil {
 				return err
 			}
 		}

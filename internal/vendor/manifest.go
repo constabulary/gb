@@ -83,6 +83,9 @@ type Dependency struct {
 	// Path is the path inside the Repository where the
 	// dependency was fetched from.
 	Path string `json:"path,omitempty"`
+
+	// Clone describes was repository cloned as a full git repository.
+	Clone bool `json:"clone,omitempty"`
 }
 
 // WriteManifest writes a Manifest to the path. If the manifest does
