@@ -1,8 +1,8 @@
 // +build go1.7
 // +build !go1.8
 
-package gb
+package version
 
 const (
-	goversion = 1.7
+	Version = 1.7
 )

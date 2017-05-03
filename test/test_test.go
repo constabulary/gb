@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/constabulary/gb"
+	"github.com/constabulary/gb/internal/version"
 )
 
 func TestTest(t *testing.T) {
@@ -76,12 +77,12 @@ func TestTest(t *testing.T) {
 		}}
 
 	for _, tt := range tests {
-		if tt.minversion != 0 && goversion < tt.minversion {
-			t.Logf("skipping test, goversion %f is below mingoversion %f", goversion, tt.minversion)
+		if tt.minversion != 0 && version.Version < tt.minversion {
+			t.Logf("skipping test, goversion %f is below mingoversion %f", version.Version, tt.minversion)
 			continue
 		}
-		if tt.maxversion != 0 && goversion > tt.maxversion {
-			t.Logf("skipping test, goversion %f is above maxgoversion %f", goversion, tt.maxversion)
+		if tt.maxversion != 0 && version.Version > tt.maxversion {
+			t.Logf("skipping test, goversion %f is above maxgoversion %f", version.Version, tt.maxversion)
 			continue
 		}
 		ctx := testContext(t, gb.Ldflags(tt.ldflags...))
