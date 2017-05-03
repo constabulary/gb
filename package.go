@@ -66,7 +66,7 @@ func (p *Package) complete() bool {
 	extFiles := len(p.CgoFiles) + len(p.CFiles) + len(p.CXXFiles) + len(p.MFiles) + len(p.SFiles) + len(p.SysoFiles) + len(p.SwigFiles) + len(p.SwigCXXFiles)
 	if p.Goroot {
 		switch p.ImportPath {
-		case "bytes", "net", "os", "runtime/pprof", "sync", "time":
+		case "bytes", "internal/poll", "net", "os", "runtime/pprof", "sync", "syscall", "time":
 			extFiles++
 		}
 	}
