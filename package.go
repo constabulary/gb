@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"bytes"
 	"fmt"
 	"go/build"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"text/template"
 
 	"github.com/constabulary/gb/internal/debug"
 	"github.com/pkg/errors"
@@ -77,11 +79,25 @@ func (p *Package) complete() bool {
 func (pkg *Package) Binfile() string {
 	target := filepath.Join(pkg.bindir(), pkg.binname())
 
-	// if this is a cross compile or GOOS/GOARCH are both defined or there are build tags, add ctxString.
-	if pkg.isCrossCompile() || (os.Getenv("GOOS") != "" && os.Getenv("GOARCH") != "") {
-		target += "-" + pkg.ctxString()
-	} else if len(pkg.buildtags) > 0 {
-		target += "-" + strings.Join(pkg.buildtags, "-")
+	if pkg.outputBinFileTemplate != "" {
+		params := map[string]string{"target_path": target, "tags": strings.Join(pkg.buildtags, "-")}
+		t, err := template.New("output-file-template").Parse(pkg.outputBinFileTemplate)
+		if err != nil {
+			panic("invalid output file template: " + pkg.outputBinFileTemplate)
+		}
+		buf := new(bytes.Buffer)
+		if err := t.Execute(buf, params); err != nil {
+			panic(fmt.Sprintf("failed to execute output file template %q with params %v: %v",
+				pkg.outputBinFileTemplate, params, err))
+		}
+		target = string(buf.Bytes())
+	} else {
+		// if this is a cross compile or GOOS/GOARCH are both defined or there are build tags, add ctxString.
+		if pkg.isCrossCompile() || (os.Getenv("GOOS") != "" && os.Getenv("GOARCH") != "") {
+			target += "-" + pkg.ctxString()
+		} else if len(pkg.buildtags) > 0 {
+			target += "-" + strings.Join(pkg.buildtags, "-")
+		}
 	}
 
 	if pkg.gotargetos == "windows" {
