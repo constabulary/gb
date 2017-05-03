@@ -1740,3 +1740,30 @@ func TestFoo(t *testing.T) {
 	gb.run("test")
 	gb.mustBeEmpty(tmpdir)
 }
+
+func TestIssue707(t *testing.T) {
+	switch runtime.GOARCH {
+	case "amd64":
+		// good to go
+	default:
+		t.Skipf("test relies on being able to run cross compiled binaries, only supported on amd64")
+	}
+	if strings.HasPrefix(runtime.Version(), "go1.4") {
+		t.Skipf("skipping test on version: %v", runtime.Version())
+	}
+
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempFile("src/issue707/issue_test.go", `package t
+
+	import "testing"
+
+	func TestIssue707(t *testing.T) {
+		t.Logf("test passed")
+	}`)
+
+	gb.cd(gb.tempdir)
+	gb.setenv("GOARCH", "386")
+	gb.run("test", "issue707")
+}
