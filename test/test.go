@@ -97,6 +97,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 
 		GoFiles:      gofiles,
 		CFiles:       pkg.CFiles,
+		CXXFiles:     pkg.CXXFiles,
 		CgoFiles:     cgofiles,
 		TestGoFiles:  pkg.TestGoFiles,  // passed directly to buildTestMain
 		XTestGoFiles: pkg.XTestGoFiles, // passed directly to buildTestMain
