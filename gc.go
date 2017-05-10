@@ -3,7 +3,6 @@ package gb
 import (
 	"bytes"
 	"fmt"
-	"go/build"
 	"io"
 	"io/ioutil"
 	"os"
@@ -26,50 +25,30 @@ func GcToolchain() func(c *Context) error {
 		// TODO(dfc) this should come from the context, not the runtime.
 		goroot := runtime.GOROOT()
 
-		if version.Version == 1.4 && (c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch) {
-			// cross-compliation is not supported yet #31
-			return errors.Errorf("cross compilation from host %s/%s to target %s/%s not supported with Go 1.4", c.gohostos, c.gohostarch, c.gotargetos, c.gotargetarch)
-		}
-
 		tooldir := filepath.Join(goroot, "pkg", "tool", c.gohostos+"_"+c.gohostarch)
 		exe := ""
 		if c.gohostos == "windows" {
 			exe += ".exe"
 		}
 		switch {
-		case version.Version == 1.4:
-			archchar, err := build.ArchChar(c.gotargetarch)
-			if err != nil {
-				return err
-			}
-			c.tc = &gcToolchain{
-				gc:   filepath.Join(tooldir, archchar+"g"+exe),
-				ld:   filepath.Join(tooldir, archchar+"l"+exe),
-				as:   filepath.Join(tooldir, archchar+"a"+exe),
-				cc:   filepath.Join(tooldir, archchar+"c"+exe),
-				pack: filepath.Join(tooldir, "pack"+exe),
-			}
-		case version.Version > 1.4:
+		case version.Version > 1.5:
 			c.tc = &gcToolchain{
 				gc:   filepath.Join(tooldir, "compile"+exe),
 				ld:   filepath.Join(tooldir, "link"+exe),
 				as:   filepath.Join(tooldir, "asm"+exe),
 				pack: filepath.Join(tooldir, "pack"+exe),
 			}
+			return nil
 		default:
 			return errors.Errorf("unsupported Go version: %v", runtime.Version())
 		}
-		return nil
 	}
 }
 
 func (t *gcToolchain) Asm(pkg *Package, ofile, sfile string) error {
 	args := []string{"-o", ofile, "-D", "GOOS_" + pkg.gotargetos, "-D", "GOARCH_" + pkg.gotargetarch}
 	switch {
-	case version.Version == 1.4:
-		includedir := filepath.Join(runtime.GOROOT(), "pkg", pkg.gotargetos+"_"+pkg.gotargetarch)
-		args = append(args, "-I", includedir)
-	case version.Version > 1.4:
+	case version.Version > 1.5:
 		odir := filepath.Join(filepath.Dir(ofile))
 		includedir := filepath.Join(runtime.GOROOT(), "pkg", "include")
 		args = append(args, "-I", odir, "-I", includedir)
@@ -107,9 +86,7 @@ func (t *gcToolchain) Ld(pkg *Package) error {
 		args = append(args, "-L", d)
 	}
 	args = append(args, "-extld", linkCmd(pkg, "CC", defaultCC))
-	if version.Version > 1.4 {
-		args = append(args, "-buildmode", pkg.buildmode)
-	}
+	args = append(args, "-buildmode", pkg.buildmode)
 	args = append(args, pkg.objfile())
 
 	var buf bytes.Buffer
@@ -123,26 +100,7 @@ func (t *gcToolchain) Ld(pkg *Package) error {
 }
 
 func (t *gcToolchain) Cc(pkg *Package, ofile, cfile string) error {
-	if version.Version > 1.4 {
-		return errors.Errorf("gc %f does not support cc", version.Version)
-	}
-	args := []string{
-		"-F", "-V", "-w",
-		"-trimpath", pkg.Context.Workdir(),
-		"-I", pkg.Workdir(),
-		"-I", filepath.Join(runtime.GOROOT(), "pkg", pkg.gohostos+"_"+pkg.gohostarch), // for runtime.h
-		"-o", ofile,
-		"-D", "GOOS_" + pkg.gotargetos,
-		"-D", "GOARCH_" + pkg.gotargetarch,
-		cfile,
-	}
-	var buf bytes.Buffer
-	err := runOut(&buf, pkg.Dir, nil, t.cc, args...)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "# %s\n", pkg.ImportPath)
-		io.Copy(os.Stderr, &buf)
-	}
-	return err
+	return errors.Errorf("gc %f does not support cc", version.Version)
 }
 
 func (t *gcToolchain) Pack(pkg *Package, afiles ...string) error {
@@ -174,17 +132,16 @@ func (t *gcToolchain) Gc(pkg *Package, files []string) error {
 		args = append(args, "-+")
 	}
 
-	switch {
-	case pkg.complete():
+	if pkg.complete() {
 		args = append(args, "-complete")
-	case version.Version > 1.4:
+	} else {
 		asmhdr := filepath.Join(filepath.Dir(outfile), pkg.Name, "go_asm.h")
 		args = append(args, "-asmhdr", asmhdr)
 	}
 
 	// If there are vendored components, create an -importmap to map the import statement
 	// to the vendored import path. The possibilities for abusing this flag are endless.
-	if version.Version > 1.5 && pkg.Goroot {
+	if pkg.Goroot {
 		for _, path := range pkg.Package.Imports {
 			if i := strings.LastIndex(path, "/vendor/"); i >= 0 {
 				args = append(args, "-importmap", path[i+len("/vendor/"):]+"="+path)

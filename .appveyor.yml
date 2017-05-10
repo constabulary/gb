@@ -5,6 +5,13 @@ shallow_clone: true # for startup speed
 
 environment:
   GOPATH: C:\gopath
+  matrix:
+  - environment:
+    GOVERSION: 1.6.3
+  - environment:
+    GOVERSION: 1.7.5
+  - environment:
+    GOVERSION: 1.8.1
 
 platform:
   - x64
