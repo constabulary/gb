@@ -1769,3 +1769,40 @@ func TestIssue707(t *testing.T) {
 	gb.setenv("GOARCH", "386")
 	gb.run("test", "issue707")
 }
+
+// check that building the test package works with .cpp files
+func TestTestWithCxxFiles(t *testing.T) {
+	gb := T{T: t}
+	defer gb.cleanup()
+
+	gb.tempFile("src/cxxtest/a/a.cpp", `extern "C" int testFunc(int i) {
+		return i;
+	}`)
+
+	gb.tempFile("src/cxxtest/a/a.h", `#ifndef A_H
+	#define A_H
+
+	#ifdef __cplusplus
+	#define EXTERNC extern "C"
+	#else
+	#define EXTERNC
+	#endif
+
+	EXTERNC int testFunc(int i);
+
+	#endif`)
+
+	gb.tempFile("src/cxxtest/a/a.go", `package a
+
+	/*
+	#include "a.h"
+	*/
+	import "C"
+
+	func init() {
+		C.testFunc(1)
+	}`)
+
+	gb.cd(gb.tempdir)
+	gb.run("test")
+}
