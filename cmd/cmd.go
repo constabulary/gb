@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/internal/debug"
 	"github.com/pkg/errors"
 )
 
@@ -63,7 +62,7 @@ func RunCommand(fs *flag.FlagSet, cmd *Command, projectroot, goroot string, args
 	}
 	defer ctx.Destroy()
 
-	debug.Debugf("args: %v", args)
+	ctx.Debug("args: %v", args)
 	return cmd.Run(ctx, args)
 }
 
@@ -79,6 +78,10 @@ func NewContext(projectroot string, options ...func(*gb.Context) error) (*gb.Con
 	}
 	proj := gb.NewProject(root)
 
-	debug.Debugf("project root %q", proj.Projectdir())
-	return gb.NewContext(proj, options...)
+	ctx, err := gb.NewContext(proj, options...)
+	if err != nil {
+		return nil, err
+	}
+	ctx.Debug("project root %q", proj.Projectdir())
+	return ctx, err
 }

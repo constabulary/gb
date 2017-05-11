@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/constabulary/gb"
-	"github.com/constabulary/gb/internal/debug"
 	"github.com/pkg/errors"
 )
 
@@ -49,7 +48,7 @@ func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
 	test := gb.Action{
 		Name: fmt.Sprintf("test: %s", strings.Join(names(pkgs), ",")),
 		Run: func() error {
-			debug.Debugf("test duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
+			pkgs[0].Debug("test duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		},
 	}
@@ -71,7 +70,7 @@ func TestPackages(flags []string, pkgs ...*gb.Package) (*gb.Action, error) {
 // TestPackage returns an Action representing the steps required to build
 // and test this Package.
 func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string) (*gb.Action, error) {
-	debug.Debugf("TestPackage: %s, flags: %s", pkg.ImportPath, flags)
+	pkg.Debug("TestPackage: %s, flags: %s", pkg.ImportPath, flags)
 	var gofiles []string
 	gofiles = append(gofiles, pkg.GoFiles...)
 	gofiles = append(gofiles, pkg.TestGoFiles...)
@@ -193,7 +192,7 @@ func TestPackage(targets map[string]*gb.Action, pkg *gb.Package, flags []string)
 					cmd.Dir = pkg.Dir // tests run in the original source directory
 					cmd.Stdout = &output
 					cmd.Stderr = &output
-					debug.Debugf("%s", cmd.Args)
+					pkg.Debug("%s", cmd.Args)
 					err = cmd.Run()                         // run test
 					err = errors.Wrapf(err, "%s", cmd.Args) // wrap error if failed
 				}
