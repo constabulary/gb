@@ -21,19 +21,11 @@ import (
 // enables sh style -e output
 const eMode = false
 
-// Importer resolves package import paths to *importer.Packages.
-type Importer interface {
-
-	// Import attempts to resolve the package import path, path,
-	// to an *importer.Package.
-	Import(path string) (*build.Package, error)
-}
-
 // Context represents an execution of one or more Targets inside a Project.
 type Context struct {
 	Project
 
-	importer Importer
+	importer func(string) (*build.Package, error)
 
 	pkgs map[string]*Package // map of package paths to resolved packages
 
@@ -167,12 +159,10 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 	bc.ReleaseTags = releaseTags
 	bc.BuildTags = ctx.buildtags
 
-	i, err := buildImporter(&bc, &ctx)
+	ctx.importer, err = buildImporter(&bc, &ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	ctx.importer = i
 
 	// C and unsafe are fake packages synthesised by the compiler.
 	// Insert fake packages into the package cache.
@@ -252,7 +242,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 		return pkg, nil
 	}
 
-	p, err := c.importer.Import(path)
+	p, err := c.importer(path)
 	if err != nil {
 		return nil, err
 	}
@@ -416,40 +406,19 @@ func cgoEnabled(gohostos, gohostarch, gotargetos, gotargetarch string) bool {
 	}
 }
 
-func buildImporter(bc *build.Context, ctx *Context) (Importer, error) {
+func buildImporter(bc *build.Context, ctx *Context) (func(string) (*build.Package, error), error) {
 	i, err := addDepfileDeps(bc, ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// construct importer stack in reverse order, vendor at the bottom, GOROOT on the top.
-	i = &_importer{
-		Importer: i,
-		im: importer{
-			Context: bc,
-			Root:    filepath.Join(ctx.Projectdir(), "vendor"),
-		},
-	}
+	i = childFirstImporter(i, dirImporter(bc, filepath.Join(ctx.Projectdir(), "vendor")))
 
-	i = &srcImporter{
-		i,
-		importer{
-			Context: bc,
-			Root:    ctx.Projectdir(),
-		},
-	}
+	i = srcImporter(i, dirImporter(bc, ctx.Projectdir()))
 
-	i = &_importer{
-		i,
-		importer{
-			Context: bc,
-			Root:    runtime.GOROOT(),
-		},
-	}
+	i = childFirstImporter(i, dirImporter(bc, runtime.GOROOT()))
 
-	i = &fixupImporter{
-		Importer: i,
-	}
-
+	i = fixupImporter(i)
 	return i, nil
 }
