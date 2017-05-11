@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/constabulary/gb/internal/debug"
 	"github.com/pkg/errors"
 )
 
@@ -56,7 +55,6 @@ var testFlagDefn = map[string]*testFlagSpec{
 
 // TestFlags appends "-test." for flags that are passed to the test binary.
 func TestFlags(testArgs []string) []string {
-	debug.Debugf("TestFlags: args: %s", testArgs)
 	var targs []string
 	for _, arg := range testArgs {
 		var nArg, nVal, fArg string
@@ -89,7 +87,6 @@ func TestFlags(testArgs []string) []string {
 		}
 		targs = append(targs, fArg)
 	}
-	debug.Debugf("testFlags: targs: %s", targs)
 	return targs
 }
 

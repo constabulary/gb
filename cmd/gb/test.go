@@ -8,7 +8,6 @@ import (
 
 	"github.com/constabulary/gb"
 	"github.com/constabulary/gb/cmd"
-	"github.com/constabulary/gb/internal/debug"
 	"github.com/constabulary/gb/test"
 )
 
@@ -89,9 +88,7 @@ Flags:
 	AddFlags: addTestFlags,
 	FlagParse: func(flags *flag.FlagSet, args []string) error {
 		var err error
-		debug.Debugf("%s", args)
 		args, tfs, err = TestFlagsExtraParse(args[2:])
-		debug.Debugf("%s %s", args, tfs)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "gb test: %s\n", err)
 			fmt.Fprintf(os.Stderr, `run "go help test" or "go help testflag" for more information`+"\n")

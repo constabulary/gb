@@ -7,15 +7,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/constabulary/gb/internal/debug"
 )
 
 // importPathsNoDotExpansion returns the import paths to use for the given
 // command line, but it does no ... expansion.
 func importPathsNoDotExpansion(srcdir string, cwd string, args []string) []string {
 	srcdir, _ = filepath.Rel(srcdir, cwd)
-	debug.Debugf("%s %s", cwd, srcdir)
 	if srcdir == ".." {
 		srcdir = "."
 	}
@@ -105,7 +102,6 @@ func treeCanMatchPattern(pattern string) func(name string) bool {
 // matchPackages returns all the packages that can be found under the srcdir directory.
 // The pattern is a path including "...".
 func matchPackages(srcdir, pattern string) ([]string, error) {
-	debug.Debugf("matchPackages: %v", pattern)
 	match := matchPattern(pattern)
 	treeCanMatch := treeCanMatchPattern(pattern)
 

@@ -5,6 +5,7 @@ import (
 	"go/build"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,7 +15,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/constabulary/gb/internal/debug"
 	"github.com/pkg/errors"
 )
 
@@ -58,6 +58,8 @@ type Context struct {
 	linkmode, buildmode string // link and build modes
 
 	buildtags []string // build tags
+
+	debug func(string, ...interface{})
 }
 
 // GOOS configures the Context to use goos as the target os.
@@ -106,6 +108,16 @@ func Ldflags(flags ...string) func(*Context) error {
 	}
 }
 
+func WithDebug(w io.Writer) func(*Context) error {
+	return func(c *Context) error {
+		l := log.New(w, "", log.Ldate|log.Ltime|log.Lshortfile)
+		c.debug = func(format string, args ...interface{}) {
+			l.Output(2, fmt.Sprintf(format, args...))
+		}
+		return nil
+	}
+}
+
 // WithRace enables the race detector and adds the tag "race" to
 // the Context build tags.
 func WithRace(c *Context) error {
@@ -134,6 +146,7 @@ func NewContext(p Project, opts ...func(*Context) error) (*Context, error) {
 			c.gohostarch = runtime.GOARCH
 			c.gotargetos = envOr("GOOS", runtime.GOOS)
 			c.gotargetarch = envOr("GOARCH", runtime.GOARCH)
+			c.debug = func(string, ...interface{}) {} // null logger
 			return nil
 		},
 		GcToolchain(),
@@ -287,7 +300,7 @@ func (c *Context) loadPackage(stack []string, path string) (*Package, error) {
 
 // Destroy removes the temporary working files of this context.
 func (c *Context) Destroy() error {
-	debug.Debugf("removing work directory: %v", c.workdir)
+	c.debug("removing work directory: %v", c.workdir)
 	return os.RemoveAll(c.workdir)
 }
 
@@ -302,6 +315,10 @@ func (c *Context) ctxString() string {
 	return strings.Join(v, "-")
 }
 
+func (c *Context) Debug(format string, args ...interface{}) {
+	c.debug(format, args...)
+}
+
 func runOut(output io.Writer, dir string, env []string, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = dir
@@ -311,7 +328,6 @@ func runOut(output io.Writer, dir string, env []string, command string, args ...
 	if eMode {
 		fmt.Fprintln(os.Stderr, "+", strings.Join(cmd.Args, " "))
 	}
-	debug.Debugf("cd %s; %s", cmd.Dir, cmd.Args)
 	err := cmd.Run()
 	return err
 }

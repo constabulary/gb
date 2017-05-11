@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/constabulary/gb/internal/debug"
 	"github.com/constabulary/gb/internal/fileutils"
 	"github.com/constabulary/gb/internal/version"
 )
@@ -48,14 +47,14 @@ func BuildPackages(pkgs ...*Package) (*Action, error) {
 	build := Action{
 		Name: fmt.Sprintf("build: %s", strings.Join(names(pkgs), ",")),
 		Run: func() error {
-			debug.Debugf("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
+			pkgs[0].debug("build duration: %v %v", time.Since(t0), pkgs[0].Statistics.String())
 			return nil
 		},
 	}
 
 	for _, pkg := range pkgs {
 		if len(pkg.GoFiles)+len(pkg.CgoFiles) == 0 {
-			debug.Debugf("skipping %v: no go files", pkg.ImportPath)
+			pkg.debug("skipping %v: no go files", pkg.ImportPath)
 			continue
 		}
 		a, err := BuildPackage(targets, pkg)

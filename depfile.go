@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/constabulary/gb/internal/debug"
 	"github.com/constabulary/gb/internal/depfile"
 	"github.com/constabulary/gb/internal/untar"
 	"github.com/pkg/errors"
@@ -30,7 +29,7 @@ func addDepfileDeps(bc *build.Context, ctx *Context) (Importer, error) {
 		if !os.IsNotExist(errors.Cause(err)) {
 			return nil, errors.Wrap(err, "could not parse depfile")
 		}
-		debug.Debugf("no depfile, nothing to do.")
+		ctx.debug("no depfile, nothing to do.")
 		return i, nil
 	}
 	re := regexp.MustCompile(semverRegex)
@@ -62,7 +61,7 @@ func addDepfileDeps(bc *build.Context, ctx *Context) (Importer, error) {
 					Root:    root,
 				},
 			}
-			debug.Debugf("Add importer for %q: %v", prefix+" "+version, root)
+			ctx.debug("add importer for %q: %v", prefix+" "+version, root)
 		}
 
 		if tag, ok := kv["tag"]; ok {
@@ -89,7 +88,7 @@ func addDepfileDeps(bc *build.Context, ctx *Context) (Importer, error) {
 					Root:    root,
 				},
 			}
-			debug.Debugf("Add importer for %q: %v", prefix+" "+tag, root)
+			ctx.debug("add importer for %q: %v", prefix+" "+tag, root)
 		}
 	}
 	return i, nil
@@ -182,7 +181,7 @@ func fetchRelease(prefix, tag string) (io.ReadCloser, error) {
 
 func readDepfile(ctx *Context) (map[string]map[string]string, error) {
 	file := filepath.Join(ctx.Projectdir(), "depfile")
-	debug.Debugf("loading depfile at %q", file)
+	ctx.debug("loading depfile at %q", file)
 	return depfile.ParseFile(file)
 }
 
