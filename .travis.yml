@@ -28,6 +28,7 @@ script:
     && bin/coverage.sh
     && go build
     && gb test 
+    && env GOARCH=386 gb test
     && ../integration-tests/run-all.bash
 
 after_success:
