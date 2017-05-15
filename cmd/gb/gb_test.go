@@ -1453,6 +1453,7 @@ func main() { println("hello world") }
 	gb.cd(gb.tempdir)
 	tmpdir := gb.tempDir("tmp")
 	gb.setenv("TMP", tmpdir)
+	gb.run("generate")
 	gb.run("build")
 	gb.mustBeEmpty(tmpdir)
 	name := "hello"
