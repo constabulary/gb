@@ -364,7 +364,7 @@ func (s *Statistics) String() string {
 }
 
 func (c *Context) isCrossCompile() bool {
-	return c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch
+	return c.gohostos != c.gotargetos || c.gohostarch != c.gotargetarch || os.Getenv("CGO_ENABLED") == "0"
 }
 
 // envForDir returns a copy of the environment
