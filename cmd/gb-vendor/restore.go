@@ -74,8 +74,8 @@ func restore(ctx *gb.Context) error {
 func restoreWorker(ctx *gb.Context, work chan vendor.Dependency, wg *sync.WaitGroup, errChan chan error) {
 	defer wg.Done()
 	for dep := range work {
-		fmt.Printf("Getting %s\n", dep.Importpath)
-		repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, insecure)
+		fmt.Printf("Getting %s from %s\n", dep.Importpath, dep.Repository)
+		repo, _, err := vendor.DeduceRemoteRepo(dep.Repository, insecure)
 		if err != nil {
 			errChan <- errors.Wrap(err, "could not process dependency")
 			return
@@ -89,12 +89,12 @@ func restoreWorker(ctx *gb.Context, work chan vendor.Dependency, wg *sync.WaitGr
 		src := filepath.Join(wc.Dir(), dep.Path)
 
 		if err := fileutils.Copypath(dst, src); err != nil {
-			errChan <- err
+			errChan <- errors.Wrap(err, "could not copy src to dst")
 			return
 		}
 
 		if err := wc.Destroy(); err != nil {
-			errChan <- err
+			errChan <- errors.Wrap(err, "could not destroy working copy")
 			return
 		}
 	}

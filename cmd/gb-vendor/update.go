@@ -74,7 +74,7 @@ Flags:
 				return errors.Wrap(err, "dependency could not be deleted from manifest")
 			}
 
-			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath, insecure)
+			repo, extra, err := vendor.DeduceRemoteRepo(d.Repository, insecure)
 			if err != nil {
 				return errors.Wrapf(err, "could not determine repository for import %q", d.Importpath)
 			}
