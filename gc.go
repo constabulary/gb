@@ -126,6 +126,12 @@ func (t *gcToolchain) Gc(pkg *Package, files []string) error {
 	for _, d := range pkg.includePaths() {
 		args = append(args, "-I", d)
 	}
+
+	if (version.Version > 1.8) && pkg.Goroot {
+		// stdlib with special std flag
+		args = append(args, "-std")
+	}
+
 	if pkg.Goroot && pkg.ImportPath == "runtime" {
 		// runtime compiles with a special gc flag to emit
 		// additional reflect type data.
