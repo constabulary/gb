@@ -127,9 +127,8 @@ func (t *gcToolchain) Gc(pkg *Package, files []string) error {
 		args = append(args, "-I", d)
 	}
 
-	if pkg.Goroot {
-		// runtime compiles with a special gc flag to emit
-		// additional reflect type data.
+	if (version.Version > 1.8) && pkg.Goroot {
+		// stdlib with special std flag
 		args = append(args, "-std")
 	}
 
