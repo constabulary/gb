@@ -49,6 +49,7 @@ var (
 	bbregex   = regexp.MustCompile(`^(?P<root>bitbucket\.org/(?P<bitname>[A-Za-z0-9_.\-]+/[A-Za-z0-9_.\-]+))(/[A-Za-z0-9_.\-]+)*$`)
 	lpregex   = regexp.MustCompile(`^launchpad.net/([A-Za-z0-9-._]+)(/[A-Za-z0-9-._]+)?(/.+)?`)
 	gcregex   = regexp.MustCompile(`^(?P<root>code\.google\.com/[pr]/(?P<project>[a-z0-9\-]+)(\.(?P<subrepo>[a-z0-9\-]+))?)(/[A-Za-z0-9_.\-]+)*$`)
+	gsregex   = regexp.MustCompile(`^go.googlesource.com/([a-z0-9-]+)`)
 	genericre = regexp.MustCompile(`^(?P<root>(?P<repo>([a-z0-9.\-]+\.)+[a-z0-9.\-]+(:[0-9]+)?/[A-Za-z0-9_.\-/~]*?)\.(?P<vcs>bzr|git|hg|svn))([/A-Za-z0-9_.\-]+)*$`)
 )
 
@@ -112,6 +113,9 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 			return repo, v[0][len(v[1]):], nil
 		}
 		return nil, "", fmt.Errorf("unknown repository type")
+	case gsregex.MatchString(path):
+		repo, err := Gitrepo(u, insecure, schemes...)
+		return repo, "", errors.Wrap(err, "failed to construct Gitrepo for go.googlesource.com path")
 	case lpregex.MatchString(path):
 		v := lpregex.FindStringSubmatch(path)
 		v = append(v, "", "")

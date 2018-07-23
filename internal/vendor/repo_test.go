@@ -93,6 +93,11 @@ func TestDeduceRemoteRepo(t *testing.T) {
 		},
 		extra: "/go/vcs",
 	}, {
+		path: "https://go.googlesource.com/image",
+		want: &gitrepo{
+			url: "https://go.googlesource.com/image",
+		},
+	}, {}, {
 		path: "labix.org/v2/mgo",
 		want: &bzrrepo{
 			url: "https://launchpad.net/mgo/v2",
