@@ -89,11 +89,11 @@ func TestContextOptions(t *testing.T) {
 	}, {
 		// test blank GOOS is an error
 		fn:  GOOS(""),
-		err: fmt.Errorf("GOOS cannot be blank"),
+		err: fmt.Errorf("gOOS cannot be blank"),
 	}, {
 		// test blank GOARCH is an error
 		fn:  GOARCH(""),
-		err: fmt.Errorf("GOARCH cannot be blank"),
+		err: fmt.Errorf("gOARCH cannot be blank"),
 	}, {
 		ctx: Context{
 			gotargetos:   "bar",

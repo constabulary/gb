@@ -75,7 +75,7 @@ var executorTests = []struct {
 }, {
 	action: &Action{
 		Name: "child, child, error",
-		Run:  func() error { return fmt.Errorf("I should not have been called") },
+		Run:  func() error { return fmt.Errorf("i should not have been called") },
 		Deps: []*Action{{
 			Name: "child, error",
 			Run:  niltask,
@@ -100,7 +100,7 @@ var executorTests = []struct {
 }, {
 	action: &Action{
 		Name: "failure count",
-		Run:  func() error { return fmt.Errorf("I should not have been called") },
+		Run:  func() error { return fmt.Errorf("i should not have been called") },
 		Deps: []*Action{createFailDag()},
 	},
 	err: fmt.Errorf("task3 called 1 time"),

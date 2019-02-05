@@ -66,7 +66,7 @@ type Context struct {
 func GOOS(goos string) func(*Context) error {
 	return func(c *Context) error {
 		if goos == "" {
-			return fmt.Errorf("GOOS cannot be blank")
+			return fmt.Errorf("gOOS cannot be blank")
 		}
 		c.gotargetos = goos
 		return nil
@@ -77,7 +77,7 @@ func GOOS(goos string) func(*Context) error {
 func GOARCH(goarch string) func(*Context) error {
 	return func(c *Context) error {
 		if goarch == "" {
-			return fmt.Errorf("GOARCH cannot be blank")
+			return fmt.Errorf("gOARCH cannot be blank")
 		}
 		c.gotargetarch = goarch
 		return nil
