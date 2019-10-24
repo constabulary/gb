@@ -25,10 +25,6 @@ You can create as many projects as you like and move between them simply by chan
 
     go get github.com/constabulary/gb/...
 
-## Read more
-
-gb has its own site, [getgb.io](http://getgb.io/), head over there for more information.
-
 ## Contributing
 
 ### Contribution guidelines
